@@ -15,12 +15,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Deixa a tela inteira (Edge-to-Edge)
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
         setContentView(R.layout.activity_main);
 
-        // Previne sobreposição da barra de notificações e botões de navegação
         View mainLayout = findViewById(R.id.mainLayout);
         ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -28,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
             return WindowInsetsCompat.CONSUMED;
         });
 
-        // Configurando os cliques das 5 abas (Agora são LinearLayouts)
         LinearLayout btnInicio = findViewById(R.id.btnInicio);
         LinearLayout btnProjetos = findViewById(R.id.btnProjetos);
         LinearLayout btnNai = findViewById(R.id.btnNai);
@@ -36,23 +33,18 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout btnConta = findViewById(R.id.btnConta);
 
         btnInicio.setOnClickListener(v -> {
-            // Ação da aba Início
         });
 
         btnProjetos.setOnClickListener(v -> {
-            // Ação da aba Projetos
         });
 
         btnNai.setOnClickListener(v -> {
-            // Ação do botão central Nai
         });
 
         btnEmpresas.setOnClickListener(v -> {
-            // Ação da aba Empresas
         });
 
         btnConta.setOnClickListener(v -> {
-            // Ação da aba Conta
         });
     }
 }
