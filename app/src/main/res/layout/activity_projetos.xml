@@ -16,55 +16,77 @@
         <TextView
             android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="PROJETOS" android:textColor="#FFFFFF" android:textSize="28sp"
-            android:fontFamily="@font/neo_sans_bold"
+            android:fontFamily="@font/neo_sans"
             app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/bottomNavigation"
         android:layout_width="0dp" android:layout_height="85dp"
         android:layout_marginHorizontal="16dp" android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_glass" android:orientation="horizontal"
-        android:gravity="center" android:paddingHorizontal="10dp"
+        android:background="@drawable/bg_glass"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout android:id="@+id/btnInicio"
-            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-            android:orientation="vertical" android:gravity="center" android:padding="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_inicio" app:tint="#FFFFFF" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Início" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans_bold" android:layout_marginTop="2dp"/>
-        </LinearLayout>
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingHorizontal="10dp">
 
-        <LinearLayout android:id="@+id/btnProjetos"
-            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-            android:orientation="vertical" android:gravity="center" android:padding="8dp"
-            android:background="@drawable/bg_active_bubble">
-            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_projetos" app:tint="#FFFFFF" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Projetos" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans_bold" android:layout_marginTop="2dp"/>
-        </LinearLayout>
+            <View
+                android:id="@+id/activeBubble"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginVertical="8dp"
+                android:background="@drawable/bg_active_bubble" />
 
-        <LinearLayout android:id="@+id/btnNai"
-            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-            android:orientation="vertical" android:gravity="center" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_nai" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Nai" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans_bold" android:layout_marginTop="2dp"/>
-        </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center">
 
-        <LinearLayout android:id="@+id/btnEmpresas"
-            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-            android:orientation="vertical" android:gravity="center" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_empresas" app:tint="#FFFFFF" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empresas" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans_bold" android:layout_marginTop="2dp"/>
-        </LinearLayout>
+                <LinearLayout android:id="@+id/btnInicio"
+                    android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+                    android:orientation="vertical" android:gravity="center" android:padding="8dp"
+                    android:background="@android:color/transparent">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_inicio" app:tint="#FFFFFF" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Início" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
+                </LinearLayout>
 
-        <LinearLayout android:id="@+id/btnConta"
-            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-            android:orientation="vertical" android:gravity="center" android:padding="8dp" android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_conta" app:tint="#FFFFFF" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Conta" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans_bold" android:layout_marginTop="2dp"/>
-        </LinearLayout>
-    </LinearLayout>
+                <LinearLayout android:id="@+id/btnProjetos"
+                    android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+                    android:orientation="vertical" android:gravity="center" android:padding="8dp"
+                    android:background="@android:color/transparent">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_projetos" app:tint="#FFFFFF" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Projetos" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/btnNai"
+                    android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+                    android:orientation="vertical" android:gravity="center" android:padding="8dp"
+                    android:background="@android:color/transparent">
+                    <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_nai" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Nai" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/btnEmpresas"
+                    android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+                    android:orientation="vertical" android:gravity="center" android:padding="8dp"
+                    android:background="@android:color/transparent">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_empresas" app:tint="#FFFFFF" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empresas" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/btnConta"
+                    android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+                    android:orientation="vertical" android:gravity="center" android:padding="8dp"
+                    android:background="@android:color/transparent">
+                    <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_conta" app:tint="#FFFFFF" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Conta" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+    </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
