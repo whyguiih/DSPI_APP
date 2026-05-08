@@ -12,6 +12,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DSPI_APP">
         <activity
+            android:name=".ContaActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EmpresasActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NaiActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProjetosActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
