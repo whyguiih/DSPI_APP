@@ -1,16 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/mainLayout"
-    android:layout_width="match_parent" android:layout_height="match_parent" android:background="@drawable/bg_gradient">
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient">
 
-    <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/glassContainer"
-        android:layout_width="0dp" android:layout_height="0dp" android:layout_margin="16dp" android:background="@drawable/bg_glass"
-        app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toTopOf="@+id/bottomNavigationContainer"
-        app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent">
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="INÍCIO" android:textColor="#FFFFFF" android:textSize="28sp" android:fontFamily="@font/neo_sans"
-            app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/glassContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/bg_glass"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigationContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ViewAnimator
+            android:id="@+id/viewAnimator"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:gravity="center_horizontal">
+
+                    <ImageView
+                        android:layout_width="220dp"
+                        android:layout_height="wrap_content"
+                        android:adjustViewBounds="true"
+                        android:src="@drawable/logo_integra"
+                        android:layout_marginBottom="24dp"
+                        android:layout_marginTop="16dp"/>
+
+                    <GridLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:columnCount="2"
+                        android:alignmentMode="alignMargins"
+                        android:columnOrderPreserved="false">
+
+                        <LinearLayout android:id="@+id/btnSenai" style="@style/GlassButtonStyle">
+                            <ImageView style="@style/GlassButtonIcon" android:src="@android:drawable/ic_menu_info_details" app:tint="#FFFFFF"/>
+                            <TextView style="@style/GlassButtonText" android:text="O que é o Senai?"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:id="@+id/btnDspi" style="@style/GlassButtonStyle">
+                            <ImageView style="@style/GlassButtonIcon" android:src="@android:drawable/ic_menu_edit" app:tint="#FFFFFF"/>
+                            <TextView style="@style/GlassButtonText" android:text="O que é o DSPI?"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:id="@+id/btnIntegraInstitucional" style="@style/GlassButtonStyle">
+                            <ImageView style="@style/GlassButtonIcon" android:src="@android:drawable/ic_menu_slideshow" app:tint="#FFFFFF"/>
+                            <TextView style="@style/GlassButtonText" android:text="O que é a Integra?"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:id="@+id/btnIntegraApp" style="@style/GlassButtonStyle">
+                            <ImageView style="@style/GlassButtonIcon" android:src="@android:drawable/ic_menu_view" app:tint="#FFFFFF"/>
+                            <TextView style="@style/GlassButtonText" android:text="O que é o Integra?"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:id="@+id/btnCursos" style="@style/GlassButtonStyle">
+                            <ImageView style="@style/GlassButtonIcon" android:src="@android:drawable/ic_menu_agenda" app:tint="#FFFFFF"/>
+                            <TextView style="@style/GlassButtonText" android:text="Cursos"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:id="@+id/btnProjetosAlunos" style="@style/GlassButtonStyle">
+                            <ImageView style="@style/GlassButtonIcon" android:src="@android:drawable/ic_menu_gallery" app:tint="#FFFFFF"/>
+                            <TextView style="@style/GlassButtonText" android:text="Projetos"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:id="@+id/btnVagas" style="@style/GlassButtonStyle">
+                            <ImageView style="@style/GlassButtonIcon" android:src="@android:drawable/ic_menu_send" app:tint="#FFFFFF"/>
+                            <TextView style="@style/GlassButtonText" android:text="Vagas"/>
+                        </LinearLayout>
+
+                        <LinearLayout android:id="@+id/btnSuporte" style="@style/GlassButtonStyle">
+                            <ImageView style="@style/GlassButtonIcon" android:src="@android:drawable/ic_menu_call" app:tint="#FFFFFF"/>
+                            <TextView style="@style/GlassButtonText" android:text="Suporte"/>
+                        </LinearLayout>
+                    </GridLayout>
+                </LinearLayout>
+            </ScrollView>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="20dp">
+
+                <ImageButton
+                    android:id="@+id/btnBackToMenu"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_menu_revert"
+                    app:tint="#FFFFFF"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"/>
+
+                <TextView
+                    android:id="@+id/txtSubpageTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Título da Subpágina"
+                    android:textColor="#FFFFFF"
+                    android:textSize="24sp"
+                    android:fontFamily="@font/neo_sans"
+                    android:layout_marginTop="16dp"
+                    app:layout_constraintTop_toBottomOf="@+id/btnBackToMenu"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ViewAnimator>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <FrameLayout android:id="@+id/bottomNavigationContainer"
@@ -21,6 +133,7 @@
         <View android:id="@+id/activeBubble" android:layout_width="0dp" android:layout_height="match_parent" android:background="@drawable/bg_active_bubble" />
 
         <LinearLayout android:id="@+id/bottomNavLayout" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="horizontal" android:gravity="center">
+
             <LinearLayout android:id="@+id/btnInicio" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="?attr/selectableItemBackgroundBorderless">
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_inicio" app:tint="#FFFFFF" />
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Início" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
@@ -45,6 +158,7 @@
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_conta" app:tint="#FFFFFF" />
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Conta" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
             </LinearLayout>
+
         </LinearLayout>
     </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
