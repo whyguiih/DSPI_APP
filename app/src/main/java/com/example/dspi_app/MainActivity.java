@@ -1,47 +1,48 @@
 package com.example.dspi_app;
 
 import android.content.Intent;
-import android.graphics.RenderEffect;
-import android.graphics.Shader;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // 1. Diz ao Android para deixar o aplicativo ocupar a tela toda (Edge-to-Edge)
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
         setContentView(R.layout.activity_main);
 
-        // 1. Aplica o efeito Blur (Apenas API 31 ou superior)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            View glassContainer = findViewById(R.id.glassContainer);
+        // 2. Protege o layout contra a barra de status e barra de botões inferiores
+        View mainLayout = findViewById(R.id.mainLayout);
+        ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
+            // Pega o tamanho real dinâmico das barras do sistema
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
 
-            RenderEffect blurEffect = RenderEffect.createBlurEffect(
-                    20f,
-                    20f,
-                    Shader.TileMode.CLAMP
-            );
+            // Aplica esse tamanho como espaçamento (padding) dentro do layout
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
 
-            // Ative a linha abaixo se quiser desfocar o que tem dentro do container
-            // glassContainer.setRenderEffect(blurEffect);
-        }
+            return WindowInsetsCompat.CONSUMED;
+        });
 
-        // 2. Configura a navegação modular (Activities separadas)
+        // 3. Configura a navegação modular
         ImageButton btnInicio = findViewById(R.id.btnInicio);
         ImageButton btnProjetos = findViewById(R.id.btnProjetos);
 
-        // O botão início não precisa fazer nada se já estamos na MainActivity
         btnInicio.setOnClickListener(v -> {
-            // Já estamos aqui, opcionalmente você pode dar um refresh na tela
+            // Lógica para a aba de Início
         });
 
-        // O botão projetos abre a Activity separada
         btnProjetos.setOnClickListener(v -> {
-            // Nota: Você precisará criar uma ProjetosActivity.java depois!
+            // Estrutura separada para não misturar telas no mesmo arquivo
             // Intent intent = new Intent(MainActivity.this, ProjetosActivity.class);
             // startActivity(intent);
         });
