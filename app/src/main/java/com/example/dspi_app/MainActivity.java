@@ -1,9 +1,8 @@
 package com.example.dspi_app;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -16,35 +15,44 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 1. Diz ao Android para deixar o aplicativo ocupar a tela toda (Edge-to-Edge)
+        // Deixa a tela inteira (Edge-to-Edge)
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
         setContentView(R.layout.activity_main);
 
-        // 2. Protege o layout contra a barra de status e barra de botões inferiores
+        // Previne sobreposição da barra de notificações e botões de navegação
         View mainLayout = findViewById(R.id.mainLayout);
         ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
-            // Pega o tamanho real dinâmico das barras do sistema
             Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-            // Aplica esse tamanho como espaçamento (padding) dentro do layout
             v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
-
             return WindowInsetsCompat.CONSUMED;
         });
 
-        // 3. Configura a navegação modular
-        ImageButton btnInicio = findViewById(R.id.btnInicio);
-        ImageButton btnProjetos = findViewById(R.id.btnProjetos);
+        // Configurando os cliques das 5 abas (Agora são LinearLayouts)
+        LinearLayout btnInicio = findViewById(R.id.btnInicio);
+        LinearLayout btnProjetos = findViewById(R.id.btnProjetos);
+        LinearLayout btnNai = findViewById(R.id.btnNai);
+        LinearLayout btnEmpresas = findViewById(R.id.btnEmpresas);
+        LinearLayout btnConta = findViewById(R.id.btnConta);
 
         btnInicio.setOnClickListener(v -> {
-            // Lógica para a aba de Início
+            // Ação da aba Início
         });
 
         btnProjetos.setOnClickListener(v -> {
-            // Estrutura separada para não misturar telas no mesmo arquivo
-            // Intent intent = new Intent(MainActivity.this, ProjetosActivity.class);
-            // startActivity(intent);
+            // Ação da aba Projetos
+        });
+
+        btnNai.setOnClickListener(v -> {
+            // Ação do botão central Nai
+        });
+
+        btnEmpresas.setOnClickListener(v -> {
+            // Ação da aba Empresas
+        });
+
+        btnConta.setOnClickListener(v -> {
+            // Ação da aba Conta
         });
     }
 }
