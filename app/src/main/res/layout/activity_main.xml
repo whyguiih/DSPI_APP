@@ -69,32 +69,32 @@ Difundir ferramentas de gestão da inovação e trabalhar habilidades e atitudes
 
                         <LinearLayout android:id="@+id/btnSenai" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_info_details" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="O que é o Senai?"/>
+                            <TextView style="@style/ListGlassText" android:text="Regulamento "/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnDspi" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_edit" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="O que é o DSPI?"/>
+                            <TextView style="@style/ListGlassText" android:text="Projeto Integrador MSEP"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnIntegraInstitucional" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_slideshow" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="O que é a Integra?"/>
+                            <TextView style="@style/ListGlassText" android:text="Protótipo"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnIntegraApp" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_view" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="O que é o Integra?"/>
+                            <TextView style="@style/ListGlassText" android:text="Critérios de Avaliação"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnCursos" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_agenda" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Cursos Disponíveis"/>
+                            <TextView style="@style/ListGlassText" android:text="Canvas Modelo de Negócios"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnProjetosAlunos" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_gallery" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Projetos de Alunos"/>
+                            <TextView style="@style/ListGlassText" android:text="Pitch de vendas"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnVagas" style="@style/ListGlassButtonStyle">
