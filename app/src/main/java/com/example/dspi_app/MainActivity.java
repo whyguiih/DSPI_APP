@@ -50,23 +50,26 @@ public class MainActivity extends AppCompatActivity {
         View.OnClickListener listener = v -> {
             String titulo = "";
             int id = v.getId();
+
+            // Títulos atualizados para refletirem o novo design
             if (id == R.id.btnSenai) titulo = "O que é o Senai?";
             else if (id == R.id.btnDspi) titulo = "O que é o DSPI?";
-            else if (id == R.id.btnIntegraInstitucional) titulo = "O que é a Integra?";
-            else if (id == R.id.btnIntegraApp) titulo = "O que é o Integra?";
-            else if (id == R.id.btnCursos) titulo = "Cursos Disponíveis";
-            else if (id == R.id.btnProjetosAlunos) titulo = "Projetos de Alunos";
-            else if (id == R.id.btnVagas) titulo = "Vagas de Estágio";
-            else if (id == R.id.btnSuporte) titulo = "Suporte e Contato";
+            else if (id == R.id.btnInstituicao) titulo = "A instituição";
+            else if (id == R.id.btnAplicativo) titulo = "O aplicativo";
+            else if (id == R.id.btnCursos) titulo = "Cursos disponíveis";
+            else if (id == R.id.btnProjetosAlunos) titulo = "Projetos de alunos";
+            else if (id == R.id.btnVagas) titulo = "Vagas de estágio";
+            else if (id == R.id.btnSuporte) titulo = "Suporte e contato";
 
             txtSubpageTitle.setText(titulo);
             viewAnimator.setDisplayedChild(1);
         };
 
+        // IDs atualizados
         findViewById(R.id.btnSenai).setOnClickListener(listener);
         findViewById(R.id.btnDspi).setOnClickListener(listener);
-        findViewById(R.id.btnIntegraInstitucional).setOnClickListener(listener);
-        findViewById(R.id.btnIntegraApp).setOnClickListener(listener);
+        findViewById(R.id.btnInstituicao).setOnClickListener(listener);
+        findViewById(R.id.btnAplicativo).setOnClickListener(listener);
         findViewById(R.id.btnCursos).setOnClickListener(listener);
         findViewById(R.id.btnProjetosAlunos).setOnClickListener(listener);
         findViewById(R.id.btnVagas).setOnClickListener(listener);

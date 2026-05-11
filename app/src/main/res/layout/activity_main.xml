@@ -45,14 +45,12 @@
 
                     <TextView
                         style="@style/SectionTitle"
-                        android:text="Missão do Projeto" />
+                        android:text="Missão do projeto" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Desenvolver Projetos Técnico-Pedagógicos visando aproximar nossos alunos ao cotidiano industrial, podendo também
-contribuir com melhorias e soluções inovadoras para as indústrias participantes do projeto.
-Difundir ferramentas de gestão da inovação e trabalhar habilidades e atitudes empreendedoras."
+                        android:text="Nossa missão é conectar estudantes e empresas através de tecnologia de ponta, facilitando a entrada no mercado de trabalho e o desenvolvimento de carreiras sólidas no setor industrial."
                         android:textColor="#E6FFFFFF"
                         android:textSize="15sp"
                         android:lineSpacingExtra="4dp"
@@ -60,7 +58,7 @@ Difundir ferramentas de gestão da inovação e trabalhar habilidades e atitudes
 
                     <TextView
                         style="@style/SectionTitle"
-                        android:text="Orientações Gerais" />
+                        android:text="Aprenda mais sobre o projeto" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -68,43 +66,43 @@ Difundir ferramentas de gestão da inovação e trabalhar habilidades e atitudes
                         android:orientation="vertical">
 
                         <LinearLayout android:id="@+id/btnSenai" style="@style/ListGlassButtonStyle">
-                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_info_details" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Regulamento "/>
+                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_agenda" app:tint="#FFFFFF"/>
+                            <TextView style="@style/ListGlassText" android:text="O que é o Senai?"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnDspi" style="@style/ListGlassButtonStyle">
-                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_edit" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Projeto Integrador MSEP"/>
+                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_manage" app:tint="#FFFFFF"/>
+                            <TextView style="@style/ListGlassText" android:text="O que é o DSPI?"/>
                         </LinearLayout>
 
-                        <LinearLayout android:id="@+id/btnIntegraInstitucional" style="@style/ListGlassButtonStyle">
-                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_slideshow" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Protótipo"/>
+                        <LinearLayout android:id="@+id/btnInstituicao" style="@style/ListGlassButtonStyle">
+                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_myplaces" app:tint="#FFFFFF"/>
+                            <TextView style="@style/ListGlassText" android:text="A instituição"/>
                         </LinearLayout>
 
-                        <LinearLayout android:id="@+id/btnIntegraApp" style="@style/ListGlassButtonStyle">
-                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_view" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Critérios de Avaliação"/>
+                        <LinearLayout android:id="@+id/btnAplicativo" style="@style/ListGlassButtonStyle">
+                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_sort_by_size" app:tint="#FFFFFF"/>
+                            <TextView style="@style/ListGlassText" android:text="O aplicativo"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnCursos" style="@style/ListGlassButtonStyle">
-                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_agenda" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Canvas Modelo de Negócios"/>
+                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_my_calendar" app:tint="#FFFFFF"/>
+                            <TextView style="@style/ListGlassText" android:text="Cursos disponíveis"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnProjetosAlunos" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_gallery" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Pitch de vendas"/>
+                            <TextView style="@style/ListGlassText" android:text="Projetos de alunos"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnVagas" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_send" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Vagas de Estágio"/>
+                            <TextView style="@style/ListGlassText" android:text="Vagas de estágio"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnSuporte" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_call" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Suporte e Contato"/>
+                            <TextView style="@style/ListGlassText" android:text="Suporte e contato"/>
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
@@ -114,6 +112,7 @@ Difundir ferramentas de gestão da inovação e trabalhar habilidades e atitudes
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:padding="20dp">
+
                 <ImageButton
                     android:id="@+id/btnBackToMenu"
                     android:layout_width="48dp"
@@ -123,6 +122,7 @@ Difundir ferramentas de gestão da inovação e trabalhar habilidades e atitudes
                     app:tint="#FFFFFF"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toStartOf="parent"/>
+
                 <TextView
                     android:id="@+id/txtSubpageTitle"
                     android:layout_width="0dp"
@@ -143,28 +143,36 @@ Difundir ferramentas de gestão da inovação e trabalhar habilidades e atitudes
         android:layout_width="0dp" android:layout_height="85dp" android:layout_marginHorizontal="16dp" android:layout_marginBottom="16dp"
         android:background="@drawable/bg_glass" android:paddingHorizontal="8dp" android:paddingVertical="8dp"
         app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent">
+
         <View android:id="@+id/activeBubble" android:layout_width="0dp" android:layout_height="match_parent" android:background="@drawable/bg_active_bubble" />
+
         <LinearLayout android:id="@+id/bottomNavLayout" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="horizontal" android:gravity="center">
+
             <LinearLayout android:id="@+id/btnInicio" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="?attr/selectableItemBackgroundBorderless">
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_inicio" app:tint="#FFFFFF" />
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Início" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
             </LinearLayout>
+
             <LinearLayout android:id="@+id/btnProjetos" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="?attr/selectableItemBackgroundBorderless">
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_projetos" app:tint="#FFFFFF" />
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Projetos" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
             </LinearLayout>
+
             <LinearLayout android:id="@+id/btnNai" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="?attr/selectableItemBackgroundBorderless">
                 <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_nai" />
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Nai" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
             </LinearLayout>
+
             <LinearLayout android:id="@+id/btnEmpresas" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="?attr/selectableItemBackgroundBorderless">
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_empresas" app:tint="#FFFFFF" />
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empresas" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
             </LinearLayout>
+
             <LinearLayout android:id="@+id/btnConta" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="?attr/selectableItemBackgroundBorderless">
                 <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_conta" app:tint="#FFFFFF" />
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Conta" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
             </LinearLayout>
+
         </LinearLayout>
     </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
