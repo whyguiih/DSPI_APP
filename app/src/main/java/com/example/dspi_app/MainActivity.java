@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
             // Títulos atualizados para refletirem o novo design
             if (id == R.id.btnPitch) titulo = "Estrutura do Pitch";
             else if (id == R.id.btnCanvas) titulo = "Estrutura do Canvas";
-            else if (id == R.id.btnTabelas) titulo = "Preenchimento das Tabelaso";
+            else if (id == R.id.btnTabelas) titulo = "Preenchimento das Tabelas";
             else if (id == R.id.btnAppInfo) titulo = "Informações do App";
             else if (id == R.id.btnRegulamento) titulo = "Regulamento";
 
