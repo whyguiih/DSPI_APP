@@ -52,22 +52,22 @@ public class MainActivity extends AppCompatActivity {
             int id = v.getId();
 
             // Títulos atualizados para refletirem o novo design
-            if (id == R.id.btnSenai) titulo = "O que é o Senai?";
-            else if (id == R.id.btnDspi) titulo = "O que é o DSPI?";
-            else if (id == R.id.btnInstituicao) titulo = "A instituição";
-            else if (id == R.id.btnAplicativo) titulo = "O aplicativo";
-            else if (id == R.id.btnCursos) titulo = "Cursos disponíveis";
+            if (id == R.id.btnPitch) titulo = "Estrutura do Pitch";
+            else if (id == R.id.btnCanvas) titulo = "Estrutura do Canvas";
+            else if (id == R.id.btnTabelas) titulo = "Preenchimento das Tabelaso";
+            else if (id == R.id.btnAppInfo) titulo = "Informações do App";
+            else if (id == R.id.btnRegulamento) titulo = "Regulamento";
 
             txtSubpageTitle.setText(titulo);
             viewAnimator.setDisplayedChild(1);
         };
 
         // IDs atualizados
-        findViewById(R.id.btnSenai).setOnClickListener(listener);
-        findViewById(R.id.btnDspi).setOnClickListener(listener);
-        findViewById(R.id.btnInstituicao).setOnClickListener(listener);
-        findViewById(R.id.btnAplicativo).setOnClickListener(listener);
-        findViewById(R.id.btnCursos).setOnClickListener(listener);
+        findViewById(R.id.btnPitch).setOnClickListener(listener);
+        findViewById(R.id.btnCanvas).setOnClickListener(listener);
+        findViewById(R.id.btnTabelas).setOnClickListener(listener);
+        findViewById(R.id.btnAppInfo).setOnClickListener(listener);
+        findViewById(R.id.btnRegulamento).setOnClickListener(listener);
     }
 
     private void configurarBolhaAnimada() {
