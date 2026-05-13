@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 11/05/2026 às 19:17
+-- Tempo de geração: 13/05/2026 às 20:46
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS `tb_cadastros` (
   `nome_usuarios` varchar(70) NOT NULL,
   `senha` varchar(25) NOT NULL,
   `nivel_de_acesso` int(11) DEFAULT 0,
-  PRIMARY KEY (`id_cadastro`)
+  PRIMARY KEY (`id_cadastro`),
+  UNIQUE KEY `nome_usuarios` (`nome_usuarios`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -57,7 +58,10 @@ CREATE TABLE IF NOT EXISTS `tb_canva` (
   `estrutura_custos` text NOT NULL,
   `fluxo_receita` text DEFAULT NULL,
   `parceiros_chaves` text NOT NULL,
-  PRIMARY KEY (`id_canva`)
+  `processado` int(11) DEFAULT 0,
+  `usuario` varchar(70) NOT NULL,
+  PRIMARY KEY (`id_canva`),
+  KEY `fk_canva_eqp` (`usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -72,7 +76,9 @@ CREATE TABLE IF NOT EXISTS `tb_conhecimentos` (
   `plano_curso` text DEFAULT NULL,
   `conhecimentos_aplicados` text NOT NULL,
   `capacidades_aplicadas` text NOT NULL,
-  PRIMARY KEY (`id_conhecimentos`)
+  `usuario` varchar(70) DEFAULT NULL,
+  PRIMARY KEY (`id_conhecimentos`),
+  KEY `fk_conh_eqp` (`usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -90,7 +96,9 @@ CREATE TABLE IF NOT EXISTS `tb_cronograma` (
   `data_inicio` date DEFAULT NULL,
   `data_final` date DEFAULT NULL,
   `observacoes` text NOT NULL,
-  PRIMARY KEY (`id_cronograma`)
+  `usuario` varchar(70) DEFAULT NULL,
+  PRIMARY KEY (`id_cronograma`),
+  KEY `fk_crono_eqp` (`usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -118,6 +126,7 @@ CREATE TABLE IF NOT EXISTS `tb_curriculo_alunos` (
   `motivo_projeto` varchar(500) NOT NULL,
   `aprendo_mais` varchar(100) DEFAULT NULL,
   `prefiro_trabalhar` varchar(50) DEFAULT NULL,
+  `usuario` varchar(70) DEFAULT NULL,
   PRIMARY KEY (`id_aluno`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -136,7 +145,17 @@ CREATE TABLE IF NOT EXISTS `tb_equipe` (
   `email` varchar(250) NOT NULL,
   `area_atuacao_curso` text NOT NULL,
   `area_atuacao_projeto` text NOT NULL,
-  PRIMARY KEY (`id_equipe`)
+  `nome_integrante2` varchar(70) DEFAULT NULL,
+  `nome_integrante3` varchar(70) DEFAULT NULL,
+  `nome_integrante4` varchar(70) DEFAULT NULL,
+  `nome_integrante5` varchar(70) DEFAULT NULL,
+  `nome_orientador` varchar(70) DEFAULT NULL,
+  `nome_coorientador` varchar(70) DEFAULT NULL,
+  `usuario` varchar(70) DEFAULT NULL,
+  PRIMARY KEY (`id_equipe`),
+  UNIQUE KEY `nome_equipe` (`nome_equipe`),
+  UNIQUE KEY `nome_equipe_2` (`nome_equipe`),
+  KEY `equipe` (`usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -149,7 +168,9 @@ DROP TABLE IF EXISTS `tb_pitch`;
 CREATE TABLE IF NOT EXISTS `tb_pitch` (
   `id_pitch` int(11) NOT NULL,
   `roteiro` text NOT NULL,
-  PRIMARY KEY (`id_pitch`)
+  `usuario` varchar(70) DEFAULT NULL,
+  PRIMARY KEY (`id_pitch`),
+  KEY `fk_pitch_eqp` (`usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -174,7 +195,9 @@ CREATE TABLE IF NOT EXISTS `tb_recursos_aplicados` (
   `pagamento` varchar(15) DEFAULT NULL,
   `alternativas_consideradas` varchar(200) DEFAULT NULL,
   `preco_total` decimal(11,2) NOT NULL,
-  PRIMARY KEY (`id_recursos`)
+  `usuario` varchar(70) DEFAULT NULL,
+  PRIMARY KEY (`id_recursos`),
+  KEY `fk_rec_eqp` (`usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -185,36 +208,34 @@ CREATE TABLE IF NOT EXISTS `tb_recursos_aplicados` (
 -- Restrições para tabelas `tb_canva`
 --
 ALTER TABLE `tb_canva`
+  ADD CONSTRAINT `fk_canva_eqp` FOREIGN KEY (`usuario`) REFERENCES `tb_equipe` (`nome_equipe`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `tb_canva_ibfk_1` FOREIGN KEY (`id_canva`) REFERENCES `tb_equipe` (`id_equipe`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Restrições para tabelas `tb_conhecimentos`
 --
 ALTER TABLE `tb_conhecimentos`
-  ADD CONSTRAINT `tb_conhecimentos_ibfk_1` FOREIGN KEY (`id_conhecimentos`) REFERENCES `tb_equipe` (`id_equipe`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_conh_eqp` FOREIGN KEY (`usuario`) REFERENCES `tb_equipe` (`nome_equipe`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Restrições para tabelas `tb_cronograma`
 --
 ALTER TABLE `tb_cronograma`
+  ADD CONSTRAINT `cusrriculo` FOREIGN KEY (`usuario`) REFERENCES `tb_cadastros` (`nome_usuarios`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_crono_eqp` FOREIGN KEY (`usuario`) REFERENCES `tb_equipe` (`nome_equipe`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `tb_cronograma_ibfk_1` FOREIGN KEY (`id_cronograma`) REFERENCES `tb_equipe` (`id_equipe`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Restrições para tabelas `tb_curriculo_alunos`
---
-ALTER TABLE `tb_curriculo_alunos`
-  ADD CONSTRAINT `tb_curriculo_alunos_ibfk_1` FOREIGN KEY (`id_aluno`) REFERENCES `tb_equipe` (`id_equipe`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Restrições para tabelas `tb_pitch`
 --
 ALTER TABLE `tb_pitch`
-  ADD CONSTRAINT `tb_pitch_ibfk_1` FOREIGN KEY (`id_pitch`) REFERENCES `tb_equipe` (`id_equipe`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_pitch_eqp` FOREIGN KEY (`usuario`) REFERENCES `tb_equipe` (`nome_equipe`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Restrições para tabelas `tb_recursos_aplicados`
 --
 ALTER TABLE `tb_recursos_aplicados`
+  ADD CONSTRAINT `fk_rec_eqp` FOREIGN KEY (`usuario`) REFERENCES `tb_equipe` (`nome_equipe`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `tb_recursos_aplicados_ibfk_1` FOREIGN KEY (`id_recursos`) REFERENCES `tb_equipe` (`id_equipe`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
