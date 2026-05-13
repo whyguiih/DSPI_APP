@@ -57,9 +57,6 @@ public class MainActivity extends AppCompatActivity {
             else if (id == R.id.btnInstituicao) titulo = "A instituição";
             else if (id == R.id.btnAplicativo) titulo = "O aplicativo";
             else if (id == R.id.btnCursos) titulo = "Cursos disponíveis";
-            else if (id == R.id.btnProjetosAlunos) titulo = "Projetos de alunos";
-            else if (id == R.id.btnVagas) titulo = "Vagas de estágio";
-            else if (id == R.id.btnSuporte) titulo = "Suporte e contato";
 
             txtSubpageTitle.setText(titulo);
             viewAnimator.setDisplayedChild(1);
@@ -71,9 +68,6 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnInstituicao).setOnClickListener(listener);
         findViewById(R.id.btnAplicativo).setOnClickListener(listener);
         findViewById(R.id.btnCursos).setOnClickListener(listener);
-        findViewById(R.id.btnProjetosAlunos).setOnClickListener(listener);
-        findViewById(R.id.btnVagas).setOnClickListener(listener);
-        findViewById(R.id.btnSuporte).setOnClickListener(listener);
     }
 
     private void configurarBolhaAnimada() {

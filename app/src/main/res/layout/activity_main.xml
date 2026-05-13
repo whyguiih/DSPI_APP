@@ -67,42 +67,27 @@
 
                         <LinearLayout android:id="@+id/btnSenai" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_agenda" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="O que é o Senai?"/>
+                            <TextView style="@style/ListGlassText" android:text="Estrutura do Pitch"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnDspi" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_manage" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="O que é o DSPI?"/>
+                            <TextView style="@style/ListGlassText" android:text="Estrutura do Canvas"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnInstituicao" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_myplaces" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="A instituição"/>
+                            <TextView style="@style/ListGlassText" android:text="Preenchimento das Tabelas"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnAplicativo" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_sort_by_size" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="O aplicativo"/>
+                            <TextView style="@style/ListGlassText" android:text="Informações do App"/>
                         </LinearLayout>
 
                         <LinearLayout android:id="@+id/btnCursos" style="@style/ListGlassButtonStyle">
                             <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_my_calendar" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Cursos disponíveis"/>
-                        </LinearLayout>
-
-                        <LinearLayout android:id="@+id/btnProjetosAlunos" style="@style/ListGlassButtonStyle">
-                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_gallery" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Projetos de alunos"/>
-                        </LinearLayout>
-
-                        <LinearLayout android:id="@+id/btnVagas" style="@style/ListGlassButtonStyle">
-                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_send" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Vagas de estágio"/>
-                        </LinearLayout>
-
-                        <LinearLayout android:id="@+id/btnSuporte" style="@style/ListGlassButtonStyle">
-                            <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_call" app:tint="#FFFFFF"/>
-                            <TextView style="@style/ListGlassText" android:text="Suporte e contato"/>
+                            <TextView style="@style/ListGlassText" android:text="Regulamento"/>
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
