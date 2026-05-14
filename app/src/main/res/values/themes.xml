@@ -5,5 +5,19 @@
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Cor de fundo da tela -->
+        <item name="windowSplashScreenBackground">#1a4b9f</item>
+
+        <!-- O ícone central (pode ser um vetor ou animado) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/loading</item>
+
+        <!-- Quanto tempo o ícone deve durar (opcional) -->
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+
+        <!-- O tema que o app deve usar DEPOIS que a splash sumir -->
+        <item name="postSplashScreenTheme">@style/Theme.DSPI_APP</item>
+    </style>
+
     <style name="Theme.DSPI_APP" parent="Base.Theme.DSPI_APP" />
 </resources>
