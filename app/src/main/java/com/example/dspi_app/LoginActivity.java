@@ -9,11 +9,16 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.splashscreen.SplashScreen; // IMPORT ADICIONADO AQUI!
 
 public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        // INSTALANDO A SPLASH (Tem que ser antes do super.onCreate!)
+        SplashScreen.installSplashScreen(this);
+
         super.onCreate(savedInstanceState);
 
         // Tela cheia (Edge-to-Edge) para o gradiente preencher até a bateria
