@@ -29,10 +29,9 @@ public class EmpresasActivity extends AppCompatActivity {
 
         configurarBolhaAnimada();
 
-        findViewById(R.id.btnInicio).setOnClickListener(v -> navegarPara(MainActivity.class, 0));
-        findViewById(R.id.btnProjetos).setOnClickListener(v -> navegarPara(ProjetosActivity.class, 1));
-        findViewById(R.id.btnNai).setOnClickListener(v -> navegarPara(NaiActivity.class, 2));
-        findViewById(R.id.btnConta).setOnClickListener(v -> navegarPara(ContaActivity.class, 4));
+        String nivel = getIntent().getStringExtra("nivel_de_acesso");
+
+        ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
     }
 
     private void configurarBolhaAnimada() {
@@ -49,14 +48,5 @@ public class EmpresasActivity extends AppCompatActivity {
                 activeBubble.animate().translationX(CURRENT_TAB_INDEX * tabWidth).setDuration(350).setInterpolator(new DecelerateInterpolator(1.5f)).start();
             }
         });
-    }
-
-    private void navegarPara(Class<?> activityClass, int newTabIndex) {
-        if (CURRENT_TAB_INDEX == newTabIndex) return;
-        Intent intent = new Intent(this, activityClass);
-        intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
-        startActivity(intent);
-        overridePendingTransition(0, 0);
-        finish();
     }
 }

@@ -7,6 +7,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ViewAnimator;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -32,12 +33,9 @@ public class MainActivity extends AppCompatActivity {
 
         configurarBolhaAnimada();
         configurarMenuLateral();
+        String nivel = getIntent().getStringExtra("nivel_de_acesso");
 
-        // Navegação da barra inferior
-        findViewById(R.id.btnProjetos).setOnClickListener(v -> navegarPara(ProjetosActivity.class, 1));
-        findViewById(R.id.btnNai).setOnClickListener(v -> navegarPara(NaiActivity.class, 2));
-        findViewById(R.id.btnEmpresas).setOnClickListener(v -> navegarPara(EmpresasActivity.class, 3));
-        findViewById(R.id.btnConta).setOnClickListener(v -> navegarPara(ContaActivity.class, 4));
+        ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
     }
 
     private void configurarMenuLateral() {
@@ -84,13 +82,5 @@ public class MainActivity extends AppCompatActivity {
                 activeBubble.animate().translationX(CURRENT_TAB_INDEX * tabWidth).setDuration(350).setInterpolator(new DecelerateInterpolator(1.5f)).start();
             }
         });
-    }
-
-    private void navegarPara(Class<?> activityClass, int newTabIndex) {
-        Intent intent = new Intent(this, activityClass);
-        intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
-        startActivity(intent);
-        overridePendingTransition(0, 0);
-        finish();
     }
 }
