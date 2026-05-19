@@ -48,20 +48,41 @@ public class LoginActivity extends AppCompatActivity {
         // Evento de clique do Botão de Login
         Button btnEntrar = findViewById(R.id.btnEntrar);
         btnEntrar.setOnClickListener(v -> {
-            String Pnome = nome.getText().toString();
-            String Psenha = senha.getText().toString();
+            String Pnome = nome.getText().toString().trim();
+            String Psenha = senha.getText().toString().trim();
 
             // URL do seu script PHP (se for local, use o IP da sua máquina)
-            String url = "http://192.168.0.140/api/login.php";
+            String url = "http://192.168.0.124/api/login.php";
 
             StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                     response -> {
-                        if (response.contains("success")) {
-                            Toast.makeText(this, "Login realizado!", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                        response = response.trim();
+
+                        if(response.startsWith("success")){
+                            String[] partes = response.split("\\|");
+                            String nivel = partes[1];
+
+                            Toast.makeText(
+                                    this,
+                                    "Nível: " + nivel,
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                            Intent intent = new Intent(
+                                    LoginActivity.this,
+                                    MainActivity.class
+                            );
+
+                            intent.putExtra("nivel_de_acesso", nivel);
+                            startActivity(intent);
                             finish();
-                        } else {
-                            Toast.makeText(this, "Usuário ou senha incorretos", Toast.LENGTH_SHORT).show();
+
+                        }else{
+                            Toast.makeText(
+                                    this,
+                                    "Usuário ou senha incorretos",
+                                    Toast.LENGTH_SHORT
+                            ).show();
                         }
                     },
                     error -> Toast.makeText(this, "Erro de conexão", Toast.LENGTH_SHORT).show()) {
