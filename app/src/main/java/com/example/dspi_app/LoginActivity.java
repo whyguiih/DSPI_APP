@@ -2,20 +2,19 @@ package com.example.dspi_app;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.*;
-
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.splashscreen.SplashScreen;
-
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import org.json.JSONException;
+import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,79 +22,73 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-        // INSTALANDO A SPLASH
         SplashScreen.installSplashScreen(this);
-
         super.onCreate(savedInstanceState);
-
-        // Tela cheia (Edge-to-Edge) para o gradiente preencher até a bateria
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_login);
 
-        // Previne que o teclado ou as barras cubram a interface
         View mainLayout = findViewById(R.id.mainLayout);
         ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
-            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            androidx.core.graphics.Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
             return WindowInsetsCompat.CONSUMED;
         });
 
         EditText nome = findViewById(R.id.inputEmail);
         EditText senha = findViewById(R.id.inputSenha);
-
-
-        // Evento de clique do Botão de Login
         Button btnEntrar = findViewById(R.id.btnEntrar);
+
         btnEntrar.setOnClickListener(v -> {
             String Pnome = nome.getText().toString().trim();
             String Psenha = senha.getText().toString().trim();
 
-            // URL do seu script PHP (se for local, use o IP da sua máquina)
-            String url = "http://192.168.0.124/api/login.php";
+            if (Pnome.isEmpty() || Psenha.isEmpty()) {
+                Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+            // ATENÇÃO: COLOQUE A SUA URL AQUI
+            String url = "https://api-dspi.whyguiih.workers.dev/";
+
+            JSONObject jsonBody = new JSONObject();
+            try {
+                jsonBody.put("nome_usuarios", Pnome);
+                jsonBody.put("senha", Psenha);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
                     response -> {
-                        response = response.trim();
-
-                        if(response.startsWith("success")){
-                            String[] partes = response.split("\\|");
-                            String nivel = partes[1];
-
-                            Toast.makeText(
-                                    this,
-                                    "Nível: " + nivel,
-                                    Toast.LENGTH_SHORT
-                            ).show();
-
-                            Intent intent = new Intent(
-                                    LoginActivity.this,
-                                    MainActivity.class
-                            );
-
-                            intent.putExtra("nivel_de_acesso", nivel);
-                            startActivity(intent);
-                            finish();
-
-                        }else{
-                            Toast.makeText(
-                                    this,
-                                    "Usuário ou senha incorretos",
-                                    Toast.LENGTH_SHORT
-                            ).show();
+                        try {
+                            if (response.getBoolean("success")) {
+                                String nivel = response.getString("nivel");
+                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                intent.putExtra("nivel_de_acesso", nivel);
+                                startActivity(intent);
+                                finish();
+                            } else {
+                                // Agora vai ler a mensagem do Worker e mostrar no ecrã!
+                                String mensagem = response.optString("message", "Login falhou");
+                                Toast.makeText(this, mensagem, Toast.LENGTH_LONG).show();
+                            }
+                        } catch (JSONException e) {
+                            Toast.makeText(this, "Erro no formato da resposta", Toast.LENGTH_SHORT).show();
                         }
                     },
-                    error -> Toast.makeText(this, "Erro de conexão", Toast.LENGTH_SHORT).show()) {
+                    error -> {
+                        Log.e("VOLLEY_ERROR", "Erro de Servidor: " + error.toString());
+                        Toast.makeText(this, "Erro interno do servidor. Tente mais tarde.", Toast.LENGTH_LONG).show();
+                    }) {
                 @Override
-                protected Map<String, String> getParams() {
-                    Map<String, String> params = new HashMap<>();
-                    params.put("nome_usuarios", Pnome);
-                    params.put("senha", Psenha);
-                    return params;
+                public Map<String, String> getHeaders() {
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("Content-Type", "application/json");
+                    return headers;
                 }
             };
 
-            Volley.newRequestQueue(this).add(stringRequest);
+            Volley.newRequestQueue(this).add(jsonObjectRequest);
         });
     }
 }
