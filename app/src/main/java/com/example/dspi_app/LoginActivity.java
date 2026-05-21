@@ -3,17 +3,30 @@ package com.example.dspi_app;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
+import android.widget.*;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.splashscreen.SplashScreen;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import java.util.HashMap;
+import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        // INSTALANDO A SPLASH
+        SplashScreen.installSplashScreen(this);
+
         super.onCreate(savedInstanceState);
 
         // Tela cheia (Edge-to-Edge) para o gradiente preencher até a bateria
@@ -28,17 +41,61 @@ public class LoginActivity extends AppCompatActivity {
             return WindowInsetsCompat.CONSUMED;
         });
 
+        EditText nome = findViewById(R.id.inputEmail);
+        EditText senha = findViewById(R.id.inputSenha);
+
+
         // Evento de clique do Botão de Login
         Button btnEntrar = findViewById(R.id.btnEntrar);
         btnEntrar.setOnClickListener(v -> {
-            // Mais para frente você coloca a lógica de validar e-mail/senha aqui!
+            String Pnome = nome.getText().toString().trim();
+            String Psenha = senha.getText().toString().trim();
 
-            // Vai para a tela inicial (MainActivity)
-            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            startActivity(intent);
+            // URL do seu script PHP (se for local, use o IP da sua máquina)
+            String url = "http://192.168.0.124/api/login.php";
 
-            // Finaliza a tela de login para que o usuário não volte a ela se apertar "Voltar" no celular
-            finish();
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                    response -> {
+                        response = response.trim();
+
+                        if(response.startsWith("success")){
+                            String[] partes = response.split("\\|");
+                            String nivel = partes[1];
+
+                            Toast.makeText(
+                                    this,
+                                    "Nível: " + nivel,
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                            Intent intent = new Intent(
+                                    LoginActivity.this,
+                                    MainActivity.class
+                            );
+
+                            intent.putExtra("nivel_de_acesso", nivel);
+                            startActivity(intent);
+                            finish();
+
+                        }else{
+                            Toast.makeText(
+                                    this,
+                                    "Usuário ou senha incorretos",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        }
+                    },
+                    error -> Toast.makeText(this, "Erro de conexão", Toast.LENGTH_SHORT).show()) {
+                @Override
+                protected Map<String, String> getParams() {
+                    Map<String, String> params = new HashMap<>();
+                    params.put("nome_usuarios", Pnome);
+                    params.put("senha", Psenha);
+                    return params;
+                }
+            };
+
+            Volley.newRequestQueue(this).add(stringRequest);
         });
     }
 }
