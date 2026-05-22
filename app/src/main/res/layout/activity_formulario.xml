@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/glassContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/bg_glass"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigationContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="PREENCHIMENTO"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:fontFamily="@font/neo_sans"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <HorizontalScrollView
+            android:id="@+id/tabsScroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:scrollbars="none"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp">
+
+                <TextView android:id="@+id/tab_equipe" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Dados da Equipe" android:padding="10dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginEnd="8dp"/>
+                <TextView android:id="@+id/tab_conhecimentos" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Conhecimentos" android:padding="10dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginEnd="8dp"/>
+                <TextView android:id="@+id/tab_recursos" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Recursos Aplicados" android:padding="10dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginEnd="8dp"/>
+                <TextView android:id="@+id/tab_cronograma" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Cronograma" android:padding="10dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginEnd="8dp"/>
+                <TextView android:id="@+id/tab_canva" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Canva" android:padding="10dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginEnd="8dp"/>
+                <TextView android:id="@+id/tab_curriculo" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Currículo" android:padding="10dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginEnd="8dp"/>
+                <TextView android:id="@+id/tab_empresa" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empresa" android:padding="10dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginEnd="8dp"/>
+                <TextView android:id="@+id/tab_pitch" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pitch" android:padding="10dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginEnd="8dp"/>
+                <TextView android:id="@+id/tab_ia" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Uso de IA" android:padding="10dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginEnd="8dp"/>
+                <TextView android:id="@+id/tab_planilha" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Planilha Acompanhamento" android:padding="10dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginEnd="8dp"/>
+                <TextView android:id="@+id/tab_complementares" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Info Complementares" android:padding="10dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginEnd="8dp"/>
+                <TextView android:id="@+id/tab_completude" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Info Completude" android:padding="10dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans"/>
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintTop_toBottomOf="@id/tabsScroll"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp">
+
+                <LinearLayout android:id="@+id/guia_dados_equipe" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="visible">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Nome completo do integrante" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textPersonName"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Unidade que faz parte" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Contato" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="phone"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Área de atuação do curso" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Função no projeto" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Nome do projeto" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/guia_conhecimentos" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Plano de curso" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Conhecimentos aplicados" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Capacidades aplicadas" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/guia_recursos" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Ferramentas" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Equipamentos" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Descrição do produto" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Quantidade comprada" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="number"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Quantidade utilizada" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="number"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Preço estimado" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="numberDecimal"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Unidade de medida" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Fornecedor principal / Modo de obtenção" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Disponibilidade / Pagamento / Alternativas" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/guia_cronograma" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Processo" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Etapas" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Responsável" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Data de início / Data final" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:hint="DD/MM/AAAA - DD/MM/AAAA" android:textColorHint="#99FFFFFF"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Observações" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/guia_canva" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Atividades chave / Proposta chave" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Relacionamentos e Segmentos de clientes" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Recursos chaves / Canais / Parceiros chaves" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Estrutura de custos / Fluxo de receita" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/guia_curriculo" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Nome e Data de nascimento" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="CPF e Cidade" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Telefone e E-mail" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Dados do Responsável (Nome, Número, Email)" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Habilidades e Responsabilidades no Projeto" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Por que escolheu fazer o projeto? (Aprendo mais / Prefiro trabalhar?)" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/guia_empresa" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Nome / CNPJ / Região" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Missão, Visão e Objetivos" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Problema do projeto" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/guia_pitch" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Roteiro do Pitch" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="150dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/guia_ia" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Ferramenta, Link e Licença utilizada" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Etapa de uso e Criação (prompt)" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Descreva como foi utilizada" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/guia_planilha" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tarefas / Alunos e Professor da área" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Início e Fim (Previsto / Realizado) e Duração" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Status e Descrição da Tarefa" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Dificuldades enxergadas / Impacto em outras tarefas" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/guia_complementares" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Projeto / Nome comercial / Coordenadores" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Integrantes (ENAI cax) e Email Google" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Camiseta, RG, Idade" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/guia_completude" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Status Geral (Não iniciada, Parcial, Completa)" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:paddingHorizontal="12dp" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Qtd / Equipe e Responsável" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Links de Fotos (Equipe e Etapas)" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textUri"/>
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Checklist (Canvas, Pitch Escrito/Video, Cronograma)" android:textColor="#FFFFFF" android:fontFamily="@font/neo_sans" android:layout_marginBottom="4dp"/>
+                    <EditText android:layout_width="match_parent" android:layout_height="80dp" android:gravity="top|start" android:padding="12dp" android:background="@drawable/bg_input_glass" android:textColor="#FFFFFF" android:layout_marginBottom="12dp" android:fontFamily="@font/neo_sans" android:inputType="textMultiLine"/>
+                </LinearLayout>
+
+            </FrameLayout>
+        </ScrollView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <include
+        android:id="@+id/bottomNavigationContainer"
+        layout="@layout/bottom_nav"
+        android:layout_width="0dp"
+        android:layout_height="85dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
