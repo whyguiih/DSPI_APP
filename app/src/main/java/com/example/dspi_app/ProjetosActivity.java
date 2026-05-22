@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -34,6 +35,21 @@ public class ProjetosActivity extends AppCompatActivity {
 
         // Ativa o menu e o bloqueio automaticamente nesta tela também!
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
+
+        // === CÓDIGO NOVO: Ação do botão para abrir o Formulário ===
+        Button btnAbrirFormulario = findViewById(R.id.btnAbrirFormulario);
+        btnAbrirFormulario.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Cria a intenção de ir da ProjetosActivity para a FormularioActivity
+                Intent intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
+
+                // Repassa o nível de acesso para a próxima tela (opcional, mas recomendado para manter a consistência do menu)
+                intent.putExtra("nivel_de_acesso", nivel);
+
+                startActivity(intent);
+            }
+        });
     }
 
     private void configurarBolhaAnimada() {
