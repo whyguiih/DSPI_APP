@@ -32,6 +32,7 @@ public class ProjetosActivity extends AppCompatActivity {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_projetos);
 
+        // APLICA O RECUO EXATAMENTE NO PAI PARA NÃO INVADIR NENHUMA BARRA!
         View mainLayout = findViewById(R.id.mainLayout);
         ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -58,7 +59,7 @@ public class ProjetosActivity extends AppCompatActivity {
 
         // Mocks dos dados baseados no seu SQL Cloudflare D1
         List<Projeto> listaProjetos = carregarDadosMock();
-        rvProjetos.setAdapter(new ProjetoAdapter(listaProjetos, this::abrirPáginaDetalhes));
+        rvProjetos.setAdapter(new ProjetoAdapter(listaProjetos, this::abrirPaginaDetalhes));
     }
 
     private void configurarBolhaAnimada() {
@@ -77,11 +78,11 @@ public class ProjetosActivity extends AppCompatActivity {
         });
     }
 
-    private void abrirPáginaDetalhes(Projeto projeto) {
+    private void abrirPaginaDetalhes(Projeto projeto) {
         Intent intent = new Intent(ProjetosActivity.this, ProjetoDetalhesActivity.class);
         intent.putExtra("projeto_selecionado", projeto);
         intent.putExtra("nivel_de_acesso", nivel);
-        intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX); // Mantém a animação suave na mesma aba
+        intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
         startActivity(intent);
         overridePendingTransition(0, 0);
     }

@@ -23,14 +23,14 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_projeto_detalhes);
 
-        View mainLayout = findViewById(R.id.glassContainer);
+        // APLICA O RECUO NO PAI PRINCIPAL PARA NÃO INVADIR TOP NEM BOTTOM
+        View mainLayout = findViewById(R.id.mainLayout);
         ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(0, insets.top, 0, 0);
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
             return WindowInsetsCompat.CONSUMED;
         });
 
-        // Mantém a bolha parada na aba Projetos
         configurarBolhaFixa();
 
         String nivel = getIntent().getStringExtra("nivel_de_acesso");
@@ -39,7 +39,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         Button btnVoltar = findViewById(R.id.btnVoltar);
         btnVoltar.setOnClickListener(v -> {
             finish();
-            overridePendingTransition(0, 0); // Sai sem animação estranha
+            overridePendingTransition(0, 0); // Sai sem animação para transição perfeita
         });
 
         layoutDetalhes = findViewById(R.id.layoutDetalhesDinamicos);
@@ -81,7 +81,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
             float tabWidth = bottomNavLayout.getWidth() / 5f;
             activeBubble.getLayoutParams().width = (int) tabWidth;
             activeBubble.requestLayout();
-            // A bolha vai direto para a posição da aba "Projetos" sem animar, porque estamos na mesma "área"
             activeBubble.setTranslationX(CURRENT_TAB_INDEX * tabWidth);
         });
     }
@@ -97,7 +96,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
 
         TextView tvSub = new TextView(this);
         tvSub.setText(subtitulo);
-        tvSub.setTextColor(0xFFFFD700); // Amarelo/Dourado para destacar
+        tvSub.setTextColor(0xFFFFD700);
         tvSub.setTextSize(16);
         tvSub.setTypeface(getResources().getFont(R.font.neo_sans));
         tvSub.setPadding(0, 0, 0, 16);
@@ -109,11 +108,11 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
     private void adicionarCabecalho(String texto) {
         View linha = new View(this);
         linha.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2));
-        linha.setBackgroundColor(0x4DFFFFFF); // Branco translúcido
+        linha.setBackgroundColor(0x4DFFFFFF);
 
         TextView tv = new TextView(this);
         tv.setText(texto.toUpperCase());
-        tv.setTextColor(0xFFB3E5FC); // Azul clarinho
+        tv.setTextColor(0xFFB3E5FC);
         tv.setTextSize(14);
         tv.setTypeface(getResources().getFont(R.font.neo_sans_bold_italic));
         tv.setPadding(0, 24, 0, 12);
