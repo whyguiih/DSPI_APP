@@ -16,12 +16,8 @@
         android:theme="@style/Theme.DSPI_APP"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
-
         <activity
-            android:name=".botton_nav"
-            android:exported="false" />
-        <activity
-            android:name=".bottom_nav"
+            android:name=".ProjetoDetalhesActivity"
             android:exported="false" />
         <activity
             android:name=".LoginActivity"
@@ -29,6 +25,7 @@
             android:theme="@style/Theme.App.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -47,10 +44,9 @@
         <activity
             android:name=".ContaActivity"
             android:exported="false" />
-
         <activity
             android:name=".FormularioActivity"
             android:exported="false" />
-
     </application>
+
 </manifest>
