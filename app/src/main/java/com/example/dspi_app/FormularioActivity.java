@@ -18,12 +18,12 @@ public class FormularioActivity extends AppCompatActivity {
 
     // Declaração dos Layouts de Formulário (Subtópicos)
     private LinearLayout formEquipe, formConhecimentos, formRecursos, formCronograma,
-            formCanva, formCurriculo, formEmpresa, formPitch,
+            formCronogramaEspecifico, formCanva, formCurriculo, formEmpresa, formPitch,
             formIA, formPlanilha, formComplementares, formCompletude;
 
     // Declaração dos botões de Aba (Tópicos)
     private TextView tabEquipe, tabConhecimentos, tabRecursos, tabCronograma,
-            tabCanva, tabCurriculo, tabEmpresa, tabPitch,
+            tabCronogramaEspecifico, tabCanva, tabCurriculo, tabEmpresa, tabPitch,
             tabIA, tabPlanilha, tabComplementares, tabCompletude;
 
     @Override
@@ -51,6 +51,7 @@ public class FormularioActivity extends AppCompatActivity {
         formConhecimentos = findViewById(R.id.formConhecimentos);
         formRecursos = findViewById(R.id.formRecursos);
         formCronograma = findViewById(R.id.formCronograma);
+        formCronogramaEspecifico = findViewById(R.id.formCronogramaEspecifico);
         formCanva = findViewById(R.id.formCanva);
         formCurriculo = findViewById(R.id.formCurriculo);
         formEmpresa = findViewById(R.id.formEmpresa);
@@ -65,6 +66,7 @@ public class FormularioActivity extends AppCompatActivity {
         tabConhecimentos = findViewById(R.id.tabConhecimentos);
         tabRecursos = findViewById(R.id.tabRecursos);
         tabCronograma = findViewById(R.id.tabCronograma);
+        tabCronogramaEspecifico = findViewById(R.id.tabCronogramaEspecifico);
         tabCanva = findViewById(R.id.tabCanva);
         tabCurriculo = findViewById(R.id.tabCurriculo);
         tabEmpresa = findViewById(R.id.tabEmpresa);
@@ -86,6 +88,7 @@ public class FormularioActivity extends AppCompatActivity {
         tabConhecimentos.setOnClickListener(v -> alternarFormulario(formConhecimentos, tabConhecimentos));
         tabRecursos.setOnClickListener(v -> alternarFormulario(formRecursos, tabRecursos));
         tabCronograma.setOnClickListener(v -> alternarFormulario(formCronograma, tabCronograma));
+        tabCronogramaEspecifico.setOnClickListener(v -> alternarFormulario(formCronogramaEspecifico, tabCronogramaEspecifico));
         tabCanva.setOnClickListener(v -> alternarFormulario(formCanva, tabCanva));
         tabCurriculo.setOnClickListener(v -> alternarFormulario(formCurriculo, tabCurriculo));
         tabEmpresa.setOnClickListener(v -> alternarFormulario(formEmpresa, tabEmpresa));
@@ -102,6 +105,7 @@ public class FormularioActivity extends AppCompatActivity {
         formConhecimentos.setVisibility(View.GONE);
         formRecursos.setVisibility(View.GONE);
         formCronograma.setVisibility(View.GONE);
+        formCronogramaEspecifico.setVisibility(View.GONE);
         formCanva.setVisibility(View.GONE);
         formCurriculo.setVisibility(View.GONE);
         formEmpresa.setVisibility(View.GONE);
@@ -119,7 +123,7 @@ public class FormularioActivity extends AppCompatActivity {
     }
 
     private void destacarAba(TextView tabAtiva) {
-        TextView[] todasAbas = {tabEquipe, tabConhecimentos, tabRecursos, tabCronograma, tabCanva, tabCurriculo, tabEmpresa, tabPitch, tabIA, tabPlanilha, tabComplementares, tabCompletude};
+        TextView[] todasAbas = {tabEquipe, tabConhecimentos, tabRecursos, tabCronograma, tabCronogramaEspecifico, tabCanva, tabCurriculo, tabEmpresa, tabPitch, tabIA, tabPlanilha, tabComplementares, tabCompletude};
 
         for (TextView tab : todasAbas) {
             tab.setAlpha(0.5f); // Deixa meio transparente as inativas

@@ -49,6 +49,7 @@
                 <TextView android:id="@+id/tabConhecimentos" style="@style/TabStyle" android:text="Conhecimentos" />
                 <TextView android:id="@+id/tabRecursos" style="@style/TabStyle" android:text="Recursos" />
                 <TextView android:id="@+id/tabCronograma" style="@style/TabStyle" android:text="Cronograma" />
+                <TextView android:id="@+id/tabCronogramaEspecifico" style="@style/TabStyle" android:text="Crono. Específico" />
                 <TextView android:id="@+id/tabCanva" style="@style/TabStyle" android:text="Canva" />
                 <TextView android:id="@+id/tabCurriculo" style="@style/TabStyle" android:text="Currículo" />
                 <TextView android:id="@+id/tabEmpresa" style="@style/TabStyle" android:text="Empresa" />
@@ -74,12 +75,18 @@
                 android:layout_height="wrap_content">
 
                 <LinearLayout android:id="@+id/formEquipe" style="@style/FormContainerStyle" android:visibility="visible">
-                    <EditText style="@style/InputGlassStyle" android:hint="Nome completo do integrante" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Unidade que faz parte" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Contato" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Área de atuação do curso" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Função no projeto" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome da equipe" />
                     <EditText style="@style/InputGlassStyle" android:hint="Nome do projeto" />
+                    <EditText style="@style/InputGlassStyle" android:hint="E-mail" android:inputType="textEmailAddress" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Área de atuação do curso" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Área de atuação do projeto" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome do orientador" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome do coorientador" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome do integrante 1" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome do integrante 2" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome do integrante 3" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome do integrante 4" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome do integrante 5" />
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/formConhecimentos" style="@style/FormContainerStyle" android:visibility="gone">
@@ -100,7 +107,8 @@
                     <EditText style="@style/InputGlassStyle" android:hint="Modo de obtenção" />
                     <EditText style="@style/InputGlassStyle" android:hint="Disponibilidade" />
                     <EditText style="@style/InputGlassStyle" android:hint="Pagamento" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Alternativas consideradas / Preço total" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Alternativas consideradas" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Preço total" android:inputType="numberDecimal" />
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/formCronograma" style="@style/FormContainerStyle" android:visibility="gone">
@@ -108,15 +116,24 @@
                     <EditText style="@style/InputGlassStyle" android:hint="Etapas" />
                     <EditText style="@style/InputGlassStyle" android:hint="Responsável" />
                     <EditText style="@style/InputGlassStyle" android:hint="Data de início" android:inputType="date" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Data de final" android:inputType="date" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Data final" android:inputType="date" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Observações" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/formCronogramaEspecifico" style="@style/FormContainerStyle" android:visibility="gone">
+                    <EditText style="@style/InputGlassStyle" android:hint="Processos" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Etapas" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Responsável" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Data de início" android:inputType="date" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Data final" android:inputType="date" />
                     <EditText style="@style/InputGlassStyle" android:hint="Observações" />
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/formCanva" style="@style/FormContainerStyle" android:visibility="gone">
-                    <EditText style="@style/InputGlassStyle" android:hint="Atividades chave" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Proposta de valor (chave)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Atividades chaves" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Proposta chave" />
                     <EditText style="@style/InputGlassStyle" android:hint="Relacionamentos com clientes" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Segmentos dos clientes" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Segmentos de clientes" />
                     <EditText style="@style/InputGlassStyle" android:hint="Recursos chaves" />
                     <EditText style="@style/InputGlassStyle" android:hint="Canais" />
                     <EditText style="@style/InputGlassStyle" android:hint="Estrutura de custos" />
@@ -129,16 +146,18 @@
                     <EditText style="@style/InputGlassStyle" android:hint="Data de nascimento" android:inputType="date" />
                     <EditText style="@style/InputGlassStyle" android:hint="CPF" android:inputType="number" />
                     <EditText style="@style/InputGlassStyle" android:hint="Empresa vinculada" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Projeto / Telefone" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Projeto" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Telefone" android:inputType="phone" />
                     <EditText style="@style/InputGlassStyle" android:hint="E-mail" android:inputType="textEmailAddress" />
                     <EditText style="@style/InputGlassStyle" android:hint="Nome do responsável" />
                     <EditText style="@style/InputGlassStyle" android:hint="Número do responsável" android:inputType="phone" />
                     <EditText style="@style/InputGlassStyle" android:hint="Email do responsável" android:inputType="textEmailAddress" />
                     <EditText style="@style/InputGlassStyle" android:hint="Habilidades" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Responsabilidades no projeto" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Fez projeto?" />
                     <EditText style="@style/InputGlassStyle" android:hint="Cidade" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Por que escolheu fazer o projeto?" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Aprendo mais? Prefiro trabalhar?" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Motivo do projeto" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Aprendo mais..." />
+                    <EditText style="@style/InputGlassStyle" android:hint="Prefiro trabalhar..." />
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/formEmpresa" style="@style/FormContainerStyle" android:visibility="gone">
@@ -166,44 +185,112 @@
 
                 <LinearLayout android:id="@+id/formPlanilha" style="@style/FormContainerStyle" android:visibility="gone">
                     <EditText style="@style/InputGlassStyle" android:hint="Tarefas" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Alunos responsáveis" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Aluno responsável" />
                     <EditText style="@style/InputGlassStyle" android:hint="Professor da área" />
                     <EditText style="@style/InputGlassStyle" android:hint="Início previsto" android:inputType="date" />
                     <EditText style="@style/InputGlassStyle" android:hint="Fim previsto" android:inputType="date" />
                     <EditText style="@style/InputGlassStyle" android:hint="Início realizado" android:inputType="date" />
                     <EditText style="@style/InputGlassStyle" android:hint="Fim realizado" android:inputType="date" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Duração" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Status (ex: em andamento, concluído)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Duração (dias)" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Status" />
                     <EditText style="@style/InputGlassStyle" android:hint="Descrição da tarefa" />
                     <EditText style="@style/InputGlassStyle" android:hint="Dificuldades enxergadas" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Qual o impacto desta tarefa em outras?" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Impacto nas outras tarefas" />
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/formComplementares" style="@style/FormContainerStyle" android:visibility="gone">
-                    <EditText style="@style/InputGlassStyle" android:hint="Projeto (número)" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Nome comercial (unidade)" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Coordenador pedagógico" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Unidade (Nome Comercial)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Coordenador Pedagógico" />
                     <EditText style="@style/InputGlassStyle" android:hint="Gestor" />
-                    <EditText style="@style/InputGlassStyle" android:hint="ENAI cax (integrantes)" />
-                    <EditText style="@style/InputGlassStyle" android:hint="E-mail google" android:inputType="textEmailAddress" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Tamanho da Camiseta" />
-                    <EditText style="@style/InputGlassStyle" android:hint="RG" android:inputType="number" />
-                    <EditText style="@style/InputGlassStyle" android:hint="CPF" android:inputType="number" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Data de nascimento" android:inputType="date" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Idade" android:inputType="number" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Telefone" android:inputType="phone" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Qtd projetos" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Empresa" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Projeto" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Descrição do Projeto" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Quantidade de Projetos" android:inputType="number" />
+
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Integrante 1" android:textColor="#FFF" android:layout_marginTop="16dp" android:textStyle="bold"/>
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome (ENAI CAX 1)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="E-mail 1" android:inputType="textEmailAddress" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Camiseta 1" />
+                    <EditText style="@style/InputGlassStyle" android:hint="RG 1" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="CPF 1" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Data de Nascimento 1" android:inputType="date" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Idade 1" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Telefone 1" android:inputType="phone" />
+
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Integrante 2" android:textColor="#FFF" android:layout_marginTop="16dp" android:textStyle="bold"/>
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome (ENAI CAX 2)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="E-mail 2" android:inputType="textEmailAddress" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Camiseta 2" />
+                    <EditText style="@style/InputGlassStyle" android:hint="RG 2" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="CPF 2" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Data de Nascimento 2" android:inputType="date" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Idade 2" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Telefone 2" android:inputType="phone" />
+
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Integrante 3" android:textColor="#FFF" android:layout_marginTop="16dp" android:textStyle="bold"/>
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome (ENAI CAX 3)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="E-mail 3" android:inputType="textEmailAddress" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Camiseta 3" />
+                    <EditText style="@style/InputGlassStyle" android:hint="RG 3" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="CPF 3" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Data de Nascimento 3" android:inputType="date" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Idade 3" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Telefone 3" android:inputType="phone" />
+
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Integrante 4" android:textColor="#FFF" android:layout_marginTop="16dp" android:textStyle="bold"/>
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome (ENAI CAX 4)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="E-mail 4" android:inputType="textEmailAddress" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Camiseta 4" />
+                    <EditText style="@style/InputGlassStyle" android:hint="RG 4" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="CPF 4" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Data de Nascimento 4" android:inputType="date" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Idade 4" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Telefone 4" android:inputType="phone" />
+
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Integrante 5" android:textColor="#FFF" android:layout_marginTop="16dp" android:textStyle="bold"/>
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome (ENAI CAX 5)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="E-mail 5" android:inputType="textEmailAddress" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Camiseta 5" />
+                    <EditText style="@style/InputGlassStyle" android:hint="RG 5" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="CPF 5" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Data de Nascimento 5" android:inputType="date" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Idade 5" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Telefone 5" android:inputType="phone" />
+
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Integrante 6" android:textColor="#FFF" android:layout_marginTop="16dp" android:textStyle="bold"/>
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome (ENAI CAX 6)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="E-mail 6" android:inputType="textEmailAddress" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Camiseta 6" />
+                    <EditText style="@style/InputGlassStyle" android:hint="RG 6" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="CPF 6" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Data de Nascimento 6" android:inputType="date" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Idade 6" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Telefone 6" android:inputType="phone" />
+
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Integrante 7" android:textColor="#FFF" android:layout_marginTop="16dp" android:textStyle="bold"/>
+                    <EditText style="@style/InputGlassStyle" android:hint="Nome (ENAI CAX 7)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="E-mail 7" android:inputType="textEmailAddress" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Camiseta 7" />
+                    <EditText style="@style/InputGlassStyle" android:hint="RG 7" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="CPF 7" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Data de Nascimento 7" android:inputType="date" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Idade 7" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Telefone 7" android:inputType="phone" />
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/formCompletude" style="@style/FormContainerStyle" android:visibility="gone">
-                    <EditText style="@style/InputGlassStyle" android:hint="Status Geral (Não iniciada, Parcial, Completa)" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Qtd - ID" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Quantidade" android:inputType="number" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Equipe / Unidade / Empresa" />
                     <EditText style="@style/InputGlassStyle" android:hint="Responsável pelo preenchimento" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Fotos (equipe) - Link/Ref" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Fotos (etapas do projeto) - Link/Ref" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Canvas preenchido? (Sim/Não)" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Pitch estruturado? (Sim/Não)" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Pitch (vídeo pronto)?" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Dados da Equipe (Status)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Conhecimentos (Status)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Recursos Aplicados (Status)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Canvas Preencher (Status)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Pitch Escrito (Status)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Pitch Vídeo (Status)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Cronograma (Status)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Foto Equipe (Status)" />
+                    <EditText style="@style/InputGlassStyle" android:hint="Fotos Etapa Projeto (Status)" />
                 </LinearLayout>
 
             </FrameLayout>
