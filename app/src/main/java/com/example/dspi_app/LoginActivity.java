@@ -48,7 +48,7 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             // ATENÇÃO: COLOQUE A SUA URL AQUI
-            String url = "https://api-dspi.whyguiih.workers.dev/";
+            String url = "https://api-dspi.whyguiih.workers.dev/login";
 
             JSONObject jsonBody = new JSONObject();
             try {
@@ -64,7 +64,15 @@ public class LoginActivity extends AppCompatActivity {
                             if (response.getBoolean("success")) {
                                 String nivel = response.getString("nivel");
                                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+
                                 intent.putExtra("nivel_de_acesso", nivel);
+                                intent.putExtra("email_usuario", Pnome);
+
+                                getSharedPreferences("SESSAO_USER", MODE_PRIVATE)
+                                        .edit()
+                                        .putString("email_logado", Pnome)
+                                        .apply();
+
                                 startActivity(intent);
                                 finish();
                             } else {

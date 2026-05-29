@@ -1,8 +1,10 @@
 package com.example.dspi_app;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,6 +12,10 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import android.widget.Button;
+import android.widget.Toast;
+
+import org.json.JSONObject;
 
 public class FormularioActivity extends AppCompatActivity {
 
@@ -25,6 +31,15 @@ public class FormularioActivity extends AppCompatActivity {
     private TextView tabEquipe, tabConhecimentos, tabRecursos, tabCronograma,
             tabCronogramaEspecifico, tabCanva, tabCurriculo, tabEmpresa, tabPitch,
             tabIA, tabPlanilha, tabComplementares, tabCompletude;
+
+    private EditText etNomeEquipe, etNomeProjeto, etEmail, etAreaCurso, etAreaProjeto,
+            etNomeOrientador, etNomeCoorientador, etIntegrante1, etIntegrante2,
+            etIntegrante3, etIntegrante4, etIntegrante5;
+
+    private Button btnEditarDados;
+    private boolean modoEdicao = false;
+
+    private String emailUsuario;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +60,22 @@ public class FormularioActivity extends AppCompatActivity {
         String nivel = getIntent().getStringExtra("nivel_de_acesso");
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
         configurarBolhaAnimada();
+
+        emailUsuario = getSharedPreferences("SESSAO_USER", MODE_PRIVATE)
+                .getString("email_logado", "");
+
+        etNomeEquipe = findViewById(R.id.etNomeEquipe);
+        etNomeProjeto = findViewById(R.id.etNomeProjeto);
+        etEmail = findViewById(R.id.etEmail);
+        etAreaCurso = findViewById(R.id.etAreaCurso);
+        etAreaProjeto = findViewById(R.id.etAreaProjeto);
+        etNomeOrientador = findViewById(R.id.etNomeOrientador);
+        etNomeCoorientador = findViewById(R.id.etNomeCoorientador);
+        etIntegrante1 = findViewById(R.id.etIntegrante1);
+        etIntegrante2 = findViewById(R.id.etIntegrante2);
+        etIntegrante3 = findViewById(R.id.etIntegrante3);
+        etIntegrante4 = findViewById(R.id.etIntegrante4);
+        etIntegrante5 = findViewById(R.id.etIntegrante5);
 
         // Inicializar Forms
         formEquipe = findViewById(R.id.formEquipe);
@@ -76,11 +107,31 @@ public class FormularioActivity extends AppCompatActivity {
         tabComplementares = findViewById(R.id.tabComplementares);
         tabCompletude = findViewById(R.id.tabCompletude);
 
+        btnEditarDados = findViewById(R.id.btnEditarDados);
+
+        atualizarTodosFormularios(false);
+
+        btnEditarDados.setOnClickListener(v -> {
+            modoEdicao = !modoEdicao;
+            atualizarTodosFormularios(modoEdicao);
+
+            if (modoEdicao) {
+                btnEditarDados.setText("Salvar Alterações");
+            } else {
+                btnEditarDados.setText("Editar Dados");
+                // Dispara o envio dos dados da equipe
+                salvarEquipeNoCloudflare();
+            }
+        });
+
         // Configurar Eventos de Clique
         configurarCliques();
 
         // Destacar a primeira aba por padrão ao abrir a tela
         destacarAba(tabEquipe);
+
+        // 🎯 AQUI ADICIONAMOS A CHAMADA PARA BUSCAR OS DADOS NO BANCO ASSIM QUE A TELA ABRE:
+        carregarDadosExistentesDoBanco();
     }
 
     private void configurarCliques() {
@@ -100,7 +151,6 @@ public class FormularioActivity extends AppCompatActivity {
     }
 
     private void alternarFormulario(LinearLayout formAtivo, TextView tabAtiva) {
-        // Esconder todos os formulários
         formEquipe.setVisibility(View.GONE);
         formConhecimentos.setVisibility(View.GONE);
         formRecursos.setVisibility(View.GONE);
@@ -115,24 +165,109 @@ public class FormularioActivity extends AppCompatActivity {
         formComplementares.setVisibility(View.GONE);
         formCompletude.setVisibility(View.GONE);
 
-        // Mostrar apenas o formulário clicado
         formAtivo.setVisibility(View.VISIBLE);
-
-        // Destacar a aba clicada
         destacarAba(tabAtiva);
+    }
+
+    // 🎯 NOVO MÉTODO: Carrega os dados usando o repositório centralizado
+    private void carregarDadosExistentesDoBanco() {
+        FormularioRepository repository = new FormularioRepository(this);
+
+        // Note o FormularioRepository.OnDadosCarregadosListener aqui:
+        repository.carregarEquipe(new FormularioRepository.OnDadosCarregadosListener() {
+            @Override
+            public void onSucesso(JSONObject dados) {
+                etNomeEquipe.setText(dados.optString("nome_equipe", ""));
+                etNomeProjeto.setText(dados.optString("nome_projeto", ""));
+                etEmail.setText(dados.optString("email", ""));
+                etAreaCurso.setText(dados.optString("area_atuacao_curso", ""));
+                etAreaProjeto.setText(dados.optString("area_atuacao_projeto", ""));
+                etNomeOrientador.setText(dados.optString("nome_orientador", ""));
+                etNomeCoorientador.setText(dados.optString("nome_coorientador", ""));
+                etIntegrante1.setText(dados.optString("nome_integrante", ""));
+                etIntegrante2.setText(dados.optString("nome_integrante2", ""));
+                etIntegrante3.setText(dados.optString("nome_integrante3", ""));
+                etIntegrante4.setText(dados.optString("nome_integrante4", ""));
+                etIntegrante5.setText(dados.optString("nome_integrante5", ""));
+            }
+
+            @Override
+            public void onNaoEncontrado() {
+                Toast.makeText(FormularioActivity.this, "Preencha sua equipe pela primeira vez.", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onErro(String erro) {
+                android.util.Log.e("ERRO_CARREGAR", erro);
+            }
+        });
+    }
+
+    // 🎯 REFACTOR: Método encolheu porque agora usa o FormularioRepository!
+    private void salvarEquipeNoCloudflare() {
+        FormularioRepository repository = new FormularioRepository(this);
+
+        repository.salvarEquipe(
+                etNomeEquipe.getText().toString().trim(),
+                etNomeProjeto.getText().toString().trim(),
+                etEmail.getText().toString().trim(),
+                etAreaCurso.getText().toString().trim(),
+                etAreaProjeto.getText().toString().trim(),
+                etNomeOrientador.getText().toString().trim(),
+                etNomeCoorientador.getText().toString().trim(),
+                etIntegrante1.getText().toString().trim(),
+                etIntegrante2.getText().toString().trim(),
+                etIntegrante3.getText().toString().trim(),
+                etIntegrante4.getText().toString().trim(),
+                etIntegrante5.getText().toString().trim()
+        );
+    }
+
+    private void definirCamposEditaveis(LinearLayout formulario, boolean habilitado) {
+        for (int i = 0; i < formulario.getChildCount(); i++) {
+            View view = formulario.getChildAt(i);
+            if (view instanceof android.widget.EditText) {
+                android.widget.EditText editText = (android.widget.EditText) view;
+                editText.setEnabled(habilitado);
+                editText.setFocusable(habilitado);
+                editText.setFocusableInTouchMode(habilitado);
+                editText.setClickable(habilitado);
+
+                editText.setTextColor(android.graphics.Color.WHITE);
+                editText.setHintTextColor(android.graphics.Color.parseColor("#80FFFFFF"));
+
+                if (!habilitado) {
+                    editText.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#66FFFFFF")));
+                } else {
+                    editText.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#FFFFFF")));
+                }
+            }
+        }
+    }
+
+    private void atualizarTodosFormularios(boolean habilitado) {
+        definirCamposEditaveis(formEquipe, habilitado);
+        definirCamposEditaveis(formConhecimentos, habilitado);
+        definirCamposEditaveis(formRecursos, habilitado);
+        definirCamposEditaveis(formCronograma, habilitado);
+        definirCamposEditaveis(formCronogramaEspecifico, habilitado);
+        definirCamposEditaveis(formCanva, habilitado);
+        definirCamposEditaveis(formCurriculo, habilitado);
+        definirCamposEditaveis(formEmpresa, habilitado);
+        definirCamposEditaveis(formPitch, habilitado);
+        definirCamposEditaveis(formIA, habilitado);
+        definirCamposEditaveis(formPlanilha, habilitado);
+        definirCamposEditaveis(formComplementares, habilitado);
+        definirCamposEditaveis(formCompletude, habilitado);
     }
 
     private void destacarAba(TextView tabAtiva) {
         TextView[] todasAbas = {tabEquipe, tabConhecimentos, tabRecursos, tabCronograma, tabCronogramaEspecifico, tabCanva, tabCurriculo, tabEmpresa, tabPitch, tabIA, tabPlanilha, tabComplementares, tabCompletude};
-
         for (TextView tab : todasAbas) {
-            tab.setAlpha(0.5f); // Deixa meio transparente as inativas
+            tab.setAlpha(0.5f);
         }
-
-        tabAtiva.setAlpha(1.0f); // Deixa 100% opaca a aba que está ativa
+        tabAtiva.setAlpha(1.0f);
     }
-
-    // --- MÉTODOS PARA MANTER A ILUSÃO VISUAL DE UMA ÚNICA TELA ---
 
     private void configurarBolhaAnimada() {
         int oldTabIndex = getIntent().getIntExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
@@ -153,7 +288,6 @@ public class FormularioActivity extends AppCompatActivity {
     @Override
     public void finish() {
         super.finish();
-        // Remove a animação de deslize se o usuário apertar o botão "Voltar" do celular
         overridePendingTransition(0, 0);
     }
 }

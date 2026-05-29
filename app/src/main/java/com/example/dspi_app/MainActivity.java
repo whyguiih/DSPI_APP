@@ -34,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
         configurarBolhaAnimada();
         configurarMenuLateral();
         String nivel = getIntent().getStringExtra("nivel_de_acesso");
+        String email = getIntent().getStringExtra("email_usuario");
 
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
     }

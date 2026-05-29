@@ -25,6 +25,7 @@ import java.util.List;
 public class ProjetosActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 1; // 1 = Projetos
     private String nivel;
+    private String email;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +44,7 @@ public class ProjetosActivity extends AppCompatActivity {
         configurarBolhaAnimada();
 
         nivel = getIntent().getStringExtra("nivel_de_acesso");
+        email = getIntent().getStringExtra("email_usuario");
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         Button btnAbrirFormulario = findViewById(R.id.btnAbrirFormulario);
@@ -50,6 +52,8 @@ public class ProjetosActivity extends AppCompatActivity {
             Intent intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
             intent.putExtra("nivel_de_acesso", nivel);
             intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
+
+            intent.putExtra("email_usuario", email);
             startActivity(intent);
             overridePendingTransition(0, 0);
         });

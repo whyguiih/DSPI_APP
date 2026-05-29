@@ -59,7 +59,6 @@ public class ConfiguradorMenu {
 
         Intent intent = new Intent(activity, targetActivity);
         intent.putExtra("OLD_TAB_INDEX", currentTabIndex);
-        intent.putExtra("nivel_de_acesso", nivel); // Garante o envio do nível correto
         activity.startActivity(intent);
         activity.overridePendingTransition(0, 0);
         activity.finish();

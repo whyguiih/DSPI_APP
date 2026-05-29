@@ -62,37 +62,50 @@
         </HorizontalScrollView>
 
         <ScrollView
+            android:id="@+id/formScroll"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
             android:paddingHorizontal="16dp"
             app:layout_constraintTop_toBottomOf="@id/tabScrollView"
-            app:layout_constraintBottom_toBottomOf="parent">
+            app:layout_constraintBottom_toTopOf="@id/btnEditarDados">
 
-            <FrameLayout
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
                 <LinearLayout android:id="@+id/formEquipe" style="@style/FormContainerStyle" android:visibility="visible">
-                    <EditText style="@style/InputGlassStyle" android:hint="Nome da equipe" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Nome do projeto" />
-                    <EditText style="@style/InputGlassStyle" android:hint="E-mail" android:inputType="textEmailAddress" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Área de atuação do curso" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Área de atuação do projeto" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Nome do orientador" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Nome do coorientador" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Nome do integrante 1" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Nome do integrante 2" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Nome do integrante 3" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Nome do integrante 4" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Nome do integrante 5" />
+                    <EditText android:id="@+id/etNomeEquipe" style="@style/InputGlassStyle" android:hint="Nome da equipe" />
+                    <EditText android:id="@+id/etNomeProjeto" style="@style/InputGlassStyle" android:hint="Nome do projeto" />
+                    <EditText android:id="@+id/etEmail" style="@style/InputGlassStyle" android:hint="E-mail" android:inputType="textEmailAddress" />
+                    <EditText android:id="@+id/etAreaCurso" style="@style/InputGlassStyle" android:hint="Área de atuação do curso" />
+                    <EditText android:id="@+id/etAreaProjeto" style="@style/InputGlassStyle" android:hint="Área de atuação do projeto" />
+                    <EditText android:id="@+id/etNomeOrientador" style="@style/InputGlassStyle" android:hint="Nome do orientador" />
+                    <EditText android:id="@+id/etNomeCoorientador" style="@style/InputGlassStyle" android:hint="Nome do coorientador" />
+                    <EditText android:id="@+id/etIntegrante1" style="@style/InputGlassStyle" android:hint="Nome do integrante 1" />
+                    <EditText android:id="@+id/etIntegrante2" style="@style/InputGlassStyle" android:hint="Nome do integrante 2" />
+                    <EditText android:id="@+id/etIntegrante3" style="@style/InputGlassStyle" android:hint="Nome do integrante 3" />
+                    <EditText android:id="@+id/etIntegrante4" style="@style/InputGlassStyle" android:hint="Nome do integrante 4" />
+                    <EditText android:id="@+id/etIntegrante5" style="@style/InputGlassStyle" android:hint="Nome do integrante 5" />
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/formConhecimentos" style="@style/FormContainerStyle" android:visibility="gone">
-                    <EditText style="@style/InputGlassStyle" android:hint="Plano de curso" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Conhecimentos aplicados" />
-                    <EditText style="@style/InputGlassStyle" android:hint="Capacidades aplicadas" />
+                    <EditText
+                        android:id="@+id/inputPlanoCurso"
+                        style="@style/InputGlassStyle"
+                        android:hint="Plano de curso" />
+
+                    <EditText
+                        android:id="@+id/inputConhecimentos"
+                        style="@style/InputGlassStyle"
+                        android:hint="Conhecimentos aplicados" />
+
+                    <EditText
+                        android:id="@+id/inputCapacidades"
+                        style="@style/InputGlassStyle"
+                        android:hint="Capacidades aplicadas" />
+                    
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/formRecursos" style="@style/FormContainerStyle" android:visibility="gone">
@@ -293,8 +306,25 @@
                     <EditText style="@style/InputGlassStyle" android:hint="Fotos Etapa Projeto (Status)" />
                 </LinearLayout>
 
-            </FrameLayout>
+            </LinearLayout>
         </ScrollView>
+        <Button
+            android:id="@+id/btnEditarDados"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:text="Editar Dados"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:fontFamily="@font/neo_sans"
+            style="@style/InputGlassStyle"
+            android:elevation="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <include
