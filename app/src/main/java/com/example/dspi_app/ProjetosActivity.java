@@ -58,12 +58,45 @@ public class ProjetosActivity extends AppCompatActivity {
             overridePendingTransition(0, 0);
         });
 
-        RecyclerView rvProjetos = findViewById(R.id.rvProjetos);
-        rvProjetos.setLayoutManager(new LinearLayoutManager(this));
+        // Configuração das duas novas listas (RecyclerViews)
+        RecyclerView rvMeusProjetos = findViewById(R.id.rvMeusProjetos);
+        RecyclerView rvOutrosProjetos = findViewById(R.id.rvOutrosProjetos);
 
-        // Mocks dos dados baseados no seu SQL Cloudflare D1
-        List<Projeto> listaProjetos = carregarDadosMock();
-        rvProjetos.setAdapter(new ProjetoAdapter(listaProjetos, this::abrirPaginaDetalhes));
+        rvMeusProjetos.setLayoutManager(new LinearLayoutManager(this));
+        rvOutrosProjetos.setLayoutManager(new LinearLayoutManager(this));
+
+        // Separando os dados para as duas sessões
+        List<Projeto> todosProjetos = carregarDadosMock();
+        List<Projeto> meusProjetos = new ArrayList<>();
+        List<Projeto> outrosProjetos = new ArrayList<>();
+
+        // TODO: Substitua essa lógica no futuro pela lógica do banco de dados Cloudflare D1
+        // Aqui estamos apenas simulando: Se o nome do projeto tiver "Drones", conta como "Meu Projeto"
+        for (Projeto p : todosProjetos) {
+            if (p.getNomeProjeto().contains("Drones")) {
+                meusProjetos.add(p);
+            } else {
+                outrosProjetos.add(p);
+            }
+        }
+
+        // Lógica de visibilidade: Esconder "Seus Projetos" se não houver nenhum
+        TextView tvSeusProjetos = findViewById(R.id.tvSeusProjetos);
+        if (meusProjetos.isEmpty()) {
+            tvSeusProjetos.setVisibility(View.GONE);
+            rvMeusProjetos.setVisibility(View.GONE);
+        } else {
+            rvMeusProjetos.setAdapter(new ProjetoAdapter(meusProjetos, this::abrirPaginaDetalhes));
+        }
+
+        // Popular a lista de Outros Projetos
+        TextView tvOutrosProjetos = findViewById(R.id.tvOutrosProjetos);
+        if (outrosProjetos.isEmpty()) {
+            tvOutrosProjetos.setVisibility(View.GONE);
+            rvOutrosProjetos.setVisibility(View.GONE);
+        } else {
+            rvOutrosProjetos.setAdapter(new ProjetoAdapter(outrosProjetos, this::abrirPaginaDetalhes));
+        }
     }
 
     private void configurarBolhaAnimada() {
@@ -121,10 +154,25 @@ public class ProjetosActivity extends AppCompatActivity {
                 "Fabricantes de microcontroladores (ESP32), sindicatos rurais.",
                 "Instalar 50 sensores nas fazendas parceiras.", "Dificuldade de sinal 4G no campo."
         ));
+        // Adicionei mais um de exemplo para a lista de "Outros Projetos" ficar com mais itens
+        lista.add(new Projeto(
+                "Plataforma de IA para Varejo", "Equipe Inova", "Em Andamento",
+                "Carlos, Beatriz", "Prof. Almeida",
+                "Prever demanda de estoque com base em clima e sazonalidade.",
+                "Mercados de médio porte.",
+                "Modelos de Machine Learning treinados em histórico de vendas.",
+                "Servidores em nuvem, base de dados SQL.",
+                "Treinamento para a equipe de gestão.",
+                "Dashboard web intuitivo.",
+                "Licenças de software e Cloud.",
+                "Assinatura anual.",
+                "Empresas provedoras de dados meteorológicos.",
+                "Finalizar primeira versão do painel.", "Limpeza e inconsistência de dados dos clientes."
+        ));
         return lista;
     }
 
-    // Adaptador interno do RecyclerView
+    // Adaptador interno do RecyclerView mantido intacto
     public static class ProjetoAdapter extends RecyclerView.Adapter<ProjetoAdapter.ViewHolder> {
         private final List<Projeto> projetos;
         private final OnItemClickListener listener;
