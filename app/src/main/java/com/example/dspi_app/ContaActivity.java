@@ -29,10 +29,8 @@ public class ContaActivity extends AppCompatActivity {
 
         configurarBolhaAnimada();
 
-        // Pega o nível recebido
         String nivel = getIntent().getStringExtra("nivel_de_acesso");
 
-        // Ativa o menu e o bloqueio automaticamente nesta tela também!
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
     }
 

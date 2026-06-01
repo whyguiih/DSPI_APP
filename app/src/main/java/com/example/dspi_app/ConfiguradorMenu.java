@@ -9,15 +9,12 @@ public class ConfiguradorMenu {
 
     public static void ativar(Activity activity, String nivel, int currentTabIndex) {
 
-        // SE O NÍVEL VIER NULO DA INTENT, PEGAMOS O QUE JÁ ESTAVA NA ACTIVITY PARA NÃO PERDER
         if (nivel == null || nivel.isEmpty()) {
             nivel = activity.getIntent().getStringExtra("nivel_de_acesso");
         }
 
-        // Garante uma String final para usar dentro dos cliques (Lambda do Java exige variável final ou efetivamente final)
         final String nivelFinal = (nivel != null) ? nivel : "6";
 
-        // 1. Configura os botões normais de todas as páginas (INCLUINDO O INÍCIO)
         activity.findViewById(R.id.btnInicio).setOnClickListener(v ->
                 navegarPara(activity, MainActivity.class, currentTabIndex, nivelFinal)
         );
@@ -34,17 +31,14 @@ public class ConfiguradorMenu {
                 navegarPara(activity, ContaActivity.class, currentTabIndex, nivelFinal)
         );
 
-        // 2. Aplica a Regra de Bloqueio do Nível 6 no botão Empresas
         View btnEmpresas = activity.findViewById(R.id.btnEmpresas);
 
         if (nivelFinal.equals("6")) {
-            // Bloqueado para o nível 6
             btnEmpresas.setAlpha(0.4f);
             btnEmpresas.setOnClickListener(v -> {
                 Toast.makeText(activity, "Acesso Negado.", Toast.LENGTH_SHORT).show();
             });
         } else {
-            // Liberado para os outros níveis
             btnEmpresas.setAlpha(1.0f);
             btnEmpresas.setOnClickListener(v ->
                     navegarPara(activity, EmpresasActivity.class, currentTabIndex, nivelFinal)
@@ -52,9 +46,7 @@ public class ConfiguradorMenu {
         }
     }
 
-    // Navegação centralizada e revisada
     private static void navegarPara(Activity activity, Class<?> targetActivity, int currentTabIndex, String nivel) {
-        // Se o usuário já está na página que clicou, não faz nada
         if (activity.getClass() == targetActivity) return;
 
         Intent intent = new Intent(activity, targetActivity);

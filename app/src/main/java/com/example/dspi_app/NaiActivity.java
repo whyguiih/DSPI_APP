@@ -12,7 +12,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 public class NaiActivity extends AppCompatActivity {
-    private final int CURRENT_TAB_INDEX = 2; // 2 = Nai
+    private final int CURRENT_TAB_INDEX = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,10 +29,8 @@ public class NaiActivity extends AppCompatActivity {
 
         configurarBolhaAnimada();
 
-        // Pega o nível recebido
         String nivel = getIntent().getStringExtra("nivel_de_acesso");
 
-        // Ativa o menu e o bloqueio automaticamente nesta tela também!
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
     }
 

@@ -3,14 +3,11 @@ package com.example.dspi_app;
 import java.io.Serializable;
 
 public class Projeto implements Serializable {
-    // tb_equipe e informações básicas
     private String nomeProjeto, nomeEquipe, status, integrantes, orientador;
 
-    // tb_canva
     private String propostaValor, segmentosClientes, atividadesChaves, recursosChaves;
     private String relacionamentoClientes, canais, estruturaCustos, fluxoReceita, parceirosChaves;
 
-    // tb_acompanhamento_projeto
     private String tarefas, dificuldadesEnxergadas;
 
     public Projeto(String nomeProjeto, String nomeEquipe, String status, String integrantes, String orientador,

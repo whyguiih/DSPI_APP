@@ -47,7 +47,6 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
-            // ATENÇÃO: COLOQUE A SUA URL AQUI
             String url = "https://api-dspi.whyguiih.workers.dev/login";
 
             JSONObject jsonBody = new JSONObject();
@@ -76,7 +75,6 @@ public class LoginActivity extends AppCompatActivity {
                                 startActivity(intent);
                                 finish();
                             } else {
-                                // Agora vai ler a mensagem do Worker e mostrar no ecrã!
                                 String mensagem = response.optString("message", "Login falhou");
                                 Toast.makeText(this, mensagem, Toast.LENGTH_LONG).show();
                             }

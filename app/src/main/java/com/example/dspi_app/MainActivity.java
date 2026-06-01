@@ -50,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
             String titulo = "";
             int id = v.getId();
 
-            // Títulos atualizados para refletirem o novo design
             if (id == R.id.btnPitch) titulo = "Estrutura do Pitch";
             else if (id == R.id.btnCanvas) titulo = "Estrutura do Canvas";
             else if (id == R.id.btnTabelas) titulo = "Preenchimento das Tabelas";
@@ -61,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
             viewAnimator.setDisplayedChild(1);
         };
 
-        // IDs atualizados
         findViewById(R.id.btnPitch).setOnClickListener(listener);
         findViewById(R.id.btnCanvas).setOnClickListener(listener);
         findViewById(R.id.btnTabelas).setOnClickListener(listener);

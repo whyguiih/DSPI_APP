@@ -14,7 +14,6 @@ public class FormularioRepository {
     private final Context context;
     private final String BASE_URL = "https://api-dspi.whyguiih.workers.dev";
 
-    // Garanta que está exatamente como "public static interface"
     public static interface OnDadosCarregadosListener {
         void onSucesso(JSONObject dados);
         void onNaoEncontrado();
@@ -25,15 +24,10 @@ public class FormularioRepository {
         this.context = context;
     }
 
-    // Método interno para pegar o e-mail logado da SharedPreferences
     private String getEmailUsuario() {
         return context.getSharedPreferences("SESSAO_USER", Context.MODE_PRIVATE)
                 .getString("email_logado", "");
     }
-
-    // =========================================================================
-    // 👥 PARTE 1: MÉTODOS DA TABELA EQUIPE
-    // =========================================================================
 
     public void carregarEquipe(OnDadosCarregadosListener listener) {
         String emailUsuario = getEmailUsuario();
@@ -116,20 +110,4 @@ public class FormularioRepository {
 
         Volley.newRequestQueue(context).add(request);
     }
-
-
-    // =========================================================================
-    // 🧠 PARTE 2: MÉTODOS DA TABELA CONHECIMENTOS (Próxima que vamos fazer)
-    // =========================================================================
-
-    /*
-    public void salvarConhecimentos(...) {
-        // Quando criarmos, o código vai entrar aqui dentro desse mesmo arquivo!
-    }
-
-    public void carregarConhecimentos(OnDadosCarregadosListener listener) {
-        // O carregador de conhecimentos entra aqui usando a mesma Interface genérica
-    }
-    */
-
 }

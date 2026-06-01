@@ -19,15 +19,12 @@ import org.json.JSONObject;
 
 public class FormularioActivity extends AppCompatActivity {
 
-    // Índice da aba para manter a navegação apontando para "Projetos"
     private final int CURRENT_TAB_INDEX = 1;
 
-    // Declaração dos Layouts de Formulário (Subtópicos)
     private LinearLayout formEquipe, formConhecimentos, formRecursos, formCronograma,
             formCronogramaEspecifico, formCanva, formCurriculo, formEmpresa, formPitch,
             formIA, formPlanilha, formComplementares, formCompletude;
 
-    // Declaração dos botões de Aba (Tópicos)
     private TextView tabEquipe, tabConhecimentos, tabRecursos, tabCronograma,
             tabCronogramaEspecifico, tabCanva, tabCurriculo, tabEmpresa, tabPitch,
             tabIA, tabPlanilha, tabComplementares, tabCompletude;
@@ -45,7 +42,6 @@ public class FormularioActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // --- 1. CONFIGURAÇÃO PARA NÃO INVADIR AS BARRAS DE STATUS/NAVEGAÇÃO ---
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_formulario);
 
@@ -56,7 +52,6 @@ public class FormularioActivity extends AppCompatActivity {
             return WindowInsetsCompat.CONSUMED;
         });
 
-        // --- 2. CONFIGURAÇÃO DO MENU INFERIOR (FINGINDO ESTAR EM PROJETOS) ---
         String nivel = getIntent().getStringExtra("nivel_de_acesso");
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
         configurarBolhaAnimada();
@@ -77,7 +72,6 @@ public class FormularioActivity extends AppCompatActivity {
         etIntegrante4 = findViewById(R.id.etIntegrante4);
         etIntegrante5 = findViewById(R.id.etIntegrante5);
 
-        // Inicializar Forms
         formEquipe = findViewById(R.id.formEquipe);
         formConhecimentos = findViewById(R.id.formConhecimentos);
         formRecursos = findViewById(R.id.formRecursos);
@@ -92,7 +86,6 @@ public class FormularioActivity extends AppCompatActivity {
         formComplementares = findViewById(R.id.formComplementares);
         formCompletude = findViewById(R.id.formCompletude);
 
-        // Inicializar Tabs
         tabEquipe = findViewById(R.id.tabEquipe);
         tabConhecimentos = findViewById(R.id.tabConhecimentos);
         tabRecursos = findViewById(R.id.tabRecursos);
@@ -119,18 +112,14 @@ public class FormularioActivity extends AppCompatActivity {
                 btnEditarDados.setText("Salvar Alterações");
             } else {
                 btnEditarDados.setText("Editar Dados");
-                // Dispara o envio dos dados da equipe
                 salvarEquipeNoCloudflare();
             }
         });
 
-        // Configurar Eventos de Clique
         configurarCliques();
 
-        // Destacar a primeira aba por padrão ao abrir a tela
         destacarAba(tabEquipe);
 
-        // 🎯 AQUI ADICIONAMOS A CHAMADA PARA BUSCAR OS DADOS NO BANCO ASSIM QUE A TELA ABRE:
         carregarDadosExistentesDoBanco();
     }
 
@@ -169,11 +158,9 @@ public class FormularioActivity extends AppCompatActivity {
         destacarAba(tabAtiva);
     }
 
-    // 🎯 NOVO MÉTODO: Carrega os dados usando o repositório centralizado
     private void carregarDadosExistentesDoBanco() {
         FormularioRepository repository = new FormularioRepository(this);
 
-        // Note o FormularioRepository.OnDadosCarregadosListener aqui:
         repository.carregarEquipe(new FormularioRepository.OnDadosCarregadosListener() {
             @Override
             public void onSucesso(JSONObject dados) {
@@ -203,7 +190,6 @@ public class FormularioActivity extends AppCompatActivity {
         });
     }
 
-    // 🎯 REFACTOR: Método encolheu porque agora usa o FormularioRepository!
     private void salvarEquipeNoCloudflare() {
         FormularioRepository repository = new FormularioRepository(this);
 

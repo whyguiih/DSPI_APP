@@ -23,7 +23,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_projeto_detalhes);
 
-        // APLICA O RECUO NO PAI PRINCIPAL PARA NÃO INVADIR TOP NEM BOTTOM
         View mainLayout = findViewById(R.id.mainLayout);
         ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -85,7 +84,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         });
     }
 
-    // MÉTODOS AUXILIARES PARA GERAR O FRONT-END DINAMICAMENTE
     private void adicionarSecaoTitulo(String titulo, String subtitulo) {
         TextView tvTitulo = new TextView(this);
         tvTitulo.setText(titulo);
