@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingVertical="32dp">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/cadastroGlassContainer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="32dp"
+                android:padding="32dp"
+                android:background="@drawable/bg_glass"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageView
+                    android:id="@+id/logoCadastro"
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:src="@drawable/logo_integra"
+                    android:layout_marginBottom="24dp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <TextView
+                    android:id="@+id/txtCrieConta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Crie sua conta"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/neo_sans"
+                    android:layout_marginTop="16dp"
+                    app:layout_constraintTop_toBottomOf="@id/logoCadastro"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+
+                <EditText
+                    android:id="@+id/inputNome"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="32dp"
+                    android:background="@drawable/bg_input_glass"
+                    android:hint="Nome Completo"
+                    android:textColorHint="#B3FFFFFF"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:paddingHorizontal="20dp"
+                    android:inputType="textPersonName"
+                    android:fontFamily="@font/neo_sans"
+                    app:layout_constraintTop_toBottomOf="@id/txtCrieConta" />
+
+                <EditText
+                    android:id="@+id/inputEmailCadastro"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_input_glass"
+                    android:hint="E-mail Institucional ou Pessoal"
+                    android:textColorHint="#B3FFFFFF"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:paddingHorizontal="20dp"
+                    android:inputType="textEmailAddress"
+                    android:fontFamily="@font/neo_sans"
+                    app:layout_constraintTop_toBottomOf="@id/inputNome" />
+
+                <EditText
+                    android:id="@+id/inputSenhaCadastro"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_input_glass"
+                    android:hint="Senha"
+                    android:textColorHint="#B3FFFFFF"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:paddingHorizontal="20dp"
+                    android:inputType="textPassword"
+                    android:fontFamily="@font/neo_sans"
+                    app:layout_constraintTop_toBottomOf="@id/inputEmailCadastro" />
+
+                <EditText
+                    android:id="@+id/inputConfirmaSenha"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_input_glass"
+                    android:hint="Confirmar Senha"
+                    android:textColorHint="#B3FFFFFF"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:paddingHorizontal="20dp"
+                    android:inputType="textPassword"
+                    android:fontFamily="@font/neo_sans"
+                    app:layout_constraintTop_toBottomOf="@id/inputSenhaCadastro" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnCadastrar"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:layout_marginTop="32dp"
+                    android:background="@drawable/bg_button_login"
+                    android:text="CADASTRAR"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/neo_sans"
+                    android:elevation="0dp"
+                    android:stateListAnimator="@null"
+                    app:layout_constraintTop_toBottomOf="@id/inputConfirmaSenha" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="24dp"
+                    app:layout_constraintTop_toBottomOf="@id/btnCadastrar"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Já tem uma conta? "
+                        android:textColor="#B3FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans" />
+
+                    <TextView
+                        android:id="@+id/txtFazerLogin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Entrar"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans" />
+                </LinearLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
