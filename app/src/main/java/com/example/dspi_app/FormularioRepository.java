@@ -1,8 +1,6 @@
 package com.example.dspi_app;
 
 import android.content.Context;
-import android.util.Log;
-import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
@@ -14,9 +12,15 @@ public class FormularioRepository {
     private final Context context;
     private final String BASE_URL = "https://api-dspi.whyguiih.workers.dev";
 
-    public static interface OnDadosCarregadosListener {
+    public interface OnDadosCarregadosListener {
         void onSucesso(JSONObject dados);
         void onNaoEncontrado();
+        void onErro(String erro);
+    }
+
+    // Nova interface para salvar
+    public interface OnSalvoListener {
+        void onSucesso();
         void onErro(String erro);
     }
 
@@ -29,7 +33,10 @@ public class FormularioRepository {
                 .getString("email_logado", "");
     }
 
-    public void carregarEquipe(OnDadosCarregadosListener listener) {
+    // =========================================================
+    // CARREGAR
+    // =========================================================
+    public void carregarDados(String tipo, OnDadosCarregadosListener listener) {
         String emailUsuario = getEmailUsuario();
         if (emailUsuario.isEmpty()) {
             listener.onErro("Usuário não autenticado.");
@@ -39,6 +46,7 @@ public class FormularioRepository {
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("usuario", emailUsuario);
+            jsonBody.put("tipo", tipo);
         } catch (JSONException e) {
             listener.onErro("Erro ao montar requisição.");
             return;
@@ -46,13 +54,14 @@ public class FormularioRepository {
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.POST,
-                BASE_URL + "/buscar-equipe",
+                BASE_URL + "/buscar-dados",
                 jsonBody,
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
                             if (response.getBoolean("existe")) {
-                                listener.onSucesso(response.getJSONObject("data"));
+                                JSONObject data = response.optJSONObject("data");
+                                listener.onSucesso(data != null ? data : response);
                             } else {
                                 listener.onNaoEncontrado();
                             }
@@ -60,7 +69,7 @@ public class FormularioRepository {
                             listener.onErro(response.optString("error", "Erro na API"));
                         }
                     } catch (JSONException e) {
-                        listener.onErro("Erro ao processar resposta do banco.");
+                        listener.onErro("Erro ao processar resposta.");
                     }
                 },
                 error -> listener.onErro("Falha na conexão com o servidor.")
@@ -69,43 +78,34 @@ public class FormularioRepository {
         Volley.newRequestQueue(context).add(request);
     }
 
-    public void salvarEquipe(
-            String nomeEquipe, String nomeProjeto, String email,
-            String areaCurso, String areaProjeto, String orientador, String coorientador,
-            String int1, String int2, String int3, String int4, String int5) {
-
+    // =========================================================
+    // SALVAR — agora avisa via callback, sem Toast próprio
+    // =========================================================
+    public void salvarDados(String tipo, JSONObject jsonCampos, OnSalvoListener listener) {
         String emailUsuario = getEmailUsuario();
         if (emailUsuario.isEmpty()) {
-            Toast.makeText(context, "Erro: Usuário não autenticado.", Toast.LENGTH_LONG).show();
+            if (listener != null) listener.onErro("Usuário não autenticado.");
             return;
         }
 
-        JSONObject jsonBody = new JSONObject();
         try {
-            jsonBody.put("usuario", emailUsuario);
-            jsonBody.put("nome_equipe", nomeEquipe);
-            jsonBody.put("nome_projeto", nomeProjeto);
-            jsonBody.put("email", email);
-            jsonBody.put("area_atuacao_curso", areaCurso);
-            jsonBody.put("area_atuacao_projeto", areaProjeto);
-            jsonBody.put("nome_orientador", orientador);
-            jsonBody.put("nome_coorientador", coorientador);
-            jsonBody.put("nome_integrante", int1);
-            jsonBody.put("nome_integrante2", int2);
-            jsonBody.put("nome_integrante3", int3);
-            jsonBody.put("nome_integrante4", int4);
-            jsonBody.put("nome_integrante5", int5);
+            jsonCampos.put("usuario", emailUsuario);
+            jsonCampos.put("tipo", tipo);
         } catch (JSONException e) {
-            e.printStackTrace();
+            if (listener != null) listener.onErro("Erro ao montar requisição.");
             return;
         }
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.POST,
-                BASE_URL + "/salvar-equipe",
-                jsonBody,
-                response -> Toast.makeText(context, "Equipe salva com sucesso!", Toast.LENGTH_SHORT).show(),
-                error -> Toast.makeText(context, "Erro ao salvar dados da equipe.", Toast.LENGTH_SHORT).show()
+                BASE_URL + "/salvar-dados",
+                jsonCampos,
+                response -> {
+                    if (listener != null) listener.onSucesso();
+                },
+                error -> {
+                    if (listener != null) listener.onErro("Falha ao salvar: " + tipo);
+                }
         );
 
         Volley.newRequestQueue(context).add(request);
