@@ -355,7 +355,8 @@ public class FormularioActivity extends AppCompatActivity {
 
         btnEditarDados = findViewById(R.id.btnEditarDados);
 
-        if ("5".equals(nivel)) {
+        String nivelValidacao = getIntent().getStringExtra("nivel_de_acesso");
+        if (nivelValidacao != null && nivelValidacao.trim().equals("5")) {
             btnEditarDados.setVisibility(View.GONE);
         }
 
