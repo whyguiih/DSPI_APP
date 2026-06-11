@@ -33,16 +33,17 @@ public class ConfiguradorMenu {
 
         View btnEmpresas = activity.findViewById(R.id.btnEmpresas);
 
-        if (nivelFinal.equals("6")) {
-            btnEmpresas.setAlpha(0.4f);
-            btnEmpresas.setOnClickListener(v -> {
-                Toast.makeText(activity, "Acesso Negado.", Toast.LENGTH_SHORT).show();
-            });
-        } else {
+        if (nivelFinal.equals("1") || nivelFinal.equals("4")) {
             btnEmpresas.setAlpha(1.0f);
             btnEmpresas.setOnClickListener(v ->
                     navegarPara(activity, EmpresasActivity.class, currentTabIndex, nivelFinal)
             );
+        } else {
+            // Bloqueia todos os outros níveis (5, 6, etc.)
+            btnEmpresas.setAlpha(0.4f);
+            btnEmpresas.setOnClickListener(v -> {
+                Toast.makeText(activity, "Acesso Negado.", Toast.LENGTH_SHORT).show();
+            });
         }
     }
 
