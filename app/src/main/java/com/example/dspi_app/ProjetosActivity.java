@@ -72,15 +72,14 @@ public class ProjetosActivity extends AppCompatActivity {
 
         for (Projeto p : todosProjetos) {
             if ("4".equals(nivel)) {
-                // Filtra os projetos vinculados à empresa do usuário logado
-                // (Exemplo usando o mock: se o nome da equipe/empresa bater com o vínculo do usuário)
-                if (p.getNomeEquipe().contains("Gazo")) {
+                // Se for a empresa (Nível 4), os "Meus Projetos" são aqueles cujo nome da equipe bate com o seu usuário logado
+                if (p.getNomeEquipe().equalsIgnoreCase(email)) {
                     meusProjetos.add(p);
                 } else {
                     outrosProjetos.add(p);
                 }
             } else {
-                // Lógica original para estudantes e admin
+                // Lógica padrão para alunos e admin
                 if (p.getNomeProjeto().contains("Drones")) {
                     meusProjetos.add(p);
                 } else {
@@ -134,6 +133,22 @@ public class ProjetosActivity extends AppCompatActivity {
     // Substitua o método carregarDadosMock() antigo por este:
     private List<Projeto> carregarDadosMock() {
         List<Projeto> lista = new ArrayList<>();
+
+        lista.add(new Projeto(
+                "Sistema de Visão Computacional Industrial", "threeeo", "Em Andamento",
+                "Mateus, Marcos, Lucas", "Prof. Ricardo",
+                "Otimizar a linha de produção automatizada identificando rachaduras e falhas estruturais em tempo real.",
+                "Indústrias automotivas, fábricas de eletrodomésticos e estamparias de grande porte.",
+                "Treinamento de redes neurais convolucionais (YOLOv8), integração com esteiras CLP via Modbus.",
+                "Câmeras industriais GigE de alta velocidade, servidores locais com GPU dedicada.",
+                "Suporte premium com SLA de 2 horas para paradas de linha, atualizações trimestrais de modelo de IA.",
+                "Dashboard web integrado para gerentes de fábrica, alertas críticos via Telegram e E-mail.",
+                "Aquisição de licenças de software de automação industrial, hardware de processamento visual robusto.",
+                "Contrato anual de manutenção preventiva + taxa de licenciamento por câmera ativa na esteira.",
+                "Fornecedores de hardware de automação, integradores industriais e institutos de pesquisa em IA.",
+                "Montar o dataset inicial com 10.000 imagens de peças defeituosas e calibrar iluminação.",
+                "Variação brusca de iluminação natural dentro do galpão industrial afetando a acurácia do modelo."
+        ));
 
         // Dados reais extraídos de db_dspi.sql -> tb_canva (id: 41 - Equipe Gazo)
         lista.add(new Projeto(

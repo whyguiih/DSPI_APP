@@ -47,6 +47,9 @@
         <activity
             android:name=".FormularioActivity"
             android:exported="false" />
+        <activity
+            android:name=".DetalhesEmpresaActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
