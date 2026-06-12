@@ -12,10 +12,13 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import android.widget.EditText;
+import android.widget.Toast;
 
 public class ProjetoDetalhesActivity extends AppCompatActivity {
-    private final int CURRENT_TAB_INDEX = 1; // Trava o menu na aba Projetos!
+    private final int CURRENT_TAB_INDEX = 1;
     private LinearLayout layoutDetalhes;
+    private String nivel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +35,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
 
         configurarBolhaFixa();
 
-        String nivel = getIntent().getStringExtra("nivel_de_acesso");
+        nivel = getIntent().getStringExtra("nivel_de_acesso");
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         Button btnVoltar = findViewById(R.id.btnVoltar);
@@ -57,11 +60,12 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         adicionarCampo("Orientador:", p.getOrientador());
 
         adicionarCabecalho("Canvas do Projeto (tb_canva)");
-        adicionarCampo("Proposta de Valor:", p.getPropostaValor());
+        // AJUSTE NESTAS DUAS LINHAS PARA CONECTAR AOS NOVOS MÉTODOS:
+        adicionarCampo("Proposta Chave:", p.getPropostaChave());
         adicionarCampo("Segmentos de Clientes:", p.getSegmentosClientes());
         adicionarCampo("Atividades Chaves:", p.getAtividadesChaves());
         adicionarCampo("Recursos Chaves:", p.getRecursosChaves());
-        adicionarCampo("Relacionamentos:", p.getRelacionamentoClientes());
+        adicionarCampo("Relacionamentos:", p.getRelacionamentosClientes());
         adicionarCampo("Canais:", p.getCanais());
         adicionarCampo("Estrutura de Custos:", p.getEstruturaCustos());
         adicionarCampo("Fluxo de Receita:", p.getFluxoReceita());
@@ -136,5 +140,42 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
 
         layoutDetalhes.addView(tvRotulo);
         layoutDetalhes.addView(tvValor);
+
+        // Se o usuário for Nível 4 (Empresa), insere uma área de feedback para esse campo específico
+        if ("4".equals(nivel)) {
+            LinearLayout layoutComentario = new LinearLayout(this);
+            layoutComentario.setOrientation(LinearLayout.HORIZONTAL);
+            layoutComentario.setPadding(0, 4, 0, 16);
+
+            EditText etComentario = new EditText(this);
+            LinearLayout.LayoutParams lpEdit = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+            etComentario.setLayoutParams(lpEdit);
+            etComentario.setHint("Comentário da empresa sobre " + rotulo.replace(":", "") + "...");
+            etComentario.setHintTextColor(0x80FFFFFF);
+            etComentario.setTextColor(0xFFFFFFFF);
+            etComentario.setTextSize(14);
+            etComentario.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFFFFF));
+
+            Button btnSalvarComentario = new Button(this);
+            btnSalvarComentario.setText("Salvar");
+            btnSalvarComentario.setTextSize(12);
+            btnSalvarComentario.setTextColor(0xFFFFFFFF);
+            btnSalvarComentario.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF0077CC));
+
+            btnSalvarComentario.setOnClickListener(v -> {
+                String feedback = etComentario.getText().toString().trim();
+                if (!feedback.isEmpty()) {
+                    // Pronto para realizar a requisição HTTP (Volley) salvando o feedback para esta seção
+                    Toast.makeText(this, "Comentário salvo para " + rotulo, Toast.LENGTH_SHORT).show();
+                    etComentario.setText(""); // Limpa o campo após salvar
+                } else {
+                    Toast.makeText(this, "Digite algo antes de salvar.", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            layoutComentario.addView(etComentario);
+            layoutComentario.addView(btnSalvarComentario);
+            layoutDetalhes.addView(layoutComentario);
+        }
     }
 }

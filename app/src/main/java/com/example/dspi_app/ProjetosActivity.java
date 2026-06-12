@@ -47,6 +47,9 @@ public class ProjetosActivity extends AppCompatActivity {
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         Button btnAbrirFormulario = findViewById(R.id.btnAbrirFormulario);
+        if ("4".equals(nivel)) {
+            btnAbrirFormulario.setVisibility(View.GONE); // Empresas não criam/editam formulários diretamente
+        }
         btnAbrirFormulario.setOnClickListener(v -> {
             Intent intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
             intent.putExtra("nivel_de_acesso", nivel);
@@ -68,10 +71,21 @@ public class ProjetosActivity extends AppCompatActivity {
         List<Projeto> outrosProjetos = new ArrayList<>();
 
         for (Projeto p : todosProjetos) {
-            if (p.getNomeProjeto().contains("Drones")) {
-                meusProjetos.add(p);
+            if ("4".equals(nivel)) {
+                // Filtra os projetos vinculados à empresa do usuário logado
+                // (Exemplo usando o mock: se o nome da equipe/empresa bater com o vínculo do usuário)
+                if (p.getNomeEquipe().contains("Gazo")) {
+                    meusProjetos.add(p);
+                } else {
+                    outrosProjetos.add(p);
+                }
             } else {
-                outrosProjetos.add(p);
+                // Lógica original para estudantes e admin
+                if (p.getNomeProjeto().contains("Drones")) {
+                    meusProjetos.add(p);
+                } else {
+                    outrosProjetos.add(p);
+                }
             }
         }
 
@@ -117,51 +131,79 @@ public class ProjetosActivity extends AppCompatActivity {
         overridePendingTransition(0, 0);
     }
 
+    // Substitua o método carregarDadosMock() antigo por este:
     private List<Projeto> carregarDadosMock() {
         List<Projeto> lista = new ArrayList<>();
+
+        // Dados reais extraídos de db_dspi.sql -> tb_canva (id: 41 - Equipe Gazo)
         lista.add(new Projeto(
-                "Drones Logísticos Autônomos", "Equipe Gazo", "Em Andamento",
+                "Drones Logísticos Autônomos", "gazo", "Em Andamento",
                 "João, Maria, Pedro", "Prof. Silva",
-                "Revolucionar a logística de última milha reduzindo o tempo de entrega em 80%.",
-                "Hospitais regionais, indústrias metalmecânicas, e-commerces.",
-                "Navegação autônoma LiDAR, gestão de tráfego aéreo, manutenção preventiva.",
-                "Frota de drones, software de IA, equipe de engenheiros aeroespaciais.",
-                "Rastreamento em tempo real, suporte técnico dedicado.",
-                "API para e-commerces, aplicativo mobile, parcerias.",
-                "Certificação aeronáutica, baterias, salários, seguros.",
-                "Taxa por quilômetro voado, modelo DaaS.",
-                "Fabricantes de baterias, ANAC, provedores de telecomunicações.",
+                "Revolucionar a logística de última milha (last-mile) reduzindo o tempo de entrega de suprimentos médicos e peças industriais críticas em até 80%.",
+                "Hospitais regionais que necessitam de transporte urgente, indústrias metalmecânicas com unidades fabris distantes.",
+                "Desenvolvimento de algoritmos de navegação autônoma com desvio de obstáculos baseado em LiDAR, gestão de tráfego aéreo privado.",
+                "Frota de drones com tecnologia de propulsão redundante, software de inteligência artificial para controle de enxame.",
+                "Interface de rastreamento em tempo real com precisão centimétrica, suporte técnico dedicado.",
+                "Plataforma de gestão logística integrada via API para grandes e-commerces, aplicativo mobile.",
+                "Elevados investimentos em certificação aeronáutica e conformidade legal, manutenção de baterias de alta densidade.",
+                "Taxa por quilômetro voado ou por entrega realizada, mensalidade por drone alocado (DaaS).",
+                "Fabricantes de células de bateria de alto desempenho, agências reguladoras (ANAC).",
                 "Finalizar testes LiDAR, homologação ANAC.", "Forte ventania durante os voos de teste."
         ));
+
+        // Dados reais extraídos de db_dspi.sql -> tb_canva (id: 17 - Equipe b)
         lista.add(new Projeto(
-                "Monitoramento IoT Agrícola", "Equipe B", "Concluído",
+                "Monitoramento IoT Agrícola", "b", "Concluído",
                 "Lucas, Ana", "Prof. Marcos",
-                "Maximizar a produtividade agrícola através de dados precisos.",
-                "Pequenos e médios agricultores da região de Garibaldi.",
-                "Monitoramento em tempo real de sensores de solo.",
-                "Sensores IoT, plataforma cloud, especialistas em agronomia.",
-                "Consultoria personalizada pós-venda, suporte via WhatsApp 24/7.",
-                "Aplicação móvel offline, portal de administração web.",
-                "Infraestrutura de nuvem, aquisição de hardware.",
-                "Modelo de assinatura mensal por hectare.",
-                "Fabricantes de microcontroladores (ESP32), sindicatos rurais.",
-                "Instalar 50 sensores nas fazendas parceiras.", "Dificuldade de sinal 4G no campo."
+                "Maximizar a produtividade agrícola através de dados precisos, reduzindo o desperdício de recursos naturais e defensivos químicos.",
+                "Pequenos e médios agricultores da região de Garibaldi e Carlos Barbosa, cooperativas vinícolas.",
+                "Monitoramento em tempo real de sensores de solo, processamento de dados climáticos via satélite.",
+                "Sensores IoT de alta precisão, plataforma de processamento em nuvem escalável.",
+                "Consultoria personalizada pós-venda, treinamentos presenciais nas cooperativas locais, suporte via WhatsApp.",
+                "Aplicação móvel offline (para áreas sem sinal), portal de administração web.",
+                "Custos fixos de infraestrutura de nuvem, aquisição e calibração de hardware IoT.",
+                "Modelo de assinatura mensal por hectare monitorado, venda de kits de sensores.",
+                "Fabricantes de microcontroladores (ESP32), sindicatos rurais de Carlos Barbosa.",
+                "Instalar 50 sensores nas fazendas.", "Dificuldade de sinal 4G em algumas propriedades rurais."
         ));
+
+        // Dados reais extraídos de db_dspi.sql -> tb_canva (id: 44 - Equipe dipp)
         lista.add(new Projeto(
-                "Plataforma de IA para Varejo", "Equipe Inova", "Em Andamento",
+                "App de Móveis Virtuais 3D", "dipp", "Não iniciado",
                 "Carlos, Beatriz", "Prof. Almeida",
-                "Prever demanda de estoque com base em clima e sazonalidade.",
-                "Mercados de médio porte.",
-                "Modelos de Machine Learning treinados em histórico de vendas.",
-                "Servidores em nuvem, base de dados SQL.",
-                "Treinamento para a equipe de gestão.",
-                "Dashboard web intuitivo.",
-                "Licenças de software e Cloud.",
-                "Assinatura anual.",
-                "Empresas provedoras de dados meteorológicos.",
-                "Finalizar primeira versão do painel.", "Limpeza e inconsistência de dados dos clientes."
+                "Permitir que usuários visualizem móveis e cores em suas casas usando apenas a câmera do celular com realismo impressionante.",
+                "Pessoas em processo de reforma ou mudança, arquitetos autônomos e lojas de móveis.",
+                "Desenvolvimento de algoritmos de renderização, curadoria de catálogo de móveis digitais.",
+                "Plataforma mobile, banco de dados de modelos 3D, equipe de desenvolvedores.",
+                "Chatbot de auxílio criativo, comunidade para compartilhamento de projetos.",
+                "App Store, Google Play, anúncios em redes sociais visuais (Instagram/Pinterest).",
+                "Manutenção do aplicativo, hospedagem em nuvem, marketing digital e salários.",
+                "Assinatura mensal para profissionais, comissão sobre móveis vendidos pelo app.",
+                "Fabricantes de móveis, lojas de tintas, desenvolvedores de motores gráficos.",
+                "Renderização do primeiro lote de poltronas.", "Problemas de incompatibilidade com câmeras Android antigas."
         ));
+
         return lista;
+    }
+
+    // Estrutura pronta para buscar da sua Cloudflare Worker no futuro (substituindo o Mock)
+    private void buscarProjetosDaApi() {
+        /*
+        String url = "https://api-dspi.whyguiih.workers.dev/listar-projetos";
+
+        // A API deverá fazer um SELECT mesclando as tabelas através do nome da equipe:
+        // SELECT * FROM tb_equipe INNER JOIN tb_canva ON tb_equipe.nome_equipe = tb_canva.usuario INNER JOIN tb_acompanhamento_projeto ...
+
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+            response -> {
+                List<Projeto> projetosAPI = new ArrayList<>();
+                // Popular a lista com response.getJSONObject(i).getString("proposta_chave"), etc...
+                // rvMeusProjetos.setAdapter(new ProjetoAdapter(projetosAPI, this::abrirPaginaDetalhes));
+            },
+            error -> Toast.makeText(this, "Erro ao carregar do Banco de Dados real.", Toast.LENGTH_SHORT).show()
+        );
+        Volley.newRequestQueue(this).add(request);
+        */
     }
 
     public static class ProjetoAdapter extends RecyclerView.Adapter<ProjetoAdapter.ViewHolder> {
