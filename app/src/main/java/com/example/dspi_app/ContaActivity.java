@@ -57,8 +57,8 @@ public class ContaActivity extends AppCompatActivity {
         LinearLayout btnSair = findViewById(R.id.btnSair);
 
         // Exemplo: Populando os dados baseados na linha da Sandramara (tb_curriculo_alunos)
-        txtNomeUsuario.setText("Sandramara Chielle");
-        txtEmailUsuario.setText("sandramara@gmail.com");
+        txtNomeUsuario.setText("Nome Completo");
+        txtEmailUsuario.setText("email@mail.co");
 
         // Configuração dos botões e subpáginas
 
