@@ -1,22 +1,31 @@
 package com.example.dspi_app;
 
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class EmpresasActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 3; // 3 = Empresas
+    private final String BASE_URL = "https://api-dspi.whyguiih.workers.dev"; // A mesma API do seu repositório
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +45,7 @@ public class EmpresasActivity extends AppCompatActivity {
         String nivel = getIntent().getStringExtra("nivel_de_acesso");
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
-        // Chamada da função que carrega a lista do banco de dados
+        // Dispara a busca das empresas lá na API
         carregarListaDeEmpresas();
     }
 
@@ -44,60 +53,66 @@ public class EmpresasActivity extends AppCompatActivity {
         LinearLayout listaEmpresasLayout = findViewById(R.id.listaEmpresasLayout);
         listaEmpresasLayout.removeAllViews(); // Limpa antes de preencher
 
-        try {
-            // OBS: Se você usa uma classe DatabaseHelper específica, substitua a linha abaixo!
-            // Exemplo: SQLiteDatabase db = new MeuDatabaseHelper(this).getReadableDatabase();
-            // Estou abrindo direto baseado no nome usado no seu arquivo SQL.
-            SQLiteDatabase db = openOrCreateDatabase("db_dspi", MODE_PRIVATE, null);
+        // Você precisará dessa rota na sua API lá no Cloudflare Worker
+        String url = BASE_URL + "/listar-empresas";
 
-            // Consulta cruzando tb_empresas com tb_cadastros para pegar as contas Nível 4
-            String query = "SELECT e.nome_empresa, e.endereco, e.foto_perfil " +
-                    "FROM tb_empresas e ";
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    try {
+                        if (response.optBoolean("success")) {
+                            JSONArray data = response.optJSONArray("data");
+                            if (data != null) {
+                                for (int i = 0; i < data.length(); i++) {
+                                    JSONObject empresa = data.getJSONObject(i);
 
-            Cursor cursor = db.rawQuery(query, null);
+                                    // Pega exatamente as colunas da tb_empresas
+                                    String nome = empresa.optString("nome_empresa", "Empresa Desconhecida");
+                                    String endereco = empresa.optString("endereco", "Endereço não informado");
+                                    String fotoPerfil = empresa.optString("foto_perfil", "");
 
-            if (cursor.moveToFirst()) {
-                do {
-                    String nome = cursor.getString(0);
-                    String endereco = cursor.getString(1);
-                    String fotoPerfil = cursor.getString(2);
-
-                    // Inflar (criar) uma cópia do nosso item_empresa.xml
-                    View itemEmpresa = getLayoutInflater().inflate(R.layout.item_empresa, listaEmpresasLayout, false);
-
-                    TextView txtNome = itemEmpresa.findViewById(R.id.txtNomeEmpresa);
-                    TextView txtEndereco = itemEmpresa.findViewById(R.id.txtEnderecoEmpresa);
-                    ImageView imgEmpresa = itemEmpresa.findViewById(R.id.imgEmpresa);
-
-                    // Setar os textos
-                    txtNome.setText(nome);
-                    txtEndereco.setText(endereco != null ? endereco : "Endereço não informado");
-
-                    // Truque para carregar a imagem dinamicamente a partir do caminho (ex: '/drawable/threeeo.png')
-                    if (fotoPerfil != null && !fotoPerfil.isEmpty()) {
-                        // Limpa o caminho do banco deixando apenas o nome, ex: "threeeo"
-                        String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
-
-                        // Busca o ID do recurso na pasta drawable
-                        int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
-
-                        if (resourceId != 0) {
-                            imgEmpresa.setImageResource(resourceId);
+                                    adicionarEmpresaNaTela(listaEmpresasLayout, nome, endereco, fotoPerfil);
+                                }
+                            }
+                        } else {
+                            Toast.makeText(this, "Nenhuma empresa encontrada.", Toast.LENGTH_SHORT).show();
                         }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        Toast.makeText(this, "Erro ao ler as empresas.", Toast.LENGTH_SHORT).show();
                     }
+                },
+                error -> {
+                    Toast.makeText(this, "Falha na conexão com o servidor.", Toast.LENGTH_SHORT).show();
+                }
+        );
 
-                    // Adicionar na tela
-                    listaEmpresasLayout.addView(itemEmpresa);
+        // Adiciona a requisição na fila do Volley
+        Volley.newRequestQueue(this).add(request);
+    }
 
-                } while (cursor.moveToNext());
+    private void adicionarEmpresaNaTela(LinearLayout container, String nome, String endereco, String fotoPerfil) {
+        View itemEmpresa = getLayoutInflater().inflate(R.layout.item_empresa, container, false);
+
+        TextView txtNome = itemEmpresa.findViewById(R.id.txtNomeEmpresa);
+        TextView txtEndereco = itemEmpresa.findViewById(R.id.txtEnderecoEmpresa);
+        ImageView imgEmpresa = itemEmpresa.findViewById(R.id.imgEmpresa);
+
+        txtNome.setText(nome);
+        txtEndereco.setText(endereco);
+
+        // Tratamento da imagem conforme os dados cadastrados no banco (ex: "/drawable/threeeo.png")
+        if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
+            String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
+            int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
+            if (resourceId != 0) {
+                imgEmpresa.setImageResource(resourceId);
             }
-            cursor.close();
-            db.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            // Em caso de erro, a lista simplesmente não carregará e não dará crash.
         }
+
+        container.addView(itemEmpresa);
     }
 
     private void configurarBolhaAnimada() {
