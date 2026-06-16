@@ -25,7 +25,7 @@ import org.json.JSONObject;
 
 public class EmpresasActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 3; // 3 = Empresas
-    private final String BASE_URL = "https://api-dspi.whyguiih.workers.dev"; // A mesma API do seu repositório
+    private final String BASE_URL = "https://api-dspi.whyguiih.workers.dev"; // Sua API
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +45,6 @@ public class EmpresasActivity extends AppCompatActivity {
         String nivel = getIntent().getStringExtra("nivel_de_acesso");
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
-        // Dispara a busca das empresas lá na API
         carregarListaDeEmpresas();
     }
 
@@ -67,19 +66,19 @@ public class EmpresasActivity extends AppCompatActivity {
                                 for (int i = 0; i < data.length(); i++) {
                                     JSONObject empresa = data.getJSONObject(i);
 
-                                    // Captura absolutamente todos os campos da tb_empresas do banco
                                     String nome = empresa.optString("nome_empresa", "Empresa Desconhecida");
                                     String cnpj = empresa.optString("cnpj", "");
                                     String telefone = empresa.optString("telefone_contato", "");
                                     String email = empresa.optString("email_contato", "");
                                     String endereco = empresa.optString("endereco", "");
                                     String fotoPerfil = empresa.optString("foto_perfil", "");
-
-                                    // Se "descricao" não existir na resposta ainda, optString devolve o texto padrão sem quebrar o app
                                     String descricao = empresa.optString("descricao", "Nenhuma descrição disponível ainda.");
 
-                                    // Passa todos os dados estruturados para criar o item na tela
-                                    adicionarEmpresaNaTela(listaEmpresasLayout, nome, cnpj, telefone, email, endereco, fotoPerfil, descricao);
+                                    // 🔥 AQUI ESTÁ A MÁGICA DO PASSO 4 (Capturamos o setor do banco)
+                                    String setor = empresa.optString("setor", "Não informado");
+
+                                    // Adicionamos o "setor" na chamada do método aqui no final
+                                    adicionarEmpresaNaTela(listaEmpresasLayout, nome, cnpj, telefone, email, endereco, fotoPerfil, descricao, setor);
                                 }
                             }
                         } else {
@@ -96,8 +95,9 @@ public class EmpresasActivity extends AppCompatActivity {
         Volley.newRequestQueue(this).add(request);
     }
 
+    // 🔥 Atualizamos a função para receber a String setor no final
     private void adicionarEmpresaNaTela(LinearLayout container, String nome, String cnpj, String telefone,
-                                        String email, String endereco, String fotoPerfil, String descricao) {
+                                        String email, String endereco, String fotoPerfil, String descricao, String setor) {
 
         View itemEmpresa = getLayoutInflater().inflate(R.layout.item_empresa, container, false);
 
@@ -108,7 +108,6 @@ public class EmpresasActivity extends AppCompatActivity {
         txtNome.setText(nome);
         txtEndereco.setText(endereco);
 
-        // Renderiza a foto de perfil nos itens arredondados
         if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
             String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
             int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
@@ -117,7 +116,6 @@ public class EmpresasActivity extends AppCompatActivity {
             }
         }
 
-        // Evento de Clique: Abre a tela de detalhes levando o pacote completo de informações
         itemEmpresa.setOnClickListener(v -> {
             Intent intent = new Intent(EmpresasActivity.this, DetalhesEmpresaActivity.class);
             intent.putExtra("nome_empresa", nome);
@@ -127,8 +125,8 @@ public class EmpresasActivity extends AppCompatActivity {
             intent.putExtra("endereco", endereco);
             intent.putExtra("foto_perfil", fotoPerfil);
             intent.putExtra("descricao", descricao);
+            intent.putExtra("setor", setor);
 
-            // Mantém o nível de acesso fluindo pelo app caso precise no menu lateral/inferior
             intent.putExtra("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
             startActivity(intent);
         });
@@ -141,14 +139,17 @@ public class EmpresasActivity extends AppCompatActivity {
         View activeBubble = findViewById(R.id.activeBubble);
         LinearLayout bottomNavLayout = findViewById(R.id.bottomNavLayout);
 
-        bottomNavLayout.post(() -> {
-            float tabWidth = bottomNavLayout.getWidth() / 5f;
-            activeBubble.getLayoutParams().width = (int) tabWidth;
-            activeBubble.requestLayout();
-            activeBubble.setTranslationX(oldTabIndex * tabWidth);
-            if (oldTabIndex != CURRENT_TAB_INDEX) {
-                activeBubble.animate().translationX(CURRENT_TAB_INDEX * tabWidth).setDuration(350).setInterpolator(new DecelerateInterpolator(1.5f)).start();
-            }
-        });
+        if (activeBubble != null && bottomNavLayout != null) {
+            bottomNavLayout.post(() -> {
+                float tabWidth = bottomNavLayout.getWidth() / 5f;
+                activeBubble.getLayoutParams().width = (int) tabWidth;
+                activeBubble.requestLayout();
+                activeBubble.setTranslationX(oldTabIndex * tabWidth);
+                if (oldTabIndex != CURRENT_TAB_INDEX) {
+                    activeBubble.animate().translationX(CURRENT_TAB_INDEX * tabWidth)
+                            .setDuration(350).setInterpolator(new DecelerateInterpolator(1.5f)).start();
+                }
+            });
+        }
     }
 }
