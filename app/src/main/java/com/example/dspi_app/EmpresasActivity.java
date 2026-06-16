@@ -51,9 +51,8 @@ public class EmpresasActivity extends AppCompatActivity {
 
     private void carregarListaDeEmpresas() {
         LinearLayout listaEmpresasLayout = findViewById(R.id.listaEmpresasLayout);
-        listaEmpresasLayout.removeAllViews(); // Limpa antes de preencher
+        listaEmpresasLayout.removeAllViews();
 
-        // Você precisará dessa rota na sua API lá no Cloudflare Worker
         String url = BASE_URL + "/listar-empresas";
 
         JsonObjectRequest request = new JsonObjectRequest(
@@ -68,12 +67,19 @@ public class EmpresasActivity extends AppCompatActivity {
                                 for (int i = 0; i < data.length(); i++) {
                                     JSONObject empresa = data.getJSONObject(i);
 
-                                    // Pega exatamente as colunas da tb_empresas
+                                    // Captura absolutamente todos os campos da tb_empresas do banco
                                     String nome = empresa.optString("nome_empresa", "Empresa Desconhecida");
-                                    String endereco = empresa.optString("endereco", "Endereço não informado");
+                                    String cnpj = empresa.optString("cnpj", "");
+                                    String telefone = empresa.optString("telefone_contato", "");
+                                    String email = empresa.optString("email_contato", "");
+                                    String endereco = empresa.optString("endereco", "");
                                     String fotoPerfil = empresa.optString("foto_perfil", "");
 
-                                    adicionarEmpresaNaTela(listaEmpresasLayout, nome, endereco, fotoPerfil);
+                                    // Se "descricao" não existir na resposta ainda, optString devolve o texto padrão sem quebrar o app
+                                    String descricao = empresa.optString("descricao", "Nenhuma descrição disponível ainda.");
+
+                                    // Passa todos os dados estruturados para criar o item na tela
+                                    adicionarEmpresaNaTela(listaEmpresasLayout, nome, cnpj, telefone, email, endereco, fotoPerfil, descricao);
                                 }
                             }
                         } else {
@@ -84,16 +90,15 @@ public class EmpresasActivity extends AppCompatActivity {
                         Toast.makeText(this, "Erro ao ler as empresas.", Toast.LENGTH_SHORT).show();
                     }
                 },
-                error -> {
-                    Toast.makeText(this, "Falha na conexão com o servidor.", Toast.LENGTH_SHORT).show();
-                }
+                error -> Toast.makeText(this, "Falha na conexão com o servidor.", Toast.LENGTH_SHORT).show()
         );
 
-        // Adiciona a requisição na fila do Volley
         Volley.newRequestQueue(this).add(request);
     }
 
-    private void adicionarEmpresaNaTela(LinearLayout container, String nome, String endereco, String fotoPerfil) {
+    private void adicionarEmpresaNaTela(LinearLayout container, String nome, String cnpj, String telefone,
+                                        String email, String endereco, String fotoPerfil, String descricao) {
+
         View itemEmpresa = getLayoutInflater().inflate(R.layout.item_empresa, container, false);
 
         TextView txtNome = itemEmpresa.findViewById(R.id.txtNomeEmpresa);
@@ -103,7 +108,7 @@ public class EmpresasActivity extends AppCompatActivity {
         txtNome.setText(nome);
         txtEndereco.setText(endereco);
 
-        // Tratamento da imagem conforme os dados cadastrados no banco (ex: "/drawable/threeeo.png")
+        // Renderiza a foto de perfil nos itens arredondados
         if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
             String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
             int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
@@ -111,6 +116,22 @@ public class EmpresasActivity extends AppCompatActivity {
                 imgEmpresa.setImageResource(resourceId);
             }
         }
+
+        // Evento de Clique: Abre a tela de detalhes levando o pacote completo de informações
+        itemEmpresa.setOnClickListener(v -> {
+            Intent intent = new Intent(EmpresasActivity.this, DetalhesEmpresaActivity.class);
+            intent.putExtra("nome_empresa", nome);
+            intent.putExtra("cnpj", cnpj);
+            intent.putExtra("telefone_contato", telefone);
+            intent.putExtra("email_contato", email);
+            intent.putExtra("endereco", endereco);
+            intent.putExtra("foto_perfil", fotoPerfil);
+            intent.putExtra("descricao", descricao);
+
+            // Mantém o nível de acesso fluindo pelo app caso precise no menu lateral/inferior
+            intent.putExtra("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
+            startActivity(intent);
+        });
 
         container.addView(itemEmpresa);
     }
