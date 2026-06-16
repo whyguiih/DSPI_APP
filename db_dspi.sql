@@ -53,10 +53,10 @@ CREATE TABLE tb_empresas (
   telefone_contato TEXT DEFAULT NULL,
   email_contato TEXT DEFAULT NULL,
   endereco TEXT DEFAULT NULL
-, foto_perfil TEXT);
-INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil") VALUES(1,'Threeeo','1234567890','59996290304','threeeodivolindos@gmail.com','rua casa do caralho, se mata, cuzao na xota','/drawable/threeeo.png');
-INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil") VALUES(2,'Ortafruti','0987654321','5434641266','tutifruti@gmail.com','rua puta que pariu, onde judas perdeu as botas, bumbum guloso','/drawable/ortafruti.png');
-INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil") VALUES(3,'Tramontina','654738291','87966631213','tramontina@gmail.com','rua quer vara, centrao da xota, rolas grossas','/drawable/tramontina.png');
+, foto_perfil TEXT, descricao TEXT, setor TEXT);
+INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor") VALUES(1,'Threeeo','1234567890','54996290304','threeeodivolindos@gmail.com','Avenida rola grossa que gostosa, 069, bairro 333, 95720-000','/drawable/threeeo.png','empresa de desenvolvimento','desenvolvimento');
+INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor") VALUES(2,'Ortafruti','0987654321','5434641266','tutifruti@gmail.com','Avenida cuzao preto, 122, bairro Olivara, 95720-000','/drawable/ortafruti.png','empresa de marcados','serviços e vendas');
+INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor") VALUES(3,'Tramontina','654738291','87966631213','tramontina@gmail.com','Avenida dei o cu pro Dipp, 666, bairro centro, 95720-000','/drawable/tramontina.png','empresa de várias coisas legais','multisetorial');
 CREATE TABLE tb_equipe (
   id_equipe INTEGER PRIMARY KEY AUTOINCREMENT,
   nome_integrante TEXT NOT NULL,
