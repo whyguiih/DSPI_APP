@@ -54,9 +54,9 @@ CREATE TABLE tb_empresas (
   email_contato TEXT DEFAULT NULL,
   endereco TEXT DEFAULT NULL
 , foto_perfil TEXT, descricao TEXT, setor TEXT);
-INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor") VALUES(1,'Threeeo','1234567890','54996290304','threeeodivolindos@gmail.com','Avenida rola grossa que gostosa, 069, bairro 333, 95720-000','/drawable/threeeo.png','empresa de desenvolvimento','desenvolvimento');
-INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor") VALUES(2,'Ortafruti','0987654321','5434641266','tutifruti@gmail.com','Avenida cuzao preto, 122, bairro Olivara, 95720-000','/drawable/ortafruti.png','empresa de marcados','serviços e vendas');
-INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor") VALUES(3,'Tramontina','654738291','87966631213','tramontina@gmail.com','Avenida dei o cu pro Dipp, 666, bairro centro, 95720-000','/drawable/tramontina.png','empresa de várias coisas legais','multisetorial');
+INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor") VALUES(1,'Threeeo','12345678910112','54996290304','threeeodivolindos@gmail.com','Rua rola grossa que gostosa 069, bairro 333, Xota Grande, Apartamento','/drawable/threeeo.png','empresa de desenvolvimento','desenvolvimento');
+INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor") VALUES(2,'Ortafruti','12345678910112','5434641266','tutifruti@gmail.com','Avenida Adelino Mioti 122, bairro Olivara, Garibaldi, Casa','/drawable/ortafruti.png','empresa de marcados','serviços e vendas');
+INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor") VALUES(3,'Tramontina','12345678910112','87966631213','tramontina@gmail.com','dei o cu pro Dipp 666, bairro centro, UOU, Apartamento','/drawable/tramontina.png','empresa de várias coisas legais','multisetorial');
 CREATE TABLE tb_equipe (
   id_equipe INTEGER PRIMARY KEY AUTOINCREMENT,
   nome_integrante TEXT NOT NULL,
