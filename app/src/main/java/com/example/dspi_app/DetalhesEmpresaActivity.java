@@ -11,6 +11,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import com.example.dspi_app.R;
 
 public class DetalhesEmpresaActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 4; // Mantém aceso o ícone de Empresas
@@ -55,7 +56,7 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
 
     private void configurarPainelExclusivoEmpresa() {
         // Exemplo: Altera títulos ou ativa botões que apenas a própria empresa pode interagir
-        TextView tvNomeEmpresa = findViewById(R.id.tvNomeEmpresa); // Use os IDs certos do seu activity_detalhes_empresa.xml
+        TextView tvNomeEmpresa = findViewById(R.id.txtTituloEmpresa); // Use os IDs certos do seu activity_detalhes_empresa.xml
         if (tvNomeEmpresa != null) {
             tvNomeEmpresa.setText("Área de Gestão: " + emailUsuario.toUpperCase());
         }
