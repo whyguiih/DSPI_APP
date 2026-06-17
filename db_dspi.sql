@@ -27,7 +27,7 @@ CREATE TABLE tb_informacoes_completude (
   cronograma TEXT CHECK( cronograma IN ('Não iniciada','Parcial','Concluido') ) DEFAULT NULL,
   foto_equipe TEXT CHECK( foto_equipe IN ('Não iniciada','Parcial','Concluido') ) DEFAULT NULL,
   fotos_etapa_projeto TEXT CHECK( fotos_etapa_projeto IN ('Não iniciada','Parcial','Concluido') ) DEFAULT NULL
-);
+, usuario TEXT DEFAULT NULL);
 CREATE TABLE tb_cronograma_especifico (
   id_cronograma_especifico INTEGER PRIMARY KEY AUTOINCREMENT,
   processos TEXT DEFAULT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE tb_cronograma_especifico (
   data_inicio DATE DEFAULT NULL,
   data_final DATE DEFAULT NULL,
   observacoes TEXT DEFAULT NULL
-);
+, usuario TEXT DEFAULT NULL);
 CREATE TABLE tb_informacoes_complementares (
   id_informacoes_complementares INTEGER PRIMARY KEY AUTOINCREMENT,
   unidade_nome_comercial TEXT NOT NULL,
@@ -45,7 +45,10 @@ CREATE TABLE tb_informacoes_complementares (
   empresa TEXT NOT NULL,
   projeto TEXT NOT NULL,
   descricao TEXT NOT NULL
-);
+, usuario TEXT DEFAULT NULL);
+INSERT INTO "tb_informacoes_complementares" ("id_informacoes_complementares","unidade_nome_comercial","coordenador_pedagogico","gestor","empresa","projeto","descricao","usuario") VALUES(1,'Senai Caxias',NULL,NULL,'Threeeo','Sistema de Automação IoT','Projeto focado em automatizar sensores na linha 1.','equipe_alpha');
+INSERT INTO "tb_informacoes_complementares" ("id_informacoes_complementares","unidade_nome_comercial","coordenador_pedagogico","gestor","empresa","projeto","descricao","usuario") VALUES(2,'Senai Caxias',NULL,NULL,'Ortafruti','Otimização de Linha de Montagem','Redução de gargalos e tempo de setup.','equipe_beta');
+INSERT INTO "tb_informacoes_complementares" ("id_informacoes_complementares","unidade_nome_comercial","coordenador_pedagogico","gestor","empresa","projeto","descricao","usuario") VALUES(3,'Senai Caxias',NULL,NULL,'Tramontina','Gestão Sustentável','Reaproveitamento de sobras de material da fábrica.','equipe_gama');
 CREATE TABLE tb_empresas (
   id_empresa INTEGER PRIMARY KEY AUTOINCREMENT,
   nome_empresa TEXT NOT NULL UNIQUE,
@@ -53,10 +56,10 @@ CREATE TABLE tb_empresas (
   telefone_contato TEXT DEFAULT NULL,
   email_contato TEXT DEFAULT NULL,
   endereco TEXT DEFAULT NULL
-, foto_perfil TEXT, descricao TEXT, setor TEXT);
-INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor") VALUES(1,'Threeeo','12345678910112','54996290304','threeeodivolindos@gmail.com','Rua rola grossa que gostosa 069, bairro 333, Xota Grande, Apartamento','/drawable/threeeo.png','empresa de desenvolvimento','desenvolvimento');
-INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor") VALUES(2,'Ortafruti','12345678910112','5434641266','tutifruti@gmail.com','Avenida Adelino Mioti 122, bairro Olivara, Garibaldi, Casa','/drawable/ortafruti.png','empresa de marcados','serviços e vendas');
-INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor") VALUES(3,'Tramontina','12345678910112','87966631213','tramontina@gmail.com','dei o cu pro Dipp 666, bairro centro, UOU, Apartamento','/drawable/tramontina.png','empresa de várias coisas legais','multisetorial');
+, foto_perfil TEXT, descricao TEXT, setor TEXT, usuario TEXT DEFAULT NULL);
+INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor","usuario") VALUES(1,'Threeeo','12345678910112','54996290304','threeeodivolindos@gmail.com','Avenida Trans-amazônia 3450, bairro Rosseau, Farroupilha, Casa','/drawable/threeeo.png','empresa de desenvolvimento','desenvolvimento',NULL);
+INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor","usuario") VALUES(2,'Ortafruti','12345678910112','5434641266','tutifruti@gmail.com','Avenida Adelino Mioti 122, bairro Olivara, Garibaldi, Casa','/drawable/ortafruti.png','empresa de marcados','serviços e vendas',NULL);
+INSERT INTO "tb_empresas" ("id_empresa","nome_empresa","cnpj","telefone_contato","email_contato","endereco","foto_perfil","descricao","setor","usuario") VALUES(3,'Tramontina','12345678910112','87966631213','tramontina@gmail.com','rua Gastrodon 888, bairro Vila Nova, Carlos Barbosa, Apartamento','/drawable/tramontina.png','empresa de várias coisas legais','multisetorial',NULL);
 CREATE TABLE tb_equipe (
   id_equipe INTEGER PRIMARY KEY AUTOINCREMENT,
   nome_integrante TEXT NOT NULL,
@@ -120,7 +123,7 @@ INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_proje
 INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_projeto","email","area_atuacao_curso","area_atuacao_projeto","nome_integrante2","nome_integrante3","nome_integrante4","nome_integrante5","nome_orientador","nome_coorientador","usuario") VALUES(49,'','borg','','','','',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_projeto","email","area_atuacao_curso","area_atuacao_projeto","nome_integrante2","nome_integrante3","nome_integrante4","nome_integrante5","nome_orientador","nome_coorientador","usuario") VALUES(50,'','Borge','','','','',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_projeto","email","area_atuacao_curso","area_atuacao_projeto","nome_integrante2","nome_integrante3","nome_integrante4","nome_integrante5","nome_orientador","nome_coorientador","usuario") VALUES(51,'','','','','','','','','','','','','threeeo');
-INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_projeto","email","area_atuacao_curso","area_atuacao_projeto","nome_integrante2","nome_integrante3","nome_integrante4","nome_integrante5","nome_orientador","nome_coorientador","usuario") VALUES(52,'j','hh','hh','hb','hh','hh','j','bb','hh','bb','jjj','jj','Sarah');
+INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_projeto","email","area_atuacao_curso","area_atuacao_projeto","nome_integrante2","nome_integrante3","nome_integrante4","nome_integrante5","nome_orientador","nome_coorientador","usuario") VALUES(52,'j','jjjjj','hh','hb','hh','hh','j','bb','hh','bb','jjj','jj','Sarah');
 CREATE TABLE tb_cadastros (
   id_cadastro INTEGER PRIMARY KEY AUTOINCREMENT,
   nome_usuarios TEXT NOT NULL UNIQUE,
@@ -133,6 +136,10 @@ INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_aces
 INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(4,'threeeo','2003',4);
 INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(5,'Alexsander','2405',5);
 INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(6,'Volgneraucious','0303',6);
+INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(7,'m.hoff@aluno.senai.br','123',6);
+INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(8,'equipe_alpha','123',6);
+INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(9,'equipe_beta','123',6);
+INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(10,'equipe_gama','123',6);
 CREATE TABLE tb_acompanhamento_projeto (
   id_acompanhamento_projeto INTEGER PRIMARY KEY AUTOINCREMENT,
   tarefas TEXT NOT NULL,
@@ -147,7 +154,7 @@ CREATE TABLE tb_acompanhamento_projeto (
   descricao_da_tarefa TEXT NOT NULL,
   dificuldades_enxergadas TEXT DEFAULT NULL,
   impacto_nas_outras TEXT DEFAULT NULL
-);
+, usuario TEXT DEFAULT NULL);
 CREATE TABLE tb_canva (
   id_canva INTEGER PRIMARY KEY,
   atividades_chaves TEXT NOT NULL,
@@ -260,7 +267,7 @@ CREATE TABLE tb_participantes (
   rg TEXT DEFAULT NULL,
   cpf TEXT DEFAULT NULL,
   data_nascimento DATE DEFAULT NULL,
-  telefone TEXT DEFAULT NULL,
+  telefone TEXT DEFAULT NULL, matricula varchar (6),
   FOREIGN KEY (id_informacoes_complementares) REFERENCES tb_informacoes_complementares (id_informacoes_complementares) ON DELETE CASCADE
 );
 CREATE TABLE tb_pitch (
@@ -288,11 +295,22 @@ CREATE TABLE tb_recursos_aplicados (
   FOREIGN KEY (usuario) REFERENCES tb_equipe (nome_equipe) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (id_recursos) REFERENCES tb_equipe (id_equipe) ON DELETE CASCADE ON UPDATE CASCADE
 );
+CREATE TABLE tb_uso_ia (
+  id_uso_ia INTEGER PRIMARY KEY AUTOINCREMENT,
+  usuario TEXT DEFAULT NULL,
+  nome_ferramenta TEXT,
+  link_acesso TEXT,
+  tipo_licenca TEXT,
+  etapa_uso TEXT,
+  criacao_prompt TEXT,
+  descricao_uso TEXT
+);
 DELETE FROM sqlite_sequence;
 INSERT INTO "sqlite_sequence" ("name","seq") VALUES('d1_migrations',1);
 INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_equipe',52);
-INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_cadastros',6);
+INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_cadastros',10);
 INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_empresas',3);
+INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_informacoes_complementares',3);
 CREATE INDEX idx_equipe_usuario ON tb_equipe(usuario);
 CREATE INDEX fk_canva_eqp ON tb_canva(usuario);
 CREATE INDEX fk_conh_eqp ON tb_conhecimentos(usuario);
