@@ -33,7 +33,6 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         ImageButton btnVoltar = findViewById(R.id.btnVoltar);
         btnVoltar.setOnClickListener(v -> finish());
 
-        // Recebe os dados brutos da lista
         String nome = getIntent().getStringExtra("nome_empresa");
         String cnpj = getIntent().getStringExtra("cnpj");
         String telefone = getIntent().getStringExtra("telefone_contato");
@@ -58,9 +57,6 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         txtSetorEmpresa.setText(setor != null && !setor.isEmpty() ? "Setor: " + setor : "Setor: Não informado");
         txtSobreEmpresa.setText(descricao != null && !descricao.isEmpty() ? descricao : "Nenhuma descrição disponível ainda.");
 
-        // ==========================================
-        // 1. FORMATAÇÃO DO CNPJ
-        // ==========================================
         String cnpjFormatado = cnpj != null ? cnpj : "";
         String apenasNumerosCnpj = cnpjFormatado.replaceAll("\\D", ""); // Garante que só tem números
         if (apenasNumerosCnpj.length() == 14) {
@@ -73,9 +69,6 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         }
         txtCnpjEmpresa.setText(!cnpjFormatado.isEmpty() ? "CNPJ: " + cnpjFormatado : "CNPJ: Não informado");
 
-        // ==========================================
-        // 2. FORMATAÇÃO DO TELEFONE
-        // ==========================================
         String telefoneFormatado = telefone != null ? telefone : "";
         String apenasNumeros = telefoneFormatado.replaceAll("\\D", "");
         if (apenasNumeros.length() == 11) {
@@ -88,22 +81,15 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         }
         txtTelefone.setText(!telefoneFormatado.isEmpty() ? telefoneFormatado : "Sem telefone");
 
-        // ==========================================
-        // 3. FORMATAÇÃO DO E-MAIL
-        // ==========================================
         String emailFormatado = email != null && !email.isEmpty() ? email : "Sem e-mail";
         emailFormatado = emailFormatado.replace("@", "\u2060@\u2060").replace(".", "\u2060.\u2060");
         txtEmail.setText(emailFormatado);
 
-        // ==========================================
-        // 4. FORMATAÇÃO DE ENDEREÇO
-        // ==========================================
         String enderecoFormatado = endereco != null ? endereco.trim() : "";
 
         if (!enderecoFormatado.isEmpty()) {
             String[] parts = enderecoFormatado.split(",");
 
-            // --- PARTE 0: Antes da primeira vírgula (Rua/Avenida) ---
             String logradouro = parts[0].trim();
             String logradouroLower = logradouro.toLowerCase();
 
@@ -116,14 +102,12 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
             }
             enderecoFormatado = logradouro;
 
-            // --- PARTE 1: Depois da primeira vírgula (Bairro) ---
             if (parts.length > 1) {
                 String bairro = parts[1].trim();
                 bairro = bairro.replaceAll("(?i)\\bbairro\\b", "").trim();
                 enderecoFormatado += ", B. " + bairro;
             }
 
-            // --- PARTE 2: Depois da segunda vírgula em diante (Cidade, Apartamento, etc.) ---
             if (parts.length > 2) {
                 StringBuilder resto = new StringBuilder();
                 for (int i = 2; i < parts.length; i++) {
@@ -140,9 +124,6 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
 
         txtEndereco.setText(enderecoFormatado);
 
-        // ==========================================
-        // TRATAMENTO DA IMAGEM
-        // ==========================================
         if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
             String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
             int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
@@ -155,7 +136,6 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
             }
         }
 
-        // Menu Inferior
         String nivel = getIntent().getStringExtra("nivel_de_acesso");
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
         configurarBolhaAnimada();

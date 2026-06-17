@@ -93,7 +93,6 @@ public class EmpresasActivity extends AppCompatActivity {
         Volley.newRequestQueue(this).add(request);
     }
 
-    // 🔥 Atualizamos a função para receber a String setor no final
     private void adicionarEmpresaNaTela(LinearLayout container, String nome, String cnpj, String telefone,
                                         String email, String endereco, String fotoPerfil, String descricao, String setor) {
 

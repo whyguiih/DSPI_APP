@@ -4,18 +4,17 @@ import java.io.Serializable;
 
 public class Projeto implements Serializable {
     private String nomeProjeto, nomeEquipe, status, integrantes, orientador;
-
-    // Atualizado para refletir as colunas exatas da tb_canva
     private String propostaChave, segmentosClientes, atividadesChaves, recursosChaves;
     private String relacionamentosClientes, canais, estruturaCustos, fluxoReceita, parceirosChaves;
-
-    // Atualizado para refletir a tb_acompanhamento_projeto
     private String tarefas, dificuldadesEnxergadas;
+
+    // NOVO CAMPO: Essencial para a empresa saber quais projetos são dela
+    private String empresaVinculada;
 
     public Projeto(String nomeProjeto, String nomeEquipe, String status, String integrantes, String orientador,
                    String propostaChave, String segmentosClientes, String atividadesChaves, String recursosChaves,
                    String relacionamentosClientes, String canais, String estruturaCustos, String fluxoReceita,
-                   String parceirosChaves, String tarefas, String dificuldadesEnxergadas) {
+                   String parceirosChaves, String tarefas, String dificuldadesEnxergadas, String empresaVinculada) {
         this.nomeProjeto = nomeProjeto;
         this.nomeEquipe = nomeEquipe;
         this.status = status;
@@ -32,9 +31,9 @@ public class Projeto implements Serializable {
         this.parceirosChaves = parceirosChaves;
         this.tarefas = tarefas;
         this.dificuldadesEnxergadas = dificuldadesEnxergadas;
+        this.empresaVinculada = empresaVinculada;
     }
 
-    // Getters atualizados
     public String getNomeProjeto() { return nomeProjeto; }
     public String getNomeEquipe() { return nomeEquipe; }
     public String getStatus() { return status; }
@@ -51,4 +50,5 @@ public class Projeto implements Serializable {
     public String getParceirosChaves() { return parceirosChaves; }
     public String getTarefas() { return tarefas; }
     public String getDificuldadesEnxergadas() { return dificuldadesEnxergadas; }
+    public String getEmpresaVinculada() { return empresaVinculada; }
 }
