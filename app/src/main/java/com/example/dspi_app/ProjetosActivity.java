@@ -50,8 +50,10 @@ public class ProjetosActivity extends AppCompatActivity {
 
         configurarBolhaAnimada();
 
-        nivel = getIntent().getStringExtra("nivel_de_acesso");
-        email = getIntent().getStringExtra("email_usuario"); // No caso de empresa, é o nome dela (ex: Threeeo)
+        android.content.SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
+        nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
+        email = prefs.getString("nome_usuario", ""); // O 'email' na verdade guarda o nome da equipe ou da empresa
+
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         Button btnAbrirFormulario = findViewById(R.id.btnAbrirFormulario);
@@ -111,17 +113,21 @@ public class ProjetosActivity extends AppCompatActivity {
                                         obj.optString("empresa_vinculada", "")
                                 );
 
+                                // Travas de segurança contra NullPointerException
+                                String empresaVinc = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada() : "";
+                                String nomeEqp = p.getNomeEquipe() != null ? p.getNomeEquipe() : "";
+                                String userLogado = email != null ? email : "";
+
                                 if ("4".equals(nivel)) {
                                     // NIVEL 4 (EMPRESA): Compara o nome de login com a empresa vinculada ao projeto
-                                    // O .trim() remove espaços em branco para evitar bugs de digitação
-                                    if (p.getEmpresaVinculada().trim().equalsIgnoreCase(email.trim())) {
+                                    if (!userLogado.trim().isEmpty() && empresaVinc.trim().equalsIgnoreCase(userLogado.trim())) {
                                         meusProjetos.add(p);
                                     } else {
                                         outrosProjetos.add(p);
                                     }
                                 } else {
-                                    // NIVEL ALUNO: Compara com o próprio nome da equipe
-                                    if (p.getNomeEquipe().trim().equalsIgnoreCase(email.trim())) {
+                                    // NIVEL ALUNO: Compara com o próprio nome de usuário
+                                    if (!userLogado.trim().isEmpty() && nomeEqp.trim().equalsIgnoreCase(userLogado.trim())) {
                                         meusProjetos.add(p);
                                     } else {
                                         outrosProjetos.add(p);
@@ -134,6 +140,8 @@ public class ProjetosActivity extends AppCompatActivity {
                             Toast.makeText(this, "Erro da API: " + erroApi, Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
+                        e.printStackTrace();
+                        android.util.Log.e("PROJETOS_ERRO", "Erro de Parse JSON: " + e.getMessage());
                         Toast.makeText(this, "Erro ao processar dados", Toast.LENGTH_SHORT).show();
                     }
                 },
