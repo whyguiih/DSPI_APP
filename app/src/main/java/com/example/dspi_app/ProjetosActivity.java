@@ -78,7 +78,7 @@ public class ProjetosActivity extends AppCompatActivity {
 
     private void buscarProjetosDaApi() {
         // ATENÇÃO: COLOQUE A URL CORRETA DA SUA API AQUI!
-        String url = "https://SEU_WORKER.workers.dev/listar-projetos";
+        String url = "https://api-dspi.whyguiih.workers.dev/listar-projetos";
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
@@ -112,15 +112,16 @@ public class ProjetosActivity extends AppCompatActivity {
                                 );
 
                                 if ("4".equals(nivel)) {
-                                    // Para empresas, compara com a empresa_vinculada
-                                    if (p.getEmpresaVinculada().equalsIgnoreCase(email)) {
+                                    // NIVEL 4 (EMPRESA): Compara o nome de login com a empresa vinculada ao projeto
+                                    // O .trim() remove espaços em branco para evitar bugs de digitação
+                                    if (p.getEmpresaVinculada().trim().equalsIgnoreCase(email.trim())) {
                                         meusProjetos.add(p);
                                     } else {
                                         outrosProjetos.add(p);
                                     }
                                 } else {
-                                    // Para estudantes, compara se é o próprio nome da equipe
-                                    if (p.getNomeEquipe().equalsIgnoreCase(email)) {
+                                    // NIVEL ALUNO: Compara com o próprio nome da equipe
+                                    if (p.getNomeEquipe().trim().equalsIgnoreCase(email.trim())) {
                                         meusProjetos.add(p);
                                     } else {
                                         outrosProjetos.add(p);
@@ -128,12 +129,18 @@ public class ProjetosActivity extends AppCompatActivity {
                                 }
                             }
                             configurarListasDeProjetos(meusProjetos, outrosProjetos);
+                        } else {
+                            String erroApi = response.optString("error", "Erro na API");
+                            Toast.makeText(this, "Erro da API: " + erroApi, Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
                         Toast.makeText(this, "Erro ao processar dados", Toast.LENGTH_SHORT).show();
                     }
                 },
-                error -> Toast.makeText(this, "Erro de conexão com o banco", Toast.LENGTH_SHORT).show()
+                error -> {
+                    String erroMsg = error.getMessage() != null ? error.getMessage() : error.toString();
+                    Toast.makeText(this, "Falha de Conexão: " + erroMsg, Toast.LENGTH_LONG).show();
+                }
         );
         Volley.newRequestQueue(this).add(request);
     }
@@ -143,6 +150,14 @@ public class ProjetosActivity extends AppCompatActivity {
         RecyclerView rvOutrosProjetos = findViewById(R.id.rvOutrosProjetos);
         TextView tvSeusProjetos = findViewById(R.id.tvSeusProjetos);
         TextView tvOutrosProjetos = findViewById(R.id.tvOutrosProjetos);
+
+        // ========= ALTERAÇÃO DINÂMICA DO TÍTULO =========
+        if ("4".equals(nivel)) {
+            tvSeusProjetos.setText("Projetos Afiliados");
+        } else {
+            tvSeusProjetos.setText("Meus Projetos");
+        }
+        // ================================================
 
         if (meusProjetos.isEmpty()) {
             tvSeusProjetos.setVisibility(View.GONE);
