@@ -108,7 +108,7 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
             String logradouroLower = logradouro.toLowerCase();
 
             if (logradouroLower.startsWith("avenida ")) {
-                logradouro = "A. " + logradouro.substring(8).trim();
+                logradouro = "Av. " + logradouro.substring(8).trim();
             } else if (logradouroLower.startsWith("rua ")) {
                 logradouro = "R. " + logradouro.substring(4).trim();
             } else if (!logradouroLower.startsWith("r. ") && !logradouroLower.startsWith("a. ")) {

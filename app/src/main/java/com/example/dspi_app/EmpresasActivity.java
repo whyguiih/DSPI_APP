@@ -74,10 +74,8 @@ public class EmpresasActivity extends AppCompatActivity {
                                     String fotoPerfil = empresa.optString("foto_perfil", "");
                                     String descricao = empresa.optString("descricao", "Nenhuma descrição disponível ainda.");
 
-                                    // 🔥 AQUI ESTÁ A MÁGICA DO PASSO 4 (Capturamos o setor do banco)
                                     String setor = empresa.optString("setor", "Não informado");
 
-                                    // Adicionamos o "setor" na chamada do método aqui no final
                                     adicionarEmpresaNaTela(listaEmpresasLayout, nome, cnpj, telefone, email, endereco, fotoPerfil, descricao, setor);
                                 }
                             }
