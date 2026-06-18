@@ -1,5 +1,6 @@
 package com.example.dspi_app;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
@@ -19,6 +20,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 1;
     private LinearLayout layoutDetalhes;
     private String nivel;
+    private String nomeUsuarioLogado; // Guarda quem é a empresa que está acessando
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +37,20 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
 
         configurarBolhaFixa();
 
-        nivel = getIntent().getStringExtra("nivel_de_acesso");
+        // ===================================================================
+        // RECUPERAÇÃO DA SESSÃO PARA SABER QUEM ESTÁ LOGADO
+        // ===================================================================
+        SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
+        nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
+
+        nomeUsuarioLogado = prefs.getString("email_logado", "");
+        if (nomeUsuarioLogado == null || nomeUsuarioLogado.trim().isEmpty()) {
+            nomeUsuarioLogado = getIntent().getStringExtra("email_usuario");
+        }
+        if (nomeUsuarioLogado == null) {
+            nomeUsuarioLogado = "";
+        }
+
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         Button btnVoltar = findViewById(R.id.btnVoltar);
@@ -56,24 +71,23 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         adicionarSecaoTitulo(p.getNomeProjeto(), "Equipe " + p.getNomeEquipe() + " | Status: " + p.getStatus());
 
         adicionarCabecalho("Informações da Equipe");
-        adicionarCampo("Integrantes:", p.getIntegrantes());
-        adicionarCampo("Orientador:", p.getOrientador());
+        adicionarCampo("Integrantes:", p.getIntegrantes(), p);
+        adicionarCampo("Orientador:", p.getOrientador(), p);
 
         adicionarCabecalho("Canvas do Projeto (tb_canva)");
-        // AJUSTE NESTAS DUAS LINHAS PARA CONECTAR AOS NOVOS MÉTODOS:
-        adicionarCampo("Proposta Chave:", p.getPropostaChave());
-        adicionarCampo("Segmentos de Clientes:", p.getSegmentosClientes());
-        adicionarCampo("Atividades Chaves:", p.getAtividadesChaves());
-        adicionarCampo("Recursos Chaves:", p.getRecursosChaves());
-        adicionarCampo("Relacionamentos:", p.getRelacionamentosClientes());
-        adicionarCampo("Canais:", p.getCanais());
-        adicionarCampo("Estrutura de Custos:", p.getEstruturaCustos());
-        adicionarCampo("Fluxo de Receita:", p.getFluxoReceita());
-        adicionarCampo("Parceiros Chaves:", p.getParceirosChaves());
+        adicionarCampo("Proposta Chave:", p.getPropostaChave(), p);
+        adicionarCampo("Segmentos de Clientes:", p.getSegmentosClientes(), p);
+        adicionarCampo("Atividades Chaves:", p.getAtividadesChaves(), p);
+        adicionarCampo("Recursos Chaves:", p.getRecursosChaves(), p);
+        adicionarCampo("Relacionamentos:", p.getRelacionamentosClientes(), p);
+        adicionarCampo("Canais:", p.getCanais(), p);
+        adicionarCampo("Estrutura de Custos:", p.getEstruturaCustos(), p);
+        adicionarCampo("Fluxo de Receita:", p.getFluxoReceita(), p);
+        adicionarCampo("Parceiros Chaves:", p.getParceirosChaves(), p);
 
         adicionarCabecalho("Acompanhamento (tb_acompanhamento)");
-        adicionarCampo("Tarefas Atuais:", p.getTarefas());
-        adicionarCampo("Dificuldades Enxergadas:", p.getDificuldadesEnxergadas());
+        adicionarCampo("Tarefas Atuais:", p.getTarefas(), p);
+        adicionarCampo("Dificuldades Enxergadas:", p.getDificuldadesEnxergadas(), p);
     }
 
     private void configurarBolhaFixa() {
@@ -123,7 +137,8 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         layoutDetalhes.addView(tv);
     }
 
-    private void adicionarCampo(String rotulo, String valor) {
+    // Passamos o Projeto "p" aqui como parâmetro extra para poder acessar a empresa vinculada dele
+    private void adicionarCampo(String rotulo, String valor, Projeto p) {
         TextView tvRotulo = new TextView(this);
         tvRotulo.setText(rotulo);
         tvRotulo.setTextColor(0xFFFFFFFF);
@@ -141,8 +156,14 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         layoutDetalhes.addView(tvRotulo);
         layoutDetalhes.addView(tvValor);
 
-        // Se o usuário for Nível 4 (Empresa), insere uma área de feedback para esse campo específico
-        if ("4".equals(nivel)) {
+        // =========================================================================
+        // LÓGICA DE EXCLUSIVIDADE: SÓ COMENTA SE FOR A EMPRESA RESPONSÁVEL
+        // =========================================================================
+        String empresaVinculada = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
+        boolean isMinhaEmpresa = !nomeUsuarioLogado.isEmpty() && empresaVinculada.equalsIgnoreCase(nomeUsuarioLogado.trim());
+
+        // Se o usuário for Nível 4 (Empresa) E a empresa for a dona do projeto, mostra a caixa
+        if ("4".equals(nivel) && isMinhaEmpresa) {
             LinearLayout layoutComentario = new LinearLayout(this);
             layoutComentario.setOrientation(LinearLayout.HORIZONTAL);
             layoutComentario.setPadding(0, 4, 0, 16);
@@ -165,7 +186,8 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
             btnSalvarComentario.setOnClickListener(v -> {
                 String feedback = etComentario.getText().toString().trim();
                 if (!feedback.isEmpty()) {
-                    // Pronto para realizar a requisição HTTP (Volley) salvando o feedback para esta seção
+                    // Aqui ficaria o Volley (Requisição HTTP) para salvar no banco db_dspi.
+                    // Por enquanto só exibe a mensagem confirmando.
                     Toast.makeText(this, "Comentário salvo para " + rotulo, Toast.LENGTH_SHORT).show();
                     etComentario.setText(""); // Limpa o campo após salvar
                 } else {

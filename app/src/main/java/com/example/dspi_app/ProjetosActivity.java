@@ -136,14 +136,15 @@ public class ProjetosActivity extends AppCompatActivity {
                                 String nomeEqp = p.getNomeEquipe() != null ? p.getNomeEquipe().trim() : "";
 
                                 if ("4".equals(nivel)) {
-                                    // SE FOR EMPRESA: Compara user logado com a empresa vinculada
+                                    // REGRA DE EXCLUSIVIDADE DA EMPRESA
                                     if (!userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado)) {
-                                        meusProjetos.add(p);
-                                    } else {
-                                        outrosProjetos.add(p);
+                                        meusProjetos.add(p); // É afiliado a esta empresa
+                                    } else if (empresaVinc.isEmpty() || empresaVinc.equalsIgnoreCase("null") || empresaVinc.equalsIgnoreCase("Nenhuma")) {
+                                        outrosProjetos.add(p); // NÃO TEM empresa vinculada (Projeto livre)
                                     }
+                                    // OBS: Se tiver empresa vinculada e não for a logada, ele simplesmente não entra em lista nenhuma (Fica Oculto).
                                 } else {
-                                    // SE FOR ALUNO/OUTROS: Compara user logado com o nome da equipe
+                                    // REGRA DO ALUNO: Mantém como estava
                                     if (!userLogado.isEmpty() && nomeEqp.equalsIgnoreCase(userLogado)) {
                                         meusProjetos.add(p);
                                     } else {

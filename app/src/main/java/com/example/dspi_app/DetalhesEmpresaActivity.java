@@ -1,6 +1,7 @@
 package com.example.dspi_app;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
@@ -31,6 +32,8 @@ import java.util.List;
 public class DetalhesEmpresaActivity extends AppCompatActivity {
 
     private final int CURRENT_TAB_INDEX = 3;
+    private String nivel;
+    private String nomeUsuarioLogado;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,10 +48,24 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
             return WindowInsetsCompat.CONSUMED;
         });
 
+        // ===================================================================
+        // RECUPERAR SESSÃO DO USUÁRIO LOGADO (Quem está fuçando o app?)
+        // ===================================================================
+        SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
+        nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
+
+        nomeUsuarioLogado = prefs.getString("email_logado", "");
+        if (nomeUsuarioLogado == null || nomeUsuarioLogado.trim().isEmpty()) {
+            nomeUsuarioLogado = getIntent().getStringExtra("email_usuario");
+        }
+        if (nomeUsuarioLogado == null) {
+            nomeUsuarioLogado = "";
+        }
+
         ImageButton btnVoltar = findViewById(R.id.btnVoltar);
         btnVoltar.setOnClickListener(v -> finish());
 
-        String nome = getIntent().getStringExtra("nome_empresa");
+        String nome = getIntent().getStringExtra("nome_empresa"); // Empresa que está sendo visualizada
         String cnpj = getIntent().getStringExtra("cnpj");
         String telefone = getIntent().getStringExtra("telefone_contato");
         String email = getIntent().getStringExtra("email_contato");
@@ -77,23 +94,17 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         String apenasNumerosCnpj = cnpjFormatado.replaceAll("\\D", "");
         if (apenasNumerosCnpj.length() == 14) {
             cnpjFormatado = String.format("%s.%s.%s/%s-%s",
-                    apenasNumerosCnpj.substring(0, 2),
-                    apenasNumerosCnpj.substring(2, 5),
-                    apenasNumerosCnpj.substring(5, 8),
-                    apenasNumerosCnpj.substring(8, 12),
-                    apenasNumerosCnpj.substring(12, 14));
+                    apenasNumerosCnpj.substring(0, 2), apenasNumerosCnpj.substring(2, 5),
+                    apenasNumerosCnpj.substring(5, 8), apenasNumerosCnpj.substring(8, 12), apenasNumerosCnpj.substring(12, 14));
         }
         txtCnpjEmpresa.setText(!cnpjFormatado.isEmpty() ? "CNPJ: " + cnpjFormatado : "CNPJ: Não informado");
 
         String telefoneFormatado = telefone != null ? telefone : "";
         String apenasNumeros = telefoneFormatado.replaceAll("\\D", "");
         if (apenasNumeros.length() == 11) {
-            telefoneFormatado = String.format("(%s) %s %s-%s",
-                    apenasNumeros.substring(0, 2), apenasNumeros.substring(2, 3),
-                    apenasNumeros.substring(3, 7), apenasNumeros.substring(7, 11));
+            telefoneFormatado = String.format("(%s) %s %s-%s", apenasNumeros.substring(0, 2), apenasNumeros.substring(2, 3), apenasNumeros.substring(3, 7), apenasNumeros.substring(7, 11));
         } else if (apenasNumeros.length() == 10) {
-            telefoneFormatado = String.format("(%s) %s-%s",
-                    apenasNumeros.substring(0, 2), apenasNumeros.substring(2, 6), apenasNumeros.substring(6, 10));
+            telefoneFormatado = String.format("(%s) %s-%s", apenasNumeros.substring(0, 2), apenasNumeros.substring(2, 6), apenasNumeros.substring(6, 10));
         }
         txtTelefone.setText(!telefoneFormatado.isEmpty() ? telefoneFormatado : "Sem telefone");
 
@@ -101,49 +112,12 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         emailFormatado = emailFormatado.replace("@", "\u2060@\u2060").replace(".", "\u2060.\u2060");
         txtEmail.setText(emailFormatado);
 
-        String enderecoFormatado = endereco != null ? endereco.trim() : "";
-
-        if (!enderecoFormatado.isEmpty()) {
-            String[] parts = enderecoFormatado.split(",");
-
-            String logradouro = parts[0].trim();
-            String logradouroLower = logradouro.toLowerCase();
-
-            if (logradouroLower.startsWith("avenida ")) {
-                logradouro = "Av. " + logradouro.substring(8).trim();
-            } else if (logradouroLower.startsWith("rua ")) {
-                logradouro = "R. " + logradouro.substring(4).trim();
-            } else if (!logradouroLower.startsWith("r. ") && !logradouroLower.startsWith("a. ")) {
-                logradouro = "R. " + logradouro;
-            }
-            enderecoFormatado = logradouro;
-
-            if (parts.length > 1) {
-                String bairro = parts[1].trim();
-                bairro = bairro.replaceAll("(?i)\\bbairro\\b", "").trim();
-                enderecoFormatado += ", B. " + bairro;
-            }
-
-            if (parts.length > 2) {
-                StringBuilder resto = new StringBuilder();
-                for (int i = 2; i < parts.length; i++) {
-                    resto.append(", ").append(parts[i].trim());
-                }
-                String restoStr = resto.toString();
-                restoStr = restoStr.replaceAll("(?i)\\bapartamento\\b", "Ap.");
-                enderecoFormatado += restoStr;
-            }
-
-        } else {
-            enderecoFormatado = "Endereço não informado";
-        }
-
+        String enderecoFormatado = endereco != null ? endereco.trim() : "Endereço não informado";
         txtEndereco.setText(enderecoFormatado);
 
         if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
             String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
             int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
-
             if (resourceId != 0) {
                 imgEmpresaLogo.setImageResource(resourceId);
                 imgEmpresaLogo.setImageTintList(null);
@@ -152,22 +126,17 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
             }
         }
 
-        String nivel = getIntent().getStringExtra("nivel_de_acesso");
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
         configurarBolhaAnimada();
 
-        // ========================================================
-        // CONFIGURAÇÃO DO RECYCLERVIEW DE PROJETOS AFILIADOS
-        // ========================================================
         recyclerProjetosAfiliados.setLayoutManager(new LinearLayoutManager(this));
 
-        // Se temos o nome da empresa, fazemos a busca na API
         if (nome != null && !nome.trim().isEmpty()) {
-            buscarProjetosDaEmpresa(nome, recyclerProjetosAfiliados, nivel);
+            buscarProjetosDaEmpresa(nome, recyclerProjetosAfiliados);
         }
     }
 
-    private void buscarProjetosDaEmpresa(String nomeEmpresa, RecyclerView recyclerView, String nivelDeAcesso) {
+    private void buscarProjetosDaEmpresa(String nomeEmpresaQueEstaSendoVisualizada, RecyclerView recyclerView) {
         String url = "https://api-dspi.whyguiih.workers.dev/listar-projetos";
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
@@ -202,24 +171,32 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
 
                                 String empresaVinc = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada() : "";
 
-                                // Verifica se o projeto está vinculado a empresa que o usuário está visualizando
-                                if (!empresaVinc.trim().isEmpty() && empresaVinc.trim().equalsIgnoreCase(nomeEmpresa.trim())) {
+                                // Verifica se o projeto está vinculado a empresa que está sendo exibida na tela agora
+                                if (!empresaVinc.trim().isEmpty() && empresaVinc.trim().equalsIgnoreCase(nomeEmpresaQueEstaSendoVisualizada.trim())) {
                                     projetosAfiliados.add(p);
                                 }
                             }
 
-                            // Preenche o RecyclerView reaproveitando o Adapter da ProjetosActivity
                             if (!projetosAfiliados.isEmpty()) {
                                 recyclerView.setAdapter(new ProjetosActivity.ProjetoAdapter(projetosAfiliados, projeto -> {
+
+                                    // =========================================================================
+                                    // BLOQUEIO MÁGICO AQUI: Se for Empresa e tentar clicar no projeto de OUTRA empresa
+                                    // =========================================================================
+                                    if ("4".equals(nivel) && !nomeEmpresaQueEstaSendoVisualizada.trim().equalsIgnoreCase(nomeUsuarioLogado.trim())) {
+                                        Toast.makeText(DetalhesEmpresaActivity.this, "Acesso Negado: Você só pode acessar os detalhes dos seus próprios projetos afiliados.", Toast.LENGTH_LONG).show();
+                                        return; // O return força a função a parar aqui. A tela não abre!
+                                    }
+
+                                    // Se passar do bloqueio (Se for Aluno, Professor, ou a PRÓPRIA empresa dona do projeto), abre normal
                                     Intent intent = new Intent(DetalhesEmpresaActivity.this, ProjetoDetalhesActivity.class);
                                     intent.putExtra("projeto_selecionado", projeto);
-                                    intent.putExtra("nivel_de_acesso", nivelDeAcesso);
+                                    intent.putExtra("nivel_de_acesso", nivel);
                                     intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
                                     startActivity(intent);
-                                    overridePendingTransition(0, 0); // Remove animação de troca de tela
+                                    overridePendingTransition(0, 0);
                                 }));
                             } else {
-                                // Se não encontrar nenhum projeto, deixa o RecyclerView vazio ou pode criar um TextView avisando.
                                 recyclerView.setVisibility(View.GONE);
                             }
                         }
