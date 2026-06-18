@@ -1,5 +1,6 @@
 package com.example.dspi_app;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
@@ -7,11 +8,25 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DetalhesEmpresaActivity extends AppCompatActivity {
 
@@ -51,6 +66,7 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         TextView txtEndereco = findViewById(R.id.txtEndereco);
         TextView txtSobreEmpresa = findViewById(R.id.txtSobreEmpresa);
         ImageView imgEmpresaLogo = findViewById(R.id.imgEmpresaLogo);
+        RecyclerView recyclerProjetosAfiliados = findViewById(R.id.recycler_projetos_afiliados);
 
         // Preenchimentos básicos
         tvNomeEmpresa.setText(nome != null ? nome : "Empresa");
@@ -58,7 +74,7 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         txtSobreEmpresa.setText(descricao != null && !descricao.isEmpty() ? descricao : "Nenhuma descrição disponível ainda.");
 
         String cnpjFormatado = cnpj != null ? cnpj : "";
-        String apenasNumerosCnpj = cnpjFormatado.replaceAll("\\D", ""); // Garante que só tem números
+        String apenasNumerosCnpj = cnpjFormatado.replaceAll("\\D", "");
         if (apenasNumerosCnpj.length() == 14) {
             cnpjFormatado = String.format("%s.%s.%s/%s-%s",
                     apenasNumerosCnpj.substring(0, 2),
@@ -139,6 +155,83 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         String nivel = getIntent().getStringExtra("nivel_de_acesso");
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
         configurarBolhaAnimada();
+
+        // ========================================================
+        // CONFIGURAÇÃO DO RECYCLERVIEW DE PROJETOS AFILIADOS
+        // ========================================================
+        recyclerProjetosAfiliados.setLayoutManager(new LinearLayoutManager(this));
+
+        // Se temos o nome da empresa, fazemos a busca na API
+        if (nome != null && !nome.trim().isEmpty()) {
+            buscarProjetosDaEmpresa(nome, recyclerProjetosAfiliados, nivel);
+        }
+    }
+
+    private void buscarProjetosDaEmpresa(String nomeEmpresa, RecyclerView recyclerView, String nivelDeAcesso) {
+        String url = "https://api-dspi.whyguiih.workers.dev/listar-projetos";
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    try {
+                        if (response.getBoolean("success")) {
+                            JSONArray data = response.getJSONArray("data");
+                            List<Projeto> projetosAfiliados = new ArrayList<>();
+
+                            for (int i = 0; i < data.length(); i++) {
+                                JSONObject obj = data.getJSONObject(i);
+
+                                Projeto p = new Projeto(
+                                        obj.optString("nome_projeto", "Projeto Sem Nome"),
+                                        obj.optString("nome_equipe", "Sem Equipe"),
+                                        obj.optString("status", "Não iniciado"),
+                                        obj.optString("nome_integrante", ""),
+                                        obj.optString("nome_orientador", ""),
+                                        obj.optString("proposta_chave", ""),
+                                        obj.optString("segmentos_clientes", ""),
+                                        obj.optString("atividades_chaves", ""),
+                                        obj.optString("recursos_chaves", ""),
+                                        obj.optString("relacionamentos_clientes", ""),
+                                        obj.optString("canais", ""),
+                                        obj.optString("estrutura_custos", ""),
+                                        obj.optString("fluxo_receita", ""),
+                                        obj.optString("parceiros_chaves", ""),
+                                        obj.optString("tarefas", ""),
+                                        obj.optString("dificuldades_enxergadas", ""),
+                                        obj.optString("empresa_vinculada", "")
+                                );
+
+                                String empresaVinc = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada() : "";
+
+                                // Verifica se o projeto está vinculado a empresa que o usuário está visualizando
+                                if (!empresaVinc.trim().isEmpty() && empresaVinc.trim().equalsIgnoreCase(nomeEmpresa.trim())) {
+                                    projetosAfiliados.add(p);
+                                }
+                            }
+
+                            // Preenche o RecyclerView reaproveitando o Adapter da ProjetosActivity
+                            if (!projetosAfiliados.isEmpty()) {
+                                recyclerView.setAdapter(new ProjetosActivity.ProjetoAdapter(projetosAfiliados, projeto -> {
+                                    Intent intent = new Intent(DetalhesEmpresaActivity.this, ProjetoDetalhesActivity.class);
+                                    intent.putExtra("projeto_selecionado", projeto);
+                                    intent.putExtra("nivel_de_acesso", nivelDeAcesso);
+                                    intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
+                                    startActivity(intent);
+                                    overridePendingTransition(0, 0); // Remove animação de troca de tela
+                                }));
+                            } else {
+                                // Se não encontrar nenhum projeto, deixa o RecyclerView vazio ou pode criar um TextView avisando.
+                                recyclerView.setVisibility(View.GONE);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(this, "Erro ao carregar projetos afiliados", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> Toast.makeText(this, "Falha na conexão com a API", Toast.LENGTH_SHORT).show()
+        );
+
+        Volley.newRequestQueue(this).add(request);
     }
 
     private void configurarBolhaAnimada() {
