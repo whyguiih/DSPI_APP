@@ -2,25 +2,36 @@ package com.example.dspi_app;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
-import android.widget.EditText;
-import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ProjetoDetalhesActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 1;
     private LinearLayout layoutDetalhes;
     private String nivel;
-    private String nomeUsuarioLogado; // Guarda quem é a empresa que está acessando
+    private String nomeUsuarioLogado;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,26 +48,21 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
 
         configurarBolhaFixa();
 
-        // ===================================================================
-        // RECUPERAÇÃO DA SESSÃO PARA SABER QUEM ESTÁ LOGADO
-        // ===================================================================
+        // Recupera sessão do usuário
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
-
         nomeUsuarioLogado = prefs.getString("email_logado", "");
         if (nomeUsuarioLogado == null || nomeUsuarioLogado.trim().isEmpty()) {
             nomeUsuarioLogado = getIntent().getStringExtra("email_usuario");
         }
-        if (nomeUsuarioLogado == null) {
-            nomeUsuarioLogado = "";
-        }
+        if (nomeUsuarioLogado == null) nomeUsuarioLogado = "";
 
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         Button btnVoltar = findViewById(R.id.btnVoltar);
         btnVoltar.setOnClickListener(v -> {
             finish();
-            overridePendingTransition(0, 0); // Sai sem animação para transição perfeita
+            overridePendingTransition(0, 0);
         });
 
         layoutDetalhes = findViewById(R.id.layoutDetalhesDinamicos);
@@ -71,23 +77,120 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         adicionarSecaoTitulo(p.getNomeProjeto(), "Equipe " + p.getNomeEquipe() + " | Status: " + p.getStatus());
 
         adicionarCabecalho("Informações da Equipe");
-        adicionarCampo("Integrantes:", p.getIntegrantes(), p);
-        adicionarCampo("Orientador:", p.getOrientador(), p);
+        adicionarCampo("Integrantes:", p.getIntegrantes());
+        adicionarCampo("Orientador:", p.getOrientador());
 
         adicionarCabecalho("Canvas do Projeto (tb_canva)");
-        adicionarCampo("Proposta Chave:", p.getPropostaChave(), p);
-        adicionarCampo("Segmentos de Clientes:", p.getSegmentosClientes(), p);
-        adicionarCampo("Atividades Chaves:", p.getAtividadesChaves(), p);
-        adicionarCampo("Recursos Chaves:", p.getRecursosChaves(), p);
-        adicionarCampo("Relacionamentos:", p.getRelacionamentosClientes(), p);
-        adicionarCampo("Canais:", p.getCanais(), p);
-        adicionarCampo("Estrutura de Custos:", p.getEstruturaCustos(), p);
-        adicionarCampo("Fluxo de Receita:", p.getFluxoReceita(), p);
-        adicionarCampo("Parceiros Chaves:", p.getParceirosChaves(), p);
+        adicionarCampo("Proposta Chave:", p.getPropostaChave());
+        adicionarCampo("Segmentos de Clientes:", p.getSegmentosClientes());
+        adicionarCampo("Atividades Chaves:", p.getAtividadesChaves());
+        adicionarCampo("Recursos Chaves:", p.getRecursosChaves());
+        adicionarCampo("Relacionamentos:", p.getRelacionamentosClientes());
+        adicionarCampo("Canais:", p.getCanais());
+        adicionarCampo("Estrutura de Custos:", p.getEstruturaCustos());
+        adicionarCampo("Fluxo de Receita:", p.getFluxoReceita());
+        adicionarCampo("Parceiros Chaves:", p.getParceirosChaves());
 
         adicionarCabecalho("Acompanhamento (tb_acompanhamento)");
-        adicionarCampo("Tarefas Atuais:", p.getTarefas(), p);
-        adicionarCampo("Dificuldades Enxergadas:", p.getDificuldadesEnxergadas(), p);
+        adicionarCampo("Tarefas Atuais:", p.getTarefas());
+        adicionarCampo("Dificuldades Enxergadas:", p.getDificuldadesEnxergadas());
+
+        // =================================================================================
+        // LÓGICA DO BALÃO DE FEEDBACK GERAL (APENAS PARA A EMPRESA DONA)
+        // =================================================================================
+        String empresaVinculada = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
+        boolean isMinhaEmpresa = !nomeUsuarioLogado.isEmpty() && empresaVinculada.equalsIgnoreCase(nomeUsuarioLogado.trim());
+
+        if ("4".equals(nivel) && isMinhaEmpresa) {
+            adicionarSecaoComentarioGeral(p);
+        }
+    }
+
+    private void adicionarSecaoComentarioGeral(Projeto p) {
+        // Linha Divisória de Vidro
+        View linha = new View(this);
+        linha.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2));
+        linha.setBackgroundColor(0x4DFFFFFF);
+        LinearLayout.LayoutParams lpLinha = (LinearLayout.LayoutParams) linha.getLayoutParams();
+        lpLinha.setMargins(0, 48, 0, 24);
+        linha.setLayoutParams(lpLinha);
+        layoutDetalhes.addView(linha);
+
+        // Título da Seção
+        TextView tvTituloFeedback = new TextView(this);
+        tvTituloFeedback.setText("FEEDBACK GERAL DA EMPRESA");
+        tvTituloFeedback.setTextColor(0xFFB3E5FC);
+        tvTituloFeedback.setTextSize(14);
+        tvTituloFeedback.setTypeface(getResources().getFont(R.font.neo_sans_bold_italic));
+        tvTituloFeedback.setPadding(0, 0, 0, 16);
+        layoutDetalhes.addView(tvTituloFeedback);
+
+        // O Balão de Comentário Grande (Glassmorphism)
+        EditText etComentario = new EditText(this);
+        LinearLayout.LayoutParams lpEdit = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        lpEdit.setMargins(0, 0, 0, 16);
+        etComentario.setLayoutParams(lpEdit);
+        etComentario.setHint("Escreva suas orientações, elogios e feedbacks gerais para a equipe aqui...");
+        etComentario.setHintTextColor(0x80FFFFFF);
+        etComentario.setTextColor(0xFFFFFFFF);
+        etComentario.setTextSize(15);
+        etComentario.setTypeface(getResources().getFont(R.font.neo_sans));
+        etComentario.setMinLines(5);
+        etComentario.setGravity(Gravity.TOP | Gravity.START);
+        etComentario.setPadding(40, 40, 40, 40);
+        etComentario.setBackground(getResources().getDrawable(R.drawable.bg_input_glass, getTheme()));
+
+        // Botão de Enviar
+        Button btnSalvarComentario = new Button(this);
+        LinearLayout.LayoutParams lpBtn = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                140
+        );
+        lpBtn.setMargins(0, 8, 0, 48);
+        btnSalvarComentario.setLayoutParams(lpBtn);
+        btnSalvarComentario.setText("ENVIAR FEEDBACK");
+        btnSalvarComentario.setTextSize(14);
+        btnSalvarComentario.setTypeface(getResources().getFont(R.font.neo_sans_bold_italic));
+        btnSalvarComentario.setTextColor(0xFFFFFFFF);
+        btnSalvarComentario.setBackground(getResources().getDrawable(R.drawable.bg_button_login, getTheme()));
+
+        // =====================================================================
+        // DISPARO DA REQUISIÇÃO (Manda apenas o Nome do Projeto e o Comentário)
+        // =====================================================================
+        btnSalvarComentario.setOnClickListener(v -> {
+            String feedback = etComentario.getText().toString().trim();
+            if (!feedback.isEmpty()) {
+                salvarComentarioNoBanco(p.getNomeProjeto(), feedback, etComentario);
+            } else {
+                Toast.makeText(this, "O balão de feedback está vazio.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Adiciona tudo na tela
+        layoutDetalhes.addView(etComentario);
+        layoutDetalhes.addView(btnSalvarComentario);
+    }
+
+    private void adicionarCampo(String rotulo, String valor) {
+        TextView tvRotulo = new TextView(this);
+        tvRotulo.setText(rotulo);
+        tvRotulo.setTextColor(0xFFFFFFFF);
+        tvRotulo.setTextSize(16);
+        tvRotulo.setTypeface(getResources().getFont(R.font.neo_sans_bold_italic));
+        tvRotulo.setPadding(0, 8, 0, 2);
+
+        TextView tvValor = new TextView(this);
+        tvValor.setText(valor != null && !valor.isEmpty() ? valor : "Dado não preenchido.");
+        tvValor.setTextColor(0xE6FFFFFF);
+        tvValor.setTextSize(15);
+        tvValor.setTypeface(getResources().getFont(R.font.neo_sans));
+        tvValor.setPadding(0, 0, 0, 12);
+
+        layoutDetalhes.addView(tvRotulo);
+        layoutDetalhes.addView(tvValor);
     }
 
     private void configurarBolhaFixa() {
@@ -137,67 +240,63 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         layoutDetalhes.addView(tv);
     }
 
-    // Passamos o Projeto "p" aqui como parâmetro extra para poder acessar a empresa vinculada dele
-    private void adicionarCampo(String rotulo, String valor, Projeto p) {
-        TextView tvRotulo = new TextView(this);
-        tvRotulo.setText(rotulo);
-        tvRotulo.setTextColor(0xFFFFFFFF);
-        tvRotulo.setTextSize(16);
-        tvRotulo.setTypeface(getResources().getFont(R.font.neo_sans_bold_italic));
-        tvRotulo.setPadding(0, 8, 0, 2);
+    // =========================================================================
+// REQUISIÇÃO VOLLEY PARA A API (VERSÃO REFORÇADA COM DEBUG E TIMEOUT MAIOR)
+// =========================================================================
+    private void salvarComentarioNoBanco(String nomeProjeto, String comentario, EditText caixaTexto) {
+        String url = "https://api-dspi.whyguiih.workers.dev/salvar-comentario";
 
-        TextView tvValor = new TextView(this);
-        tvValor.setText(valor != null && !valor.isEmpty() ? valor : "Dado não preenchido.");
-        tvValor.setTextColor(0xE6FFFFFF);
-        tvValor.setTextSize(15);
-        tvValor.setTypeface(getResources().getFont(R.font.neo_sans));
-        tvValor.setPadding(0, 0, 0, 12);
-
-        layoutDetalhes.addView(tvRotulo);
-        layoutDetalhes.addView(tvValor);
-
-        // =========================================================================
-        // LÓGICA DE EXCLUSIVIDADE: SÓ COMENTA SE FOR A EMPRESA RESPONSÁVEL
-        // =========================================================================
-        String empresaVinculada = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
-        boolean isMinhaEmpresa = !nomeUsuarioLogado.isEmpty() && empresaVinculada.equalsIgnoreCase(nomeUsuarioLogado.trim());
-
-        // Se o usuário for Nível 4 (Empresa) E a empresa for a dona do projeto, mostra a caixa
-        if ("4".equals(nivel) && isMinhaEmpresa) {
-            LinearLayout layoutComentario = new LinearLayout(this);
-            layoutComentario.setOrientation(LinearLayout.HORIZONTAL);
-            layoutComentario.setPadding(0, 4, 0, 16);
-
-            EditText etComentario = new EditText(this);
-            LinearLayout.LayoutParams lpEdit = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
-            etComentario.setLayoutParams(lpEdit);
-            etComentario.setHint("Comentário da empresa sobre " + rotulo.replace(":", "") + "...");
-            etComentario.setHintTextColor(0x80FFFFFF);
-            etComentario.setTextColor(0xFFFFFFFF);
-            etComentario.setTextSize(14);
-            etComentario.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFFFFFFF));
-
-            Button btnSalvarComentario = new Button(this);
-            btnSalvarComentario.setText("Salvar");
-            btnSalvarComentario.setTextSize(12);
-            btnSalvarComentario.setTextColor(0xFFFFFFFF);
-            btnSalvarComentario.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFF0077CC));
-
-            btnSalvarComentario.setOnClickListener(v -> {
-                String feedback = etComentario.getText().toString().trim();
-                if (!feedback.isEmpty()) {
-                    // Aqui ficaria o Volley (Requisição HTTP) para salvar no banco db_dspi.
-                    // Por enquanto só exibe a mensagem confirmando.
-                    Toast.makeText(this, "Comentário salvo para " + rotulo, Toast.LENGTH_SHORT).show();
-                    etComentario.setText(""); // Limpa o campo após salvar
-                } else {
-                    Toast.makeText(this, "Digite algo antes de salvar.", Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            layoutComentario.addView(etComentario);
-            layoutComentario.addView(btnSalvarComentario);
-            layoutDetalhes.addView(layoutComentario);
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("nome_projeto", nomeProjeto);
+            jsonBody.put("comentario", comentario);
+            jsonBody.put("nome_empresa", nomeUsuarioLogado);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
+                response -> {
+                    try {
+                        if (response.getBoolean("success")) {
+                            Toast.makeText(this, "Feedback enviado com sucesso!", Toast.LENGTH_SHORT).show();
+                            caixaTexto.setText(""); // Limpa o campo
+                        } else {
+                            Toast.makeText(this, "Aviso: " + response.optString("message", "Falha ao salvar"), Toast.LENGTH_LONG).show();
+                        }
+                    } catch (JSONException e) {
+                        Toast.makeText(this, "Erro no formato da resposta", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    // CAPTURA A MENSAGEM EXATA DO ERRO DO CLOUDFLARE
+                    String erroDetalhado = "Erro de conexão (Timeout ou sem internet).";
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
+                        erroDetalhado = new String(error.networkResponse.data);
+                    } else if (error.getMessage() != null) {
+                        erroDetalhado = error.getMessage();
+                    }
+
+                    int statusCode = error.networkResponse != null ? error.networkResponse.statusCode : 0;
+                    Log.e("API_COMENTARIO", "Status: " + statusCode + " | Erro: " + erroDetalhado);
+
+                    // Exibe o erro real na tela para sabermos o que arrumar!
+                    Toast.makeText(this, "Erro da API: " + erroDetalhado, Toast.LENGTH_LONG).show();
+                }) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Content-Type", "application/json; charset=utf-8");
+                return headers;
+            }
+        };
+
+        // AUMENTA O TEMPO DE ESPERA PARA 10 SEGUNDOS (Resolve erros de Cold Start da API)
+        jsonObjectRequest.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(
+                10000,
+                0, // Não tenta reenviar o POST automaticamente para evitar comentários duplicados
+                com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        Volley.newRequestQueue(this).add(jsonObjectRequest);
     }
 }
