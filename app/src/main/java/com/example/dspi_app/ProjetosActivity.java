@@ -1,7 +1,9 @@
 package com.example.dspi_app;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,7 +35,7 @@ import java.util.List;
 public class ProjetosActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 1;
     private String nivel;
-    private String email;
+    private String nomeUsuario;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,21 +52,38 @@ public class ProjetosActivity extends AppCompatActivity {
 
         configurarBolhaAnimada();
 
-        android.content.SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
+        // ===================================================================
+        // BUSCANDO EXATAMENTE COM AS CHAVES DO SEU LOGINACTIVITY
+        // ===================================================================
+        SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
-        email = prefs.getString("nome_usuario", ""); // O 'email' na verdade guarda o nome da equipe ou da empresa
+
+        // Pega do SharedPreferences igual você salvou no LoginActivity
+        nomeUsuario = prefs.getString("email_logado", "");
+
+        // Se por acaso vier vazio do SharedPreferences, tenta pegar da Intent
+        if (nomeUsuario == null || nomeUsuario.trim().isEmpty()) {
+            nomeUsuario = getIntent().getStringExtra("email_usuario");
+        }
+
+        // Proteção contra nulo
+        if (nomeUsuario == null) {
+            nomeUsuario = "";
+        }
+
+        Log.d("DEBUG_PROJETOS", "Nível logado: " + nivel + " | Usuário/Empresa logada: '" + nomeUsuario + "'");
 
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         Button btnAbrirFormulario = findViewById(R.id.btnAbrirFormulario);
         if ("4".equals(nivel)) {
-            btnAbrirFormulario.setVisibility(View.GONE); // Empresas não editam/criam
+            btnAbrirFormulario.setVisibility(View.GONE);
         }
         btnAbrirFormulario.setOnClickListener(v -> {
             Intent intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
             intent.putExtra("nivel_de_acesso", nivel);
             intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
-            intent.putExtra("email_usuario", email);
+            intent.putExtra("email_usuario", nomeUsuario);
             startActivity(intent);
             overridePendingTransition(0, 0);
         });
@@ -74,12 +93,10 @@ public class ProjetosActivity extends AppCompatActivity {
         rvMeusProjetos.setLayoutManager(new LinearLayoutManager(this));
         rvOutrosProjetos.setLayoutManager(new LinearLayoutManager(this));
 
-        // Busca dados diretamente do Banco de Dados
         buscarProjetosDaApi();
     }
 
     private void buscarProjetosDaApi() {
-        // ATENÇÃO: COLOQUE A URL CORRETA DA SUA API AQUI!
         String url = "https://api-dspi.whyguiih.workers.dev/listar-projetos";
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
@@ -89,6 +106,8 @@ public class ProjetosActivity extends AppCompatActivity {
                             JSONArray data = response.getJSONArray("data");
                             List<Projeto> meusProjetos = new ArrayList<>();
                             List<Projeto> outrosProjetos = new ArrayList<>();
+
+                            String userLogado = nomeUsuario.trim();
 
                             for (int i = 0; i < data.length(); i++) {
                                 JSONObject obj = data.getJSONObject(i);
@@ -113,21 +132,19 @@ public class ProjetosActivity extends AppCompatActivity {
                                         obj.optString("empresa_vinculada", "")
                                 );
 
-                                // Travas de segurança contra NullPointerException
-                                String empresaVinc = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada() : "";
-                                String nomeEqp = p.getNomeEquipe() != null ? p.getNomeEquipe() : "";
-                                String userLogado = email != null ? email : "";
+                                String empresaVinc = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
+                                String nomeEqp = p.getNomeEquipe() != null ? p.getNomeEquipe().trim() : "";
 
                                 if ("4".equals(nivel)) {
-                                    // NIVEL 4 (EMPRESA): Compara o nome de login com a empresa vinculada ao projeto
-                                    if (!userLogado.trim().isEmpty() && empresaVinc.trim().equalsIgnoreCase(userLogado.trim())) {
+                                    // SE FOR EMPRESA: Compara user logado com a empresa vinculada
+                                    if (!userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado)) {
                                         meusProjetos.add(p);
                                     } else {
                                         outrosProjetos.add(p);
                                     }
                                 } else {
-                                    // NIVEL ALUNO: Compara com o próprio nome de usuário
-                                    if (!userLogado.trim().isEmpty() && nomeEqp.trim().equalsIgnoreCase(userLogado.trim())) {
+                                    // SE FOR ALUNO/OUTROS: Compara user logado com o nome da equipe
+                                    if (!userLogado.isEmpty() && nomeEqp.equalsIgnoreCase(userLogado)) {
                                         meusProjetos.add(p);
                                     } else {
                                         outrosProjetos.add(p);
@@ -136,19 +153,14 @@ public class ProjetosActivity extends AppCompatActivity {
                             }
                             configurarListasDeProjetos(meusProjetos, outrosProjetos);
                         } else {
-                            String erroApi = response.optString("error", "Erro na API");
-                            Toast.makeText(this, "Erro da API: " + erroApi, Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "Erro da API: " + response.optString("error"), Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        android.util.Log.e("PROJETOS_ERRO", "Erro de Parse JSON: " + e.getMessage());
                         Toast.makeText(this, "Erro ao processar dados", Toast.LENGTH_SHORT).show();
                     }
                 },
-                error -> {
-                    String erroMsg = error.getMessage() != null ? error.getMessage() : error.toString();
-                    Toast.makeText(this, "Falha de Conexão: " + erroMsg, Toast.LENGTH_LONG).show();
-                }
+                error -> Toast.makeText(this, "Falha de Conexão com API", Toast.LENGTH_LONG).show()
         );
         Volley.newRequestQueue(this).add(request);
     }
@@ -159,13 +171,7 @@ public class ProjetosActivity extends AppCompatActivity {
         TextView tvSeusProjetos = findViewById(R.id.tvSeusProjetos);
         TextView tvOutrosProjetos = findViewById(R.id.tvOutrosProjetos);
 
-        // ========= ALTERAÇÃO DINÂMICA DO TÍTULO =========
-        if ("4".equals(nivel)) {
-            tvSeusProjetos.setText("Projetos Afiliados");
-        } else {
-            tvSeusProjetos.setText("Meus Projetos");
-        }
-        // ================================================
+        tvSeusProjetos.setText("Meus Projetos");
 
         if (meusProjetos.isEmpty()) {
             tvSeusProjetos.setVisibility(View.GONE);
@@ -233,11 +239,8 @@ public class ProjetosActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             Projeto projeto = projetos.get(position);
             holder.tvNome.setText(projeto.getNomeProjeto());
-
-            // Corrige se o status vier vazio ou null do banco
             String st = projeto.getStatus();
             holder.tvStatus.setText("Status: " + (st == null || st.trim().isEmpty() || st.equals("null") ? "Não Iniciado" : st));
-
             holder.tvEquipe.setText("Equipe: " + projeto.getNomeEquipe());
             holder.itemView.setOnClickListener(v -> listener.onItemClick(projeto));
         }
