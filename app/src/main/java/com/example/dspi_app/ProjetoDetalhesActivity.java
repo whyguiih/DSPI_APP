@@ -48,7 +48,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
 
         configurarBolhaFixa();
 
-        // Recupera sessão do usuário
+        // Recupera sessão do usuário logado (Usado APENAS para validar a permissão de visualização do balão)
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
         nomeUsuarioLogado = prefs.getString("email_logado", "");
@@ -96,7 +96,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         adicionarCampo("Dificuldades Enxergadas:", p.getDificuldadesEnxergadas());
 
         // =================================================================================
-        // LÓGICA DO BALÃO DE FEEDBACK GERAL (APENAS PARA A EMPRESA DONA)
+        // LÓGICA DE PERMISSÃO PARA MOSTRAR O BALÃO DE FEEDBACK
         // =================================================================================
         String empresaVinculada = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
         boolean isMinhaEmpresa = !nomeUsuarioLogado.isEmpty() && empresaVinculada.equalsIgnoreCase(nomeUsuarioLogado.trim());
@@ -107,7 +107,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
     }
 
     private void adicionarSecaoComentarioGeral(Projeto p) {
-        // Linha Divisória de Vidro
         View linha = new View(this);
         linha.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2));
         linha.setBackgroundColor(0x4DFFFFFF);
@@ -116,7 +115,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         linha.setLayoutParams(lpLinha);
         layoutDetalhes.addView(linha);
 
-        // Título da Seção
         TextView tvTituloFeedback = new TextView(this);
         tvTituloFeedback.setText("FEEDBACK GERAL DA EMPRESA");
         tvTituloFeedback.setTextColor(0xFFB3E5FC);
@@ -125,7 +123,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         tvTituloFeedback.setPadding(0, 0, 0, 16);
         layoutDetalhes.addView(tvTituloFeedback);
 
-        // O Balão de Comentário Grande (Glassmorphism)
         EditText etComentario = new EditText(this);
         LinearLayout.LayoutParams lpEdit = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -143,7 +140,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         etComentario.setPadding(40, 40, 40, 40);
         etComentario.setBackground(getResources().getDrawable(R.drawable.bg_input_glass, getTheme()));
 
-        // Botão de Enviar
         Button btnSalvarComentario = new Button(this);
         LinearLayout.LayoutParams lpBtn = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -158,18 +154,23 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         btnSalvarComentario.setBackground(getResources().getDrawable(R.drawable.bg_button_login, getTheme()));
 
         // =====================================================================
-        // DISPARO DA REQUISIÇÃO (Manda apenas o Nome do Projeto e o Comentário)
+        // DISPARO DA REQUISIÇÃO (Pegando a equipe do PROJETO ABERTO)
         // =====================================================================
         btnSalvarComentario.setOnClickListener(v -> {
             String feedback = etComentario.getText().toString().trim();
             if (!feedback.isEmpty()) {
-                salvarComentarioNoBanco(p.getNomeProjeto(), feedback, etComentario);
+
+                // Pega a equipe EXATA que está vinculada a este card aberto
+                String nomeEquipeDoProjetoAberto = p.getNomeEquipe();
+                if(nomeEquipeDoProjetoAberto == null) nomeEquipeDoProjetoAberto = "";
+
+                // Chama a API enviando o nome da equipe alvo e o texto
+                salvarComentarioNoBanco(nomeEquipeDoProjetoAberto, feedback, etComentario);
             } else {
                 Toast.makeText(this, "O balão de feedback está vazio.", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Adiciona tudo na tela
         layoutDetalhes.addView(etComentario);
         layoutDetalhes.addView(btnSalvarComentario);
     }
@@ -241,16 +242,16 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
     }
 
     // =========================================================================
-// REQUISIÇÃO VOLLEY PARA A API (VERSÃO REFORÇADA COM DEBUG E TIMEOUT MAIOR)
-// =========================================================================
-    private void salvarComentarioNoBanco(String nomeProjeto, String comentario, EditText caixaTexto) {
+    // REQUISIÇÃO VOLLEY PARA A API: Enviando apenas a equipe e o comentário
+    // =========================================================================
+    private void salvarComentarioNoBanco(String equipeAlvo, String comentario, EditText caixaTexto) {
         String url = "https://api-dspi.whyguiih.workers.dev/salvar-comentario";
 
         JSONObject jsonBody = new JSONObject();
         try {
-            jsonBody.put("nome_projeto", nomeProjeto);
+            // As chaves do JSON agora estão alinhadas com o Worker atualizado: "nome_equipe" e "comentario"
+            jsonBody.put("nome_equipe", equipeAlvo);
             jsonBody.put("comentario", comentario);
-            jsonBody.put("nome_empresa", nomeUsuarioLogado);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -260,28 +261,22 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
                     try {
                         if (response.getBoolean("success")) {
                             Toast.makeText(this, "Feedback enviado com sucesso!", Toast.LENGTH_SHORT).show();
-                            caixaTexto.setText(""); // Limpa o campo
+                            caixaTexto.setText(""); // Limpa o campo para ficar bonito
                         } else {
-                            Toast.makeText(this, "Aviso: " + response.optString("message", "Falha ao salvar"), Toast.LENGTH_LONG).show();
+                            // Se a API retornar sucesso=false, mostra a mensagem real do Worker
+                            Toast.makeText(this, "Aviso: " + response.optString("message"), Toast.LENGTH_LONG).show();
                         }
                     } catch (JSONException e) {
-                        Toast.makeText(this, "Erro no formato da resposta", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Erro no processamento da resposta.", Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> {
-                    // CAPTURA A MENSAGEM EXATA DO ERRO DO CLOUDFLARE
-                    String erroDetalhado = "Erro de conexão (Timeout ou sem internet).";
-                    if (error.networkResponse != null && error.networkResponse.data != null) {
-                        erroDetalhado = new String(error.networkResponse.data);
-                    } else if (error.getMessage() != null) {
-                        erroDetalhado = error.getMessage();
+                    String erroDetalhe = "Falha de conexão";
+                    if(error.networkResponse != null && error.networkResponse.data != null) {
+                        erroDetalhe = new String(error.networkResponse.data);
                     }
-
-                    int statusCode = error.networkResponse != null ? error.networkResponse.statusCode : 0;
-                    Log.e("API_COMENTARIO", "Status: " + statusCode + " | Erro: " + erroDetalhado);
-
-                    // Exibe o erro real na tela para sabermos o que arrumar!
-                    Toast.makeText(this, "Erro da API: " + erroDetalhado, Toast.LENGTH_LONG).show();
+                    Log.e("API_COMENTARIO", "Erro Volley: " + erroDetalhe);
+                    Toast.makeText(this, "Erro da API: " + erroDetalhe, Toast.LENGTH_LONG).show();
                 }) {
             @Override
             public Map<String, String> getHeaders() {
@@ -291,11 +286,8 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
             }
         };
 
-        // AUMENTA O TEMPO DE ESPERA PARA 10 SEGUNDOS (Resolve erros de Cold Start da API)
         jsonObjectRequest.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(
-                10000,
-                0, // Não tenta reenviar o POST automaticamente para evitar comentários duplicados
-                com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+                10000, 0, com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
         Volley.newRequestQueue(this).add(jsonObjectRequest);
     }
