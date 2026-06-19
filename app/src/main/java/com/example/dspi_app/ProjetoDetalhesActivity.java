@@ -94,9 +94,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         adicionarCampo("Tarefas Atuais:", p.getTarefas());
         adicionarCampo("Dificuldades Enxergadas:", p.getDificuldadesEnxergadas());
 
-        // =================================================================================
         // LÓGICA DE COMENTÁRIOS: Empresa Edita, Aluno (Equipe) apenas LÊ (sem botão)
-        // =================================================================================
         String comentario = p.getComentarioEmpresa() != null ? p.getComentarioEmpresa().trim() : "";
         boolean temComentario = !comentario.isEmpty() && !comentario.equalsIgnoreCase("null");
 
@@ -107,7 +105,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         boolean isMinhaEmpresa = "4".equals(nivel) && !nomeUsuarioLogado.isEmpty() && empresaVinculada.equalsIgnoreCase(nomeUsuarioLogado.trim());
 
         if (isMinhaEmpresa) {
-            // A empresa dona vê a caixa de texto (vazia ou pré-preenchida com o comentário dela para editar)
+            // A empresa dona vê a caixa de texto (pré-preenchida com o comentário dela para editar)
             adicionarSecaoCriarComentario(p, comentario);
         } else if (isMinhaEquipe && temComentario) {
             // A equipe (aluno) vê APENAS o balão de vidro com a mensagem da empresa
@@ -115,15 +113,12 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         }
     }
 
-    // =====================================================================
-    // VISÃO DA EQUIPE (ALUNO): APENAS A BOLHA, SEM BOTÕES
-    // =====================================================================
     private void adicionarSecaoComentarioExistente(String comentarioTexto) {
         adicionarDivisoriaETitulo("FEEDBACK GERAL DA EMPRESA");
 
         TextView tvComentario = new TextView(this);
         LinearLayout.LayoutParams lpTv = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lpTv.setMargins(0, 0, 0, 48); // Dá um respiro entre o balão e o menu inferior
+        lpTv.setMargins(0, 0, 0, 48);
         tvComentario.setLayoutParams(lpTv);
         tvComentario.setText(comentarioTexto);
         tvComentario.setTextColor(0xFFFFFFFF);
@@ -135,9 +130,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         layoutDetalhes.addView(tvComentario);
     }
 
-    // =====================================================================
-    // VISÃO DA EMPRESA: CAIXA DE TEXTO (Vazia ou com o texto anterior)
-    // =====================================================================
     private void adicionarSecaoCriarComentario(Projeto p, String comentarioAtual) {
         adicionarDivisoriaETitulo("FEEDBACK GERAL DA EMPRESA");
 
@@ -155,8 +147,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         etComentario.setPadding(40, 40, 40, 40);
         etComentario.setBackground(getResources().getDrawable(R.drawable.bg_input_glass, getTheme()));
 
-        // Se a empresa já havia comentado, trazemos o texto de volta para ela poder editar
-        if (!comentarioAtual.isEmpty()) {
+        if (!comentarioAtual.isEmpty() && !comentarioAtual.equalsIgnoreCase("null")) {
             etComentario.setText(comentarioAtual);
         }
 
@@ -165,7 +156,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         lpBtn.setMargins(0, 8, 0, 48);
         btnSalvarComentario.setLayoutParams(lpBtn);
 
-        // O texto do botão se adapta
         btnSalvarComentario.setText(comentarioAtual.isEmpty() ? "ENVIAR FEEDBACK" : "ATUALIZAR FEEDBACK");
         btnSalvarComentario.setTextSize(14);
         btnSalvarComentario.setTypeface(getResources().getFont(R.font.neo_sans_bold_italic));
@@ -216,7 +206,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
                     try {
                         if (response.getBoolean("success")) {
                             Toast.makeText(this, "Feedback atualizado com sucesso!", Toast.LENGTH_SHORT).show();
-                            // Atualiza a tela para a empresa continuar vendo a caixa de edição
                             p.setComentarioEmpresa(comentarioEnviado);
                             layoutDetalhes.removeAllViews();
                             preencherDadosDoProjeto(p);

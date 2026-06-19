@@ -52,33 +52,26 @@ public class ProjetosActivity extends AppCompatActivity {
 
         configurarBolhaAnimada();
 
-        // ===================================================================
-        // BUSCANDO EXATAMENTE COM AS CHAVES DO SEU LOGINACTIVITY
-        // ===================================================================
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
-
-        // Pega do SharedPreferences igual você salvou no LoginActivity
         nomeUsuario = prefs.getString("email_logado", "");
 
-        // Se por acaso vier vazio do SharedPreferences, tenta pegar da Intent
         if (nomeUsuario == null || nomeUsuario.trim().isEmpty()) {
             nomeUsuario = getIntent().getStringExtra("email_usuario");
         }
-
-        // Proteção contra nulo
-        if (nomeUsuario == null) {
-            nomeUsuario = "";
-        }
-
-        Log.d("DEBUG_PROJETOS", "Nível logado: " + nivel + " | Usuário/Empresa logada: '" + nomeUsuario + "'");
+        if (nomeUsuario == null) nomeUsuario = "";
 
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         Button btnAbrirFormulario = findViewById(R.id.btnAbrirFormulario);
+
+        // =========================================================================
+        // TRAVA PARA ALUNO E EMPRESA: Não veem o botão do formulário
+        // =========================================================================
         if ("4".equals(nivel) || "6".equals(nivel)) {
             btnAbrirFormulario.setVisibility(View.GONE);
         }
+
         btnAbrirFormulario.setOnClickListener(v -> {
             Intent intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
             intent.putExtra("nivel_de_acesso", nivel);
@@ -132,19 +125,18 @@ public class ProjetosActivity extends AppCompatActivity {
                                         obj.optString("empresa_vinculada", "")
                                 );
 
+                                p.setComentarioEmpresa(obj.optString("comentario_empresa", ""));
+
                                 String empresaVinc = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
                                 String nomeEqp = p.getNomeEquipe() != null ? p.getNomeEquipe().trim() : "";
 
                                 if ("4".equals(nivel)) {
-                                    // REGRA DE EXCLUSIVIDADE DA EMPRESA
                                     if (!userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado)) {
-                                        meusProjetos.add(p); // É afiliado a esta empresa
+                                        meusProjetos.add(p);
                                     } else if (empresaVinc.isEmpty() || empresaVinc.equalsIgnoreCase("null") || empresaVinc.equalsIgnoreCase("Nenhuma")) {
-                                        outrosProjetos.add(p); // NÃO TEM empresa vinculada (Projeto livre)
+                                        outrosProjetos.add(p);
                                     }
-                                    // OBS: Se tiver empresa vinculada e não for a logada, ele simplesmente não entra em lista nenhuma (Fica Oculto).
                                 } else {
-                                    // REGRA DO ALUNO: Mantém como estava
                                     if (!userLogado.isEmpty() && nomeEqp.equalsIgnoreCase(userLogado)) {
                                         meusProjetos.add(p);
                                     } else {
