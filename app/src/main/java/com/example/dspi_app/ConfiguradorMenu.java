@@ -1,13 +1,21 @@
 package com.example.dspi_app;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.View;
 import android.widget.Toast;
 
 public class ConfiguradorMenu {
 
     public static void ativar(Activity activity, String nivel, int currentTabIndex) {
+
+        SharedPreferences prefs = activity.getSharedPreferences("SESSAO_USER", Context.MODE_PRIVATE);
+        long expiracaoAtual = prefs.getLong("tempo_expiracao", 0);
+        if (expiracaoAtual > 0) {
+            prefs.edit().putLong("tempo_expiracao", System.currentTimeMillis() + (10 * 60 * 1000)).apply();
+        }
 
         if (nivel == null || nivel.isEmpty()) {
             nivel = activity.getIntent().getStringExtra("nivel_de_acesso");
