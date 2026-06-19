@@ -241,9 +241,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         layoutDetalhes.addView(tv);
     }
 
-    // =========================================================================
-    // REQUISIÇÃO VOLLEY PARA A API: Enviando apenas a equipe e o comentário
-    // =========================================================================
     private void salvarComentarioNoBanco(String equipeAlvo, String comentario, EditText caixaTexto) {
         String url = "https://api-dspi.whyguiih.workers.dev/salvar-comentario";
 
