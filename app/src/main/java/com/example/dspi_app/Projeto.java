@@ -10,6 +10,8 @@ public class Projeto implements Serializable {
 
     // NOVO CAMPO: Essencial para a empresa saber quais projetos são dela
     private String empresaVinculada;
+    private String comentarioEmpresa;
+
 
     public Projeto(String nomeProjeto, String nomeEquipe, String status, String integrantes, String orientador,
                    String propostaChave, String segmentosClientes, String atividadesChaves, String recursosChaves,
@@ -51,4 +53,12 @@ public class Projeto implements Serializable {
     public String getTarefas() { return tarefas; }
     public String getDificuldadesEnxergadas() { return dificuldadesEnxergadas; }
     public String getEmpresaVinculada() { return empresaVinculada; }
+
+    public String getComentarioEmpresa() {
+        return comentarioEmpresa;
+    }
+
+    public void setComentarioEmpresa(String comentarioEmpresa) {
+        this.comentarioEmpresa = comentarioEmpresa;
+    }
 }

@@ -1,6 +1,7 @@
 package com.example.dspi_app;
 
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -48,7 +49,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
 
         configurarBolhaFixa();
 
-        // Recupera sessão do usuário logado (Usado APENAS para validar a permissão de visualização do balão)
+        // O usuário logado aqui vai ser o nome da EQUIPE (se for aluno logado) ou o nome da EMPRESA (se for a empresa logada)
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
         nomeUsuarioLogado = prefs.getString("email_logado", "");
@@ -95,36 +96,75 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         adicionarCampo("Tarefas Atuais:", p.getTarefas());
         adicionarCampo("Dificuldades Enxergadas:", p.getDificuldadesEnxergadas());
 
-        String empresaVinculada = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
-        boolean isMinhaEmpresa = !nomeUsuarioLogado.isEmpty() && empresaVinculada.equalsIgnoreCase(nomeUsuarioLogado.trim());
+        // =================================================================================
+        // LÓGICA CORRIGIDA: DEFININDO QUEM É EQUIPE E QUEM É EMPRESA
+        // =================================================================================
+        String comentario = p.getComentarioEmpresa() != null ? p.getComentarioEmpresa().trim() : "";
+        boolean temComentario = !comentario.isEmpty() && !comentario.equalsIgnoreCase("null");
 
-        if ("4".equals(nivel) && isMinhaEmpresa) {
-            adicionarSecaoComentarioGeral(p);
+        String nomeEquipeDoProjeto = p.getNomeEquipe() != null ? p.getNomeEquipe().trim() : "";
+        String empresaVinculada = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
+
+        // Verifica se quem está no celular agora é o dono do projeto (A Equipe) ou a Empresa
+        boolean isMinhaEquipe = !nomeUsuarioLogado.isEmpty() && nomeEquipeDoProjeto.equalsIgnoreCase(nomeUsuarioLogado.trim());
+        boolean isMinhaEmpresa = "4".equals(nivel) && !nomeUsuarioLogado.isEmpty() && empresaVinculada.equalsIgnoreCase(nomeUsuarioLogado.trim());
+
+        if (temComentario) {
+            // Se o comentário existe, ele aparece para a EQUIPE ver, e a EQUIPE pode apagar!
+            adicionarSecaoComentarioExistente(p, comentario, isMinhaEquipe, isMinhaEmpresa);
+        } else {
+            // Se NÃO tem comentário, APENAS a empresa dona pode ver a caixa de texto para digitar
+            if (isMinhaEmpresa) {
+                adicionarSecaoCriarComentario(p);
+            }
+            // Se for o aluno e não tiver comentário, simplesmente não aparece nada no fim da tela.
         }
     }
 
-    private void adicionarSecaoComentarioGeral(Projeto p) {
-        View linha = new View(this);
-        linha.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2));
-        linha.setBackgroundColor(0x4DFFFFFF);
-        LinearLayout.LayoutParams lpLinha = (LinearLayout.LayoutParams) linha.getLayoutParams();
-        lpLinha.setMargins(0, 48, 0, 24);
-        linha.setLayoutParams(lpLinha);
-        layoutDetalhes.addView(linha);
+    // =====================================================================
+    // VISAO DA EQUIPE: LER O COMENTÁRIO E O BOTÃO DE APAGAR
+    // =====================================================================
+    private void adicionarSecaoComentarioExistente(Projeto p, String comentarioTexto, boolean isMinhaEquipe, boolean isMinhaEmpresa) {
+        adicionarDivisoriaETitulo("FEEDBACK GERAL DA EMPRESA");
 
-        TextView tvTituloFeedback = new TextView(this);
-        tvTituloFeedback.setText("FEEDBACK GERAL DA EMPRESA");
-        tvTituloFeedback.setTextColor(0xFFB3E5FC);
-        tvTituloFeedback.setTextSize(14);
-        tvTituloFeedback.setTypeface(getResources().getFont(R.font.neo_sans_bold_italic));
-        tvTituloFeedback.setPadding(0, 0, 0, 16);
-        layoutDetalhes.addView(tvTituloFeedback);
+        // Balão de Leitura do Comentário para a equipe visualizar
+        TextView tvComentario = new TextView(this);
+        LinearLayout.LayoutParams lpTv = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lpTv.setMargins(0, 0, 0, 16);
+        tvComentario.setLayoutParams(lpTv);
+        tvComentario.setText(comentarioTexto);
+        tvComentario.setTextColor(0xFFFFFFFF);
+        tvComentario.setTextSize(15);
+        tvComentario.setTypeface(getResources().getFont(R.font.neo_sans));
+        tvComentario.setPadding(40, 40, 40, 40);
+        tvComentario.setBackground(getResources().getDrawable(R.drawable.bg_input_glass, getTheme()));
+
+        layoutDetalhes.addView(tvComentario);
+
+        // AQUI ESTAVA O ERRO! Agora, se quem está na tela é a EQUIPE, o botão de Apagar aparece para eles!
+        if (isMinhaEquipe || isMinhaEmpresa) {
+            Button btnApagar = new Button(this);
+            LinearLayout.LayoutParams lpBtn = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 140);
+            lpBtn.setMargins(0, 8, 0, 48);
+            btnApagar.setLayoutParams(lpBtn);
+            btnApagar.setText("APAGAR FEEDBACK");
+            btnApagar.setTextSize(14);
+            btnApagar.setTypeface(getResources().getFont(R.font.neo_sans_bold_italic));
+            btnApagar.setTextColor(0xFFFFFFFF);
+            btnApagar.setBackground(getResources().getDrawable(R.drawable.bg_button_login, getTheme()));
+            btnApagar.setBackgroundTintList(ColorStateList.valueOf(0xFFE53935));
+
+            // Quando a EQUIPE (Aluno) clica aqui, ele manda o espaço em branco pro banco e limpa!
+            btnApagar.setOnClickListener(v -> apagarComentarioNoBanco(p));
+            layoutDetalhes.addView(btnApagar);
+        }
+    }
+
+    private void adicionarSecaoCriarComentario(Projeto p) {
+        adicionarDivisoriaETitulo("DEIXAR FEEDBACK GERAL (EMPRESA)");
 
         EditText etComentario = new EditText(this);
-        LinearLayout.LayoutParams lpEdit = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
+        LinearLayout.LayoutParams lpEdit = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         lpEdit.setMargins(0, 0, 0, 16);
         etComentario.setLayoutParams(lpEdit);
         etComentario.setHint("Escreva suas orientações, elogios e feedbacks gerais para a equipe aqui...");
@@ -138,10 +178,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         etComentario.setBackground(getResources().getDrawable(R.drawable.bg_input_glass, getTheme()));
 
         Button btnSalvarComentario = new Button(this);
-        LinearLayout.LayoutParams lpBtn = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                140
-        );
+        LinearLayout.LayoutParams lpBtn = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 140);
         lpBtn.setMargins(0, 8, 0, 48);
         btnSalvarComentario.setLayoutParams(lpBtn);
         btnSalvarComentario.setText("ENVIAR FEEDBACK");
@@ -150,19 +187,10 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         btnSalvarComentario.setTextColor(0xFFFFFFFF);
         btnSalvarComentario.setBackground(getResources().getDrawable(R.drawable.bg_button_login, getTheme()));
 
-        // =====================================================================
-        // DISPARO DA REQUISIÇÃO (Pegando a equipe do PROJETO ABERTO)
-        // =====================================================================
         btnSalvarComentario.setOnClickListener(v -> {
             String feedback = etComentario.getText().toString().trim();
             if (!feedback.isEmpty()) {
-
-                // Pega a equipe EXATA que está vinculada a este card aberto
-                String nomeEquipeDoProjetoAberto = p.getNomeEquipe();
-                if(nomeEquipeDoProjetoAberto == null) nomeEquipeDoProjetoAberto = "";
-
-                // Chama a API enviando o nome da equipe alvo e o texto
-                salvarComentarioNoBanco(nomeEquipeDoProjetoAberto, feedback, etComentario);
+                salvarComentarioNoBanco(p, feedback);
             } else {
                 Toast.makeText(this, "O balão de feedback está vazio.", Toast.LENGTH_SHORT).show();
             }
@@ -170,6 +198,84 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
 
         layoutDetalhes.addView(etComentario);
         layoutDetalhes.addView(btnSalvarComentario);
+    }
+
+    private void adicionarDivisoriaETitulo(String titulo) {
+        View linha = new View(this);
+        linha.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 2));
+        linha.setBackgroundColor(0x4DFFFFFF);
+        LinearLayout.LayoutParams lpLinha = (LinearLayout.LayoutParams) linha.getLayoutParams();
+        lpLinha.setMargins(0, 48, 0, 24);
+        linha.setLayoutParams(lpLinha);
+        layoutDetalhes.addView(linha);
+
+        TextView tvTituloFeedback = new TextView(this);
+        tvTituloFeedback.setText(titulo);
+        tvTituloFeedback.setTextColor(0xFFB3E5FC);
+        tvTituloFeedback.setTextSize(14);
+        tvTituloFeedback.setTypeface(getResources().getFont(R.font.neo_sans_bold_italic));
+        tvTituloFeedback.setPadding(0, 0, 0, 16);
+        layoutDetalhes.addView(tvTituloFeedback);
+    }
+
+    private void salvarComentarioNoBanco(Projeto p, String comentarioEnviado) {
+        String url = "https://api-dspi.whyguiih.workers.dev/salvar-comentario";
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("nome_equipe", p.getNomeEquipe());
+            jsonBody.put("comentario", comentarioEnviado);
+        } catch (JSONException e) { e.printStackTrace(); }
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
+                response -> {
+                    try {
+                        if (response.getBoolean("success")) {
+                            Toast.makeText(this, "Feedback enviado com sucesso!", Toast.LENGTH_SHORT).show();
+                            p.setComentarioEmpresa(comentarioEnviado);
+                            layoutDetalhes.removeAllViews();
+                            preencherDadosDoProjeto(p);
+                        } else {
+                            Toast.makeText(this, "Aviso: " + response.optString("message"), Toast.LENGTH_LONG).show();
+                        }
+                    } catch (JSONException e) {}
+                },
+                error -> Toast.makeText(this, "Erro de Conexão", Toast.LENGTH_LONG).show()
+        ) {
+            @Override public Map<String, String> getHeaders() {
+                Map<String, String> h = new HashMap<>(); h.put("Content-Type", "application/json; charset=utf-8"); return h;
+            }
+        };
+        Volley.newRequestQueue(this).add(jsonObjectRequest);
+    }
+
+    private void apagarComentarioNoBanco(Projeto p) {
+        String url = "https://api-dspi.whyguiih.workers.dev/salvar-comentario";
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("nome_equipe", p.getNomeEquipe());
+            jsonBody.put("comentario", " "); // Bypass no Worker pra limpar o banco
+        } catch (JSONException e) { e.printStackTrace(); }
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
+                response -> {
+                    try {
+                        if (response.getBoolean("success")) {
+                            Toast.makeText(this, "Feedback apagado com sucesso!", Toast.LENGTH_SHORT).show();
+
+                            // Atualiza a tela NA HORA removendo o balão.
+                            p.setComentarioEmpresa("");
+                            layoutDetalhes.removeAllViews();
+                            preencherDadosDoProjeto(p);
+                        }
+                    } catch (JSONException e) {}
+                },
+                error -> Toast.makeText(this, "Erro ao tentar apagar.", Toast.LENGTH_LONG).show()
+        ) {
+            @Override public Map<String, String> getHeaders() {
+                Map<String, String> h = new HashMap<>(); h.put("Content-Type", "application/json; charset=utf-8"); return h;
+            }
+        };
+        Volley.newRequestQueue(this).add(jsonObjectRequest);
     }
 
     private void adicionarCampo(String rotulo, String valor) {
@@ -194,7 +300,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
     private void configurarBolhaFixa() {
         View activeBubble = findViewById(R.id.activeBubble);
         LinearLayout bottomNavLayout = findViewById(R.id.bottomNavLayout);
-
         bottomNavLayout.post(() -> {
             float tabWidth = bottomNavLayout.getWidth() / 5f;
             activeBubble.getLayoutParams().width = (int) tabWidth;
@@ -236,53 +341,5 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
 
         layoutDetalhes.addView(linha);
         layoutDetalhes.addView(tv);
-    }
-
-    private void salvarComentarioNoBanco(String equipeAlvo, String comentario, EditText caixaTexto) {
-        String url = "https://api-dspi.whyguiih.workers.dev/salvar-comentario";
-
-        JSONObject jsonBody = new JSONObject();
-        try {
-            // As chaves do JSON agora estão alinhadas com o Worker atualizado: "nome_equipe" e "comentario"
-            jsonBody.put("nome_equipe", equipeAlvo);
-            jsonBody.put("comentario", comentario);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
-                response -> {
-                    try {
-                        if (response.getBoolean("success")) {
-                            Toast.makeText(this, "Feedback enviado com sucesso!", Toast.LENGTH_SHORT).show();
-                            caixaTexto.setText(""); // Limpa o campo para ficar bonito
-                        } else {
-                            // Se a API retornar sucesso=false, mostra a mensagem real do Worker
-                            Toast.makeText(this, "Aviso: " + response.optString("message"), Toast.LENGTH_LONG).show();
-                        }
-                    } catch (JSONException e) {
-                        Toast.makeText(this, "Erro no processamento da resposta.", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                error -> {
-                    String erroDetalhe = "Falha de conexão";
-                    if(error.networkResponse != null && error.networkResponse.data != null) {
-                        erroDetalhe = new String(error.networkResponse.data);
-                    }
-                    Log.e("API_COMENTARIO", "Erro Volley: " + erroDetalhe);
-                    Toast.makeText(this, "Erro da API: " + erroDetalhe, Toast.LENGTH_LONG).show();
-                }) {
-            @Override
-            public Map<String, String> getHeaders() {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("Content-Type", "application/json; charset=utf-8");
-                return headers;
-            }
-        };
-
-        jsonObjectRequest.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(
-                10000, 0, com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-        Volley.newRequestQueue(this).add(jsonObjectRequest);
     }
 }
