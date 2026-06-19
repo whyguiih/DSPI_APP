@@ -1,131 +1,100 @@
 package com.example.dspi_app;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
-
+import android.util.Log;
+import android.view.View;
+import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
-
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.splashscreen.SplashScreen;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-
 import org.json.JSONException;
 import org.json.JSONObject;
+import java.util.HashMap;
+import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText editEmail, editSenha;
-    private Button btnEntrar;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
-
-        // =========================================================================
-        // CHECA A SESSÃO: Se já estiver logado e no prazo de 10 min, pula o login!
-        // =========================================================================
-        SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
-        long tempoExpiracao = prefs.getLong("tempo_expiracao", 0);
-        long tempoAtual = System.currentTimeMillis();
-
-        if (tempoExpiracao > tempoAtual) {
-            // Renova a sessão (ganha mais 10 min)
-            prefs.edit().putLong("tempo_expiracao", tempoAtual + (10 * 60 * 1000)).apply();
-
-            String nivel = prefs.getString("nivel_de_acesso", "");
-            String email = prefs.getString("email_logado", "");
-
-            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            intent.putExtra("nivel_de_acesso", nivel);
-            intent.putExtra("email_usuario", email);
-            startActivity(intent);
-            finish();
-            return; // Impede a tela de login de carregar
-        } else {
-            // Se expirou, limpa a sessão antiga
-            prefs.edit().clear().apply();
-        }
-
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_login);
 
-        // =========================================================================
-        // MAPEAMENTO CORRETO DOS SEUS ELEMENTOS REAIS (Sem inventar botões)
-        // =========================================================================
-        editEmail = findViewById(R.id.inputEmail);
-        editSenha = findViewById(R.id.inputSenha);
-        btnEntrar = findViewById(R.id.btnEntrar);
+        View mainLayout = findViewById(R.id.mainLayout);
+        ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
+            androidx.core.graphics.Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
 
-        btnEntrar.setOnClickListener(v -> realizarLogin());
-    }
+        EditText nome = findViewById(R.id.inputEmail);
+        EditText senha = findViewById(R.id.inputSenha);
+        Button btnEntrar = findViewById(R.id.btnEntrar);
 
-    private void realizarLogin() {
-        String email = editEmail.getText().toString().trim();
-        String senha = editSenha.getText().toString().trim();
+        btnEntrar.setOnClickListener(v -> {
+            String Pnome = nome.getText().toString().trim();
+            String Psenha = senha.getText().toString().trim();
 
-        if (email.isEmpty() || senha.isEmpty()) {
-            Toast.makeText(this, "Preencha todos os campos", Toast.LENGTH_SHORT).show();
-            return;
-        }
+            if (Pnome.isEmpty() || Psenha.isEmpty()) {
+                Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-        String url = "https://api-dspi.whyguiih.workers.dev/login";
+            String url = "https://api-dspi.whyguiih.workers.dev/login";
 
-        JSONObject jsonBody = new JSONObject();
-        try {
-            jsonBody.put("email", email);
-            jsonBody.put("senha", senha);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+            JSONObject jsonBody = new JSONObject();
+            try {
+                jsonBody.put("nome_usuarios", Pnome);
+                jsonBody.put("senha", Psenha);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
 
-        btnEntrar.setEnabled(false);
-        btnEntrar.setText("Aguarde...");
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
+                    response -> {
+                        try {
+                            if (response.getBoolean("success")) {
+                                String nivel = response.getString("nivel");
+                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
 
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
-                response -> {
-                    btnEntrar.setEnabled(true);
-                    btnEntrar.setText("ENTRAR");
-                    try {
-                        if (response.getBoolean("success")) {
-                            JSONObject userData = response.getJSONObject("data");
-                            String nivelAcesso = userData.getString("nivel_de_acesso");
+                                intent.putExtra("nivel_de_acesso", nivel);
+                                intent.putExtra("email_usuario", Pnome);
 
-                            // Tenta pegar o "nome", se não vier, usa o email
-                            String nomeLogado = userData.optString("nome", email);
+                                getSharedPreferences("SESSAO_USER", MODE_PRIVATE)
+                                        .edit()
+                                        .putString("email_logado", Pnome)
+                                        .apply();
 
-                            // ==============================================================
-                            // SALVA A SESSÃO APÓS O LOGIN COM SUCESSO (+ 10 MINUTOS)
-                            // ==============================================================
-                            SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
-                            SharedPreferences.Editor editor = prefs.edit();
-                            editor.putString("email_logado", email);
-                            editor.putString("nivel_de_acesso", nivelAcesso);
-                            editor.putString("nome_usuario", nomeLogado);
-                            editor.putLong("tempo_expiracao", System.currentTimeMillis() + (10 * 60 * 1000));
-                            editor.apply();
-
-                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            intent.putExtra("nivel_de_acesso", nivelAcesso);
-                            intent.putExtra("email_usuario", email);
-                            startActivity(intent);
-                            finish();
-                        } else {
-                            Toast.makeText(this, "Erro: " + response.getString("message"), Toast.LENGTH_LONG).show();
+                                startActivity(intent);
+                                finish();
+                            } else {
+                                String mensagem = response.optString("message", "Login falhou");
+                                Toast.makeText(this, mensagem, Toast.LENGTH_LONG).show();
+                            }
+                        } catch (JSONException e) {
+                            Toast.makeText(this, "Erro no formato da resposta", Toast.LENGTH_SHORT).show();
                         }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        Toast.makeText(this, "Erro ao processar os dados.", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                error -> {
-                    btnEntrar.setEnabled(true);
-                    btnEntrar.setText("ENTRAR");
-                    Toast.makeText(this, "Erro de conexão com o servidor.", Toast.LENGTH_LONG).show();
-                });
+                    },
+                    error -> {
+                        Log.e("VOLLEY_ERROR", "Erro de Servidor: " + error.toString());
+                        Toast.makeText(this, "Erro interno do servidor. Tente mais tarde.", Toast.LENGTH_LONG).show();
+                    }) {
+                @Override
+                public Map<String, String> getHeaders() {
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("Content-Type", "application/json");
+                    return headers;
+                }
+            };
 
-        Volley.newRequestQueue(this).add(request);
+            Volley.newRequestQueue(this).add(jsonObjectRequest);
+        });
     }
 }
