@@ -1,7 +1,6 @@
 package com.example.dspi_app;
 
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -49,7 +48,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
 
         configurarBolhaFixa();
 
-        // O usuário logado aqui vai ser o nome da EQUIPE (se for aluno logado) ou o nome da EMPRESA (se for a empresa logada)
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
         nomeUsuarioLogado = prefs.getString("email_logado", "");
@@ -97,7 +95,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         adicionarCampo("Dificuldades Enxergadas:", p.getDificuldadesEnxergadas());
 
         // =================================================================================
-        // LÓGICA CORRIGIDA: DEFININDO QUEM É EQUIPE E QUEM É EMPRESA
+        // LÓGICA DE COMENTÁRIOS: Empresa Edita, Aluno (Equipe) apenas LÊ (sem botão)
         // =================================================================================
         String comentario = p.getComentarioEmpresa() != null ? p.getComentarioEmpresa().trim() : "";
         boolean temComentario = !comentario.isEmpty() && !comentario.equalsIgnoreCase("null");
@@ -105,32 +103,27 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         String nomeEquipeDoProjeto = p.getNomeEquipe() != null ? p.getNomeEquipe().trim() : "";
         String empresaVinculada = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
 
-        // Verifica se quem está no celular agora é o dono do projeto (A Equipe) ou a Empresa
         boolean isMinhaEquipe = !nomeUsuarioLogado.isEmpty() && nomeEquipeDoProjeto.equalsIgnoreCase(nomeUsuarioLogado.trim());
         boolean isMinhaEmpresa = "4".equals(nivel) && !nomeUsuarioLogado.isEmpty() && empresaVinculada.equalsIgnoreCase(nomeUsuarioLogado.trim());
 
-        if (temComentario) {
-            // Se o comentário existe, ele aparece para a EQUIPE ver, e a EQUIPE pode apagar!
-            adicionarSecaoComentarioExistente(p, comentario, isMinhaEquipe, isMinhaEmpresa);
-        } else {
-            // Se NÃO tem comentário, APENAS a empresa dona pode ver a caixa de texto para digitar
-            if (isMinhaEmpresa) {
-                adicionarSecaoCriarComentario(p);
-            }
-            // Se for o aluno e não tiver comentário, simplesmente não aparece nada no fim da tela.
+        if (isMinhaEmpresa) {
+            // A empresa dona vê a caixa de texto (vazia ou pré-preenchida com o comentário dela para editar)
+            adicionarSecaoCriarComentario(p, comentario);
+        } else if (isMinhaEquipe && temComentario) {
+            // A equipe (aluno) vê APENAS o balão de vidro com a mensagem da empresa
+            adicionarSecaoComentarioExistente(comentario);
         }
     }
 
     // =====================================================================
-    // VISAO DA EQUIPE: LER O COMENTÁRIO E O BOTÃO DE APAGAR
+    // VISÃO DA EQUIPE (ALUNO): APENAS A BOLHA, SEM BOTÕES
     // =====================================================================
-    private void adicionarSecaoComentarioExistente(Projeto p, String comentarioTexto, boolean isMinhaEquipe, boolean isMinhaEmpresa) {
+    private void adicionarSecaoComentarioExistente(String comentarioTexto) {
         adicionarDivisoriaETitulo("FEEDBACK GERAL DA EMPRESA");
 
-        // Balão de Leitura do Comentário para a equipe visualizar
         TextView tvComentario = new TextView(this);
         LinearLayout.LayoutParams lpTv = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lpTv.setMargins(0, 0, 0, 16);
+        lpTv.setMargins(0, 0, 0, 48); // Dá um respiro entre o balão e o menu inferior
         tvComentario.setLayoutParams(lpTv);
         tvComentario.setText(comentarioTexto);
         tvComentario.setTextColor(0xFFFFFFFF);
@@ -140,34 +133,19 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         tvComentario.setBackground(getResources().getDrawable(R.drawable.bg_input_glass, getTheme()));
 
         layoutDetalhes.addView(tvComentario);
-
-        // AQUI ESTAVA O ERRO! Agora, se quem está na tela é a EQUIPE, o botão de Apagar aparece para eles!
-        if (isMinhaEquipe || isMinhaEmpresa) {
-            Button btnApagar = new Button(this);
-            LinearLayout.LayoutParams lpBtn = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 140);
-            lpBtn.setMargins(0, 8, 0, 48);
-            btnApagar.setLayoutParams(lpBtn);
-            btnApagar.setText("APAGAR FEEDBACK");
-            btnApagar.setTextSize(14);
-            btnApagar.setTypeface(getResources().getFont(R.font.neo_sans_bold_italic));
-            btnApagar.setTextColor(0xFFFFFFFF);
-            btnApagar.setBackground(getResources().getDrawable(R.drawable.bg_button_login, getTheme()));
-            btnApagar.setBackgroundTintList(ColorStateList.valueOf(0xFFE53935));
-
-            // Quando a EQUIPE (Aluno) clica aqui, ele manda o espaço em branco pro banco e limpa!
-            btnApagar.setOnClickListener(v -> apagarComentarioNoBanco(p));
-            layoutDetalhes.addView(btnApagar);
-        }
     }
 
-    private void adicionarSecaoCriarComentario(Projeto p) {
-        adicionarDivisoriaETitulo("DEIXAR FEEDBACK GERAL (EMPRESA)");
+    // =====================================================================
+    // VISÃO DA EMPRESA: CAIXA DE TEXTO (Vazia ou com o texto anterior)
+    // =====================================================================
+    private void adicionarSecaoCriarComentario(Projeto p, String comentarioAtual) {
+        adicionarDivisoriaETitulo("FEEDBACK GERAL DA EMPRESA");
 
         EditText etComentario = new EditText(this);
         LinearLayout.LayoutParams lpEdit = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         lpEdit.setMargins(0, 0, 0, 16);
         etComentario.setLayoutParams(lpEdit);
-        etComentario.setHint("Escreva suas orientações, elogios e feedbacks gerais para a equipe aqui...");
+        etComentario.setHint("Escreva ou edite suas orientações para a equipe aqui...");
         etComentario.setHintTextColor(0x80FFFFFF);
         etComentario.setTextColor(0xFFFFFFFF);
         etComentario.setTextSize(15);
@@ -177,11 +155,18 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         etComentario.setPadding(40, 40, 40, 40);
         etComentario.setBackground(getResources().getDrawable(R.drawable.bg_input_glass, getTheme()));
 
+        // Se a empresa já havia comentado, trazemos o texto de volta para ela poder editar
+        if (!comentarioAtual.isEmpty()) {
+            etComentario.setText(comentarioAtual);
+        }
+
         Button btnSalvarComentario = new Button(this);
         LinearLayout.LayoutParams lpBtn = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 140);
         lpBtn.setMargins(0, 8, 0, 48);
         btnSalvarComentario.setLayoutParams(lpBtn);
-        btnSalvarComentario.setText("ENVIAR FEEDBACK");
+
+        // O texto do botão se adapta
+        btnSalvarComentario.setText(comentarioAtual.isEmpty() ? "ENVIAR FEEDBACK" : "ATUALIZAR FEEDBACK");
         btnSalvarComentario.setTextSize(14);
         btnSalvarComentario.setTypeface(getResources().getFont(R.font.neo_sans_bold_italic));
         btnSalvarComentario.setTextColor(0xFFFFFFFF);
@@ -230,7 +215,8 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
-                            Toast.makeText(this, "Feedback enviado com sucesso!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Feedback atualizado com sucesso!", Toast.LENGTH_SHORT).show();
+                            // Atualiza a tela para a empresa continuar vendo a caixa de edição
                             p.setComentarioEmpresa(comentarioEnviado);
                             layoutDetalhes.removeAllViews();
                             preencherDadosDoProjeto(p);
@@ -240,36 +226,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
                     } catch (JSONException e) {}
                 },
                 error -> Toast.makeText(this, "Erro de Conexão", Toast.LENGTH_LONG).show()
-        ) {
-            @Override public Map<String, String> getHeaders() {
-                Map<String, String> h = new HashMap<>(); h.put("Content-Type", "application/json; charset=utf-8"); return h;
-            }
-        };
-        Volley.newRequestQueue(this).add(jsonObjectRequest);
-    }
-
-    private void apagarComentarioNoBanco(Projeto p) {
-        String url = "https://api-dspi.whyguiih.workers.dev/salvar-comentario";
-        JSONObject jsonBody = new JSONObject();
-        try {
-            jsonBody.put("nome_equipe", p.getNomeEquipe());
-            jsonBody.put("comentario", " "); // Bypass no Worker pra limpar o banco
-        } catch (JSONException e) { e.printStackTrace(); }
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
-                response -> {
-                    try {
-                        if (response.getBoolean("success")) {
-                            Toast.makeText(this, "Feedback apagado com sucesso!", Toast.LENGTH_SHORT).show();
-
-                            // Atualiza a tela NA HORA removendo o balão.
-                            p.setComentarioEmpresa("");
-                            layoutDetalhes.removeAllViews();
-                            preencherDadosDoProjeto(p);
-                        }
-                    } catch (JSONException e) {}
-                },
-                error -> Toast.makeText(this, "Erro ao tentar apagar.", Toast.LENGTH_LONG).show()
         ) {
             @Override public Map<String, String> getHeaders() {
                 Map<String, String> h = new HashMap<>(); h.put("Content-Type", "application/json; charset=utf-8"); return h;

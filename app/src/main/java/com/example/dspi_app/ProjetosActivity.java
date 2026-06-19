@@ -76,7 +76,7 @@ public class ProjetosActivity extends AppCompatActivity {
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         Button btnAbrirFormulario = findViewById(R.id.btnAbrirFormulario);
-        if ("4".equals(nivel)) {
+        if ("4".equals(nivel) || "6".equals(nivel)) {
             btnAbrirFormulario.setVisibility(View.GONE);
         }
         btnAbrirFormulario.setOnClickListener(v -> {
