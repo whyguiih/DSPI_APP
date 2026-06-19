@@ -95,9 +95,6 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         adicionarCampo("Tarefas Atuais:", p.getTarefas());
         adicionarCampo("Dificuldades Enxergadas:", p.getDificuldadesEnxergadas());
 
-        // =================================================================================
-        // LÓGICA DE PERMISSÃO PARA MOSTRAR O BALÃO DE FEEDBACK
-        // =================================================================================
         String empresaVinculada = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
         boolean isMinhaEmpresa = !nomeUsuarioLogado.isEmpty() && empresaVinculada.equalsIgnoreCase(nomeUsuarioLogado.trim());
 
