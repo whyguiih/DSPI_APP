@@ -37,6 +37,7 @@ CREATE TABLE tb_cronograma_especifico (
   data_final DATE DEFAULT NULL,
   observacoes TEXT DEFAULT NULL
 , usuario TEXT DEFAULT NULL);
+INSERT INTO "tb_cronograma_especifico" ("id_cronograma_especifico","processos","etapas","responsavel","data_inicio","data_final","observacoes","usuario") VALUES(1,'','','',NULL,NULL,'','m.hoff@aluno.senai.br');
 CREATE TABLE tb_informacoes_complementares (
   id_informacoes_complementares INTEGER PRIMARY KEY AUTOINCREMENT,
   unidade_nome_comercial TEXT NOT NULL,
@@ -46,9 +47,9 @@ CREATE TABLE tb_informacoes_complementares (
   projeto TEXT NOT NULL,
   descricao TEXT NOT NULL
 , usuario TEXT DEFAULT NULL);
-INSERT INTO "tb_informacoes_complementares" ("id_informacoes_complementares","unidade_nome_comercial","coordenador_pedagogico","gestor","empresa","projeto","descricao","usuario") VALUES(1,'Senai Caxias',NULL,NULL,'Threeeo','Sistema de Automação IoT','Projeto focado em automatizar sensores na linha 1.','equipe_alpha');
-INSERT INTO "tb_informacoes_complementares" ("id_informacoes_complementares","unidade_nome_comercial","coordenador_pedagogico","gestor","empresa","projeto","descricao","usuario") VALUES(2,'Senai Caxias',NULL,NULL,'Ortafruti','Otimização de Linha de Montagem','Redução de gargalos e tempo de setup.','equipe_beta');
-INSERT INTO "tb_informacoes_complementares" ("id_informacoes_complementares","unidade_nome_comercial","coordenador_pedagogico","gestor","empresa","projeto","descricao","usuario") VALUES(3,'Senai Caxias',NULL,NULL,'Tramontina','Gestão Sustentável','Reaproveitamento de sobras de material da fábrica.','equipe_gama');
+INSERT INTO "tb_informacoes_complementares" ("id_informacoes_complementares","unidade_nome_comercial","coordenador_pedagogico","gestor","empresa","projeto","descricao","usuario") VALUES(4,'Senai Caxias','Coordenador João','Gestor Marcos','Threeeo','Sistema de Automação IoT','Projeto focado em automatizar sensores na linha 1.','equipe_alpha');
+INSERT INTO "tb_informacoes_complementares" ("id_informacoes_complementares","unidade_nome_comercial","coordenador_pedagogico","gestor","empresa","projeto","descricao","usuario") VALUES(5,'Senai Caxias','Coordenadora Maria','Gestora Julia','Ortafruti','Otimização de Linha de Montagem','Redução de gargalos e tempo de setup.','equipe_beta');
+INSERT INTO "tb_informacoes_complementares" ("id_informacoes_complementares","unidade_nome_comercial","coordenador_pedagogico","gestor","empresa","projeto","descricao","usuario") VALUES(6,'Senai Caxias','Coordenador Pedro','Gestor Tiago','Tramontina','Gestão Sustentável','Reaproveitamento de sobras de material da fábrica.','equipe_gama');
 CREATE TABLE tb_empresas (
   id_empresa INTEGER PRIMARY KEY AUTOINCREMENT,
   nome_empresa TEXT NOT NULL UNIQUE,
@@ -124,6 +125,10 @@ INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_proje
 INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_projeto","email","area_atuacao_curso","area_atuacao_projeto","nome_integrante2","nome_integrante3","nome_integrante4","nome_integrante5","nome_orientador","nome_coorientador","usuario") VALUES(50,'','Borge','','','','',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_projeto","email","area_atuacao_curso","area_atuacao_projeto","nome_integrante2","nome_integrante3","nome_integrante4","nome_integrante5","nome_orientador","nome_coorientador","usuario") VALUES(51,'','','','','','','','','','','','','threeeo');
 INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_projeto","email","area_atuacao_curso","area_atuacao_projeto","nome_integrante2","nome_integrante3","nome_integrante4","nome_integrante5","nome_orientador","nome_coorientador","usuario") VALUES(52,'j','jjjjj','hh','hb','hh','hh','j','bb','hh','bb','jjj','jj','Sarah');
+INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_projeto","email","area_atuacao_curso","area_atuacao_projeto","nome_integrante2","nome_integrante3","nome_integrante4","nome_integrante5","nome_orientador","nome_coorientador","usuario") VALUES(53,'João Silva','equipe_alpha','Sistema de Automação IoT','alpha@email.com','Mecatrônica','Automação','Carlos','Ana','Bia','Lucas','Prof. Pardal','Prof. Girafales','equipe_alpha');
+INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_projeto","email","area_atuacao_curso","area_atuacao_projeto","nome_integrante2","nome_integrante3","nome_integrante4","nome_integrante5","nome_orientador","nome_coorientador","usuario") VALUES(54,'Maria Souza','equipe_beta','Otimização de Linha de Montagem','beta@email.com','Engenharia de Produção','Gestão','Pedro','Paulo','Joana','Carla','Prof. Madruga','Prof. Linguiça','equipe_beta');
+INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_projeto","email","area_atuacao_curso","area_atuacao_projeto","nome_integrante2","nome_integrante3","nome_integrante4","nome_integrante5","nome_orientador","nome_coorientador","usuario") VALUES(55,'Pedro Santos','equipe_gama','Gestão Sustentável','gama@email.com','Gestão Ambiental','Sustentabilidade','Marcos','Julia','Marta','Tiago','Prof. Tibúrcio','Prof. Raimundo','equipe_gama');
+INSERT INTO "tb_equipe" ("id_equipe","nome_integrante","nome_equipe","nome_projeto","email","area_atuacao_curso","area_atuacao_projeto","nome_integrante2","nome_integrante3","nome_integrante4","nome_integrante5","nome_orientador","nome_coorientador","usuario") VALUES(56,'hh','h','h','h','h','b','b','b','b','b','h','h','m.hoff@aluno.senai.br');
 CREATE TABLE tb_cadastros (
   id_cadastro INTEGER PRIMARY KEY AUTOINCREMENT,
   nome_usuarios TEXT NOT NULL UNIQUE,
@@ -133,10 +138,9 @@ CREATE TABLE tb_cadastros (
 INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(1,'Sarah','2911',1);
 INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(2,'Brandalize','1603',2);
 INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(3,'Larissa','1710',3);
-INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(4,'threeeo','2003',4);
+INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(4,'Threeeo','2003',4);
 INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(5,'Alexsander','2405',5);
 INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(6,'Volgneraucious','0303',6);
-INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(7,'m.hoff@aluno.senai.br','123',6);
 INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(8,'equipe_alpha','123',6);
 INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(9,'equipe_beta','123',6);
 INSERT INTO "tb_cadastros" ("id_cadastro","nome_usuarios","senha","nivel_de_acesso") VALUES(10,'equipe_gama','123',6);
@@ -154,7 +158,10 @@ CREATE TABLE tb_acompanhamento_projeto (
   descricao_da_tarefa TEXT NOT NULL,
   dificuldades_enxergadas TEXT DEFAULT NULL,
   impacto_nas_outras TEXT DEFAULT NULL
-, usuario TEXT DEFAULT NULL);
+, usuario TEXT DEFAULT NULL, comentario_empresa TEXT);
+INSERT INTO "tb_acompanhamento_projeto" ("id_acompanhamento_projeto","tarefas","aluno_responsavel","professor_da_area","inicio_previsto","fim_previsto","inicio_realizado","fim_realizado","duracao","status","descricao_da_tarefa","dificuldades_enxergadas","impacto_nas_outras","usuario","comentario_empresa") VALUES(1,'Pesquisa de Sensores','João Silva','Prof. Pardal','2023-08-01','2023-08-15','2023-08-02','2023-08-14',12,'Concluído','Levantamento de fornecedores','Falta de material na região','Atrasou a compra em 2 dias','equipe_alpha',NULL);
+INSERT INTO "tb_acompanhamento_projeto" ("id_acompanhamento_projeto","tarefas","aluno_responsavel","professor_da_area","inicio_previsto","fim_previsto","inicio_realizado","fim_realizado","duracao","status","descricao_da_tarefa","dificuldades_enxergadas","impacto_nas_outras","usuario","comentario_empresa") VALUES(2,'Mapeamento de Processos','Maria Souza','Prof. Girafales','2023-08-05','2023-08-20','2023-08-05','2023-08-18',13,'Concluído','Mapear a esteira principal','Dificuldade de acesso à fábrica','Nenhum','equipe_beta',NULL);
+INSERT INTO "tb_acompanhamento_projeto" ("id_acompanhamento_projeto","tarefas","aluno_responsavel","professor_da_area","inicio_previsto","fim_previsto","inicio_realizado","fim_realizado","duracao","status","descricao_da_tarefa","dificuldades_enxergadas","impacto_nas_outras","usuario","comentario_empresa") VALUES(3,'Coleta de Amostras','Pedro Santos','Prof. Tibúrcio','2023-08-10','2023-08-25','2023-08-12','2023-08-28',16,'Em atraso','Coletar resíduos do mês de maio','Chuva forte na semana da coleta','Atrasou a análise laboratorial','equipe_gama',NULL);
 CREATE TABLE tb_canva (
   id_canva INTEGER PRIMARY KEY,
   atividades_chaves TEXT NOT NULL,
@@ -258,6 +265,9 @@ CREATE TABLE tb_curriculo_alunos (
   usuario TEXT DEFAULT NULL,
   FOREIGN KEY (usuario) REFERENCES tb_equipe (nome_equipe) ON DELETE CASCADE ON UPDATE CASCADE
 );
+INSERT INTO "tb_curriculo_alunos" ("id_aluno","nome","data_nacimento","cpf","empresa_vinculado","projeto","telefone","email","nome_reponsavel","numero_responsavel","email_repsonsavel","habilidades","fez_projeto","cidade","motivo_projeto","aprendo_mais","prefiro_trabalhar","usuario") VALUES(1,'João Silva','2005-01-10','111.111.111-11','Threeeo','Sistema de Automação IoT','54999999999','joao@email.com','Pai do João','54888888888','pai.joao@email.com','Programação, Robótica','Sim, projeto na escola','Caxias do Sul','Aprender na prática e entrar na empresa','Lendo e praticando','Em equipe','equipe_alpha');
+INSERT INTO "tb_curriculo_alunos" ("id_aluno","nome","data_nacimento","cpf","empresa_vinculado","projeto","telefone","email","nome_reponsavel","numero_responsavel","email_repsonsavel","habilidades","fez_projeto","cidade","motivo_projeto","aprendo_mais","prefiro_trabalhar","usuario") VALUES(2,'Maria Souza','2004-05-20','222.222.222-22','Ortafruti','Otimização de Linha de Montagem','54777777777','maria@email.com','Mãe da Maria','54666666666','mae.maria@email.com','Gestão de Tempo, Excel','Não, primeiro projeto','Garibaldi','Aplicar conhecimentos de gestão','Ouvindo e anotando','Sozinha','equipe_beta');
+INSERT INTO "tb_curriculo_alunos" ("id_aluno","nome","data_nacimento","cpf","empresa_vinculado","projeto","telefone","email","nome_reponsavel","numero_responsavel","email_repsonsavel","habilidades","fez_projeto","cidade","motivo_projeto","aprendo_mais","prefiro_trabalhar","usuario") VALUES(3,'Pedro Santos','2003-11-15','333.333.333-33','Tramontina','Gestão Sustentável','54555555555','pedro@email.com','Tio do Pedro','54444444444','tio.pedro@email.com','Logística, Análise de Dados','Sim, feira de ciências','Bento Gonçalves','Melhorar o meio ambiente','Com vídeos e tutoriais','Em equipe','equipe_gama');
 CREATE TABLE tb_participantes (
   id_participante INTEGER PRIMARY KEY AUTOINCREMENT,
   id_informacoes_complementares INTEGER NOT NULL,
@@ -305,12 +315,17 @@ CREATE TABLE tb_uso_ia (
   criacao_prompt TEXT,
   descricao_uso TEXT
 );
+INSERT INTO "tb_uso_ia" ("id_uso_ia","usuario","nome_ferramenta","link_acesso","tipo_licenca","etapa_uso","criacao_prompt","descricao_uso") VALUES(1,'m.hoff@aluno.senai.br','','','','','','');
 DELETE FROM sqlite_sequence;
 INSERT INTO "sqlite_sequence" ("name","seq") VALUES('d1_migrations',1);
-INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_equipe',52);
+INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_equipe',56);
 INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_cadastros',10);
-INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_empresas',3);
-INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_informacoes_complementares',3);
+INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_empresas',4);
+INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_informacoes_complementares',7);
+INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_acompanhamento_projeto',3);
+INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_cronograma_especifico',1);
+INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_uso_ia',1);
+INSERT INTO "sqlite_sequence" ("name","seq") VALUES('tb_informacoes_completude',1);
 CREATE INDEX idx_equipe_usuario ON tb_equipe(usuario);
 CREATE INDEX fk_canva_eqp ON tb_canva(usuario);
 CREATE INDEX fk_conh_eqp ON tb_conhecimentos(usuario);
