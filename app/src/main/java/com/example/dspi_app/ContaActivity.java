@@ -83,21 +83,17 @@ public class ContaActivity extends AppCompatActivity {
             finish(); // Fecha a tela de conta para não empilhar
         });
 
-        // 3. Botão Configurações -> Placeholder para uma futura tela
         btnConfiguracoes.setOnClickListener(v -> {
             Toast.makeText(ContaActivity.this, "Configurações em desenvolvimento", Toast.LENGTH_SHORT).show();
         });
 
-        // 4. Botão Sair da Conta -> Limpa a sessão e volta para o Login
         btnSair.setOnClickListener(v -> {
             // Limpa as SharedPreferences
             SharedPreferences.Editor editor = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit();
             editor.clear();
             editor.apply();
 
-            // Redireciona para o login
             Intent intent = new Intent(ContaActivity.this, LoginActivity.class);
-            // Limpa o histórico de telas para que o botão voltar do Android não retorne para a conta
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
