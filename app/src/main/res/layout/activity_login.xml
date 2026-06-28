@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,36 +13,37 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
-        android:padding="32dp"
         android:background="@drawable/bg_glass"
-        app:layout_constraintTop_toTopOf="parent"
+        android:padding="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.496">
 
         <ImageView
             android:id="@+id/logoLogin"
             android:layout_width="180dp"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp"
             android:adjustViewBounds="true"
             android:src="@drawable/logo_integra"
-            android:layout_marginBottom="32dp"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/txtBemVindo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/neo_sans"
             android:text="Bem-vindo de volta!"
             android:textColor="#FFFFFF"
             android:textSize="18sp"
-            android:fontFamily="@font/neo_sans"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@id/logoLogin"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/logoLogin" />
 
         <EditText
             android:id="@+id/inputEmail"
@@ -49,13 +51,13 @@
             android:layout_height="55dp"
             android:layout_marginTop="32dp"
             android:background="@drawable/bg_input_glass"
-            android:hint="Usuário / E-mail"
-            android:textColorHint="#B3FFFFFF"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:paddingHorizontal="20dp"
-            android:inputType="textEmailAddress"
             android:fontFamily="@font/neo_sans"
+            android:hint="Usuário / E-mail"
+            android:inputType="textEmailAddress"
+            android:paddingHorizontal="20dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#B3FFFFFF"
+            android:textSize="16sp"
             app:layout_constraintTop_toBottomOf="@id/txtBemVindo" />
 
         <EditText
@@ -64,28 +66,28 @@
             android:layout_height="55dp"
             android:layout_marginTop="16dp"
             android:background="@drawable/bg_input_glass"
-            android:hint="Senha"
-            android:textColorHint="#B3FFFFFF"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:paddingHorizontal="20dp"
-            android:inputType="textPassword"
             android:fontFamily="@font/neo_sans"
+            android:hint="Senha"
+            android:inputType="textPassword"
+            android:paddingHorizontal="20dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#B3FFFFFF"
+            android:textSize="16sp"
             app:layout_constraintTop_toBottomOf="@id/inputEmail" />
 
         <TextView
             android:id="@+id/txtEsqueciSenha"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:fontFamily="@font/neo_sans"
+            android:padding="4dp"
             android:text="Esqueceu a senha?"
             android:textColor="#E6FFFFFF"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:fontFamily="@font/neo_sans"
-            android:layout_marginTop="12dp"
-            android:padding="4dp"
-            app:layout_constraintTop_toBottomOf="@id/inputSenha"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/inputSenha" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnEntrar"
@@ -93,56 +95,59 @@
             android:layout_height="60dp"
             android:layout_marginTop="32dp"
             android:background="@drawable/bg_button_login"
+            android:elevation="0dp"
+            android:fontFamily="@font/neo_sans"
+            android:stateListAnimator="@null"
             android:text="ENTRAR"
             android:textColor="#FFFFFF"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:fontFamily="@font/neo_sans"
-            android:elevation="0dp"
-            android:stateListAnimator="@null"
             app:layout_constraintTop_toBottomOf="@id/txtEsqueciSenha" />
+
 
         <Button
             android:id="@+id/Google"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="52dp"
+            android:backgroundTint="#4285F4"
             android:text="Entrar com o Google"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#4285F4"
             app:icon="@drawable/ic_conta"
-            app:layout_constraintTop_toBottomOf="@id/btnEntrar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/btnEntrar" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:layout_marginTop="24dp"
-            app:layout_constraintTop_toBottomOf="@id/btnEntrar"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/btnEntrar">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Não tem uma conta? "
-                android:textColor="#B3FFFFFF"
-                android:textSize="14sp"
-                android:fontFamily="@font/neo_sans" />
 
-            <TextView
-                android:id="@+id/txtCriarConta"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Cadastre-se"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:textSize="14sp"
-                android:fontFamily="@font/neo_sans" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/txtCriarConta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="115dp"
+            android:layout_marginTop="21dp"
+            android:layout_marginEnd="115dp"
+            android:layout_marginBottom="13dp"
+            android:fontFamily="@font/neo_sans"
+            android:text="Cadastre-se"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@+id/Google"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnEntrar" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
