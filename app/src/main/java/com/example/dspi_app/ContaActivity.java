@@ -51,7 +51,7 @@ public class ContaActivity extends AppCompatActivity {
         // Vincular componentes da tela
         LinearLayout btnEditarPerfil = findViewById(R.id.btnEditarPerfil);
         LinearLayout btnMeusProjetos = findViewById(R.id.btnMeusProjetos);
-        LinearLayout btnConfiguracoes = findViewById(R.id.btnConfiguracoes);
+
         LinearLayout btnSair = findViewById(R.id.btnSair);
 
         // Esconder o botão "Meus Projetos" para usuários de nível 6
@@ -82,9 +82,6 @@ public class ContaActivity extends AppCompatActivity {
             finish(); // Fecha a tela de conta para não empilhar
         });
 
-        btnConfiguracoes.setOnClickListener(v -> {
-            Toast.makeText(ContaActivity.this, "Configurações em desenvolvimento", Toast.LENGTH_SHORT).show();
-        });
 
         btnSair.setOnClickListener(v -> {
             // Limpa as SharedPreferences

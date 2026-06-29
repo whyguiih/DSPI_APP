@@ -84,11 +84,6 @@
                         <TextView style="@style/ListGlassText" android:text="Meus Projetos / Submissões"/>
                     </LinearLayout>
 
-                    <LinearLayout android:id="@+id/btnConfiguracoes" style="@style/ListGlassButtonStyle">
-                        <ImageView style="@style/ListGlassIcon" android:src="@android:drawable/ic_menu_preferences" app:tint="#FFFFFF"/>
-                        <TextView style="@style/ListGlassText" android:text="Configurações do App"/>
-                    </LinearLayout>
-
                     <LinearLayout android:id="@+id/btnSair"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
