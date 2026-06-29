@@ -24,8 +24,8 @@
         </LinearLayout>
 
         <LinearLayout android:id="@+id/btnNai" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="?attr/selectableItemBackgroundBorderless">
-            <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_nai" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Nai" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
+            <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/cato" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mia" android:textColor="#FFFFFF" android:textSize="11sp" android:fontFamily="@font/neo_sans" android:layout_marginTop="2dp"/>
         </LinearLayout>
 
         <LinearLayout android:id="@+id/btnEmpresas" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:background="?attr/selectableItemBackgroundBorderless">

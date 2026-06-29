@@ -36,35 +36,34 @@ public class ContaActivity extends AppCompatActivity {
             return WindowInsetsCompat.CONSUMED;
         });
 
-        // Recuperar dados de sessão (nível de acesso e email)
+        // Recuperar dados de sessão (nível de acesso, email, nome e foto)
+        SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         nivel = getIntent().getStringExtra("nivel_de_acesso");
         if (nivel == null) {
-            nivel = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).getString("nivel_de_acesso", "5");
+            nivel = prefs.getString("nivel_de_acesso", "5");
         }
 
-        emailLogado = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).getString("email_logado", "sandramara");
+        emailLogado = prefs.getString("email_logado", "usuario@email.com");
 
         // Configurar o menu inferior
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         // Vincular componentes da tela
-        TextView txtNomeUsuario = findViewById(R.id.txtNomeUsuario);
-        TextView txtEmailUsuario = findViewById(R.id.txtEmailUsuario);
-
         LinearLayout btnEditarPerfil = findViewById(R.id.btnEditarPerfil);
         LinearLayout btnMeusProjetos = findViewById(R.id.btnMeusProjetos);
         LinearLayout btnConfiguracoes = findViewById(R.id.btnConfiguracoes);
         LinearLayout btnSair = findViewById(R.id.btnSair);
 
-        // Exemplo: Populando os dados baseados na linha da Sandramara (tb_curriculo_alunos)
-        txtNomeUsuario.setText("Nome Completo");
-        txtEmailUsuario.setText("email@mail.co");
+        // Esconder o botão "Meus Projetos" para usuários de nível 6
+        if ("6".equals(nivel)) {
+            btnMeusProjetos.setVisibility(View.GONE);
+        }
 
         // Configuração dos botões e subpáginas
 
-        // 1. Botão Editar Perfil -> Leva ao FormularioActivity para preencher o currículo/dados
+        // 1. Botão Editar Perfil -> Leva ao PerfilActivity para alterar dados pessoais
         btnEditarPerfil.setOnClickListener(v -> {
-            Intent intent = new Intent(ContaActivity.this, FormularioActivity.class);
+            Intent intent = new Intent(ContaActivity.this, PerfilActivity.class);
             intent.putExtra("nivel_de_acesso", nivel);
             intent.putExtra("email_usuario", emailLogado);
             intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
@@ -98,5 +97,33 @@ public class ContaActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Recarregar dados caso tenham mudado no PerfilActivity
+        SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
+        TextView txtNomeUsuario = findViewById(R.id.txtNomeUsuario);
+        TextView txtEmailUsuario = findViewById(R.id.txtEmailUsuario);
+        android.widget.ImageView imgAvatar = findViewById(R.id.imgAvatar);
+
+        String nome = prefs.getString("nome_usuario", "Nome Completo");
+        String email = prefs.getString("email_logado", "usuario@email.com");
+        String foto = prefs.getString("foto_usuario", "");
+
+        txtNomeUsuario.setText(nome);
+        txtEmailUsuario.setText(email);
+
+        if (!foto.isEmpty()) {
+            try {
+                byte[] decodedString = android.util.Base64.decode(foto, android.util.Base64.DEFAULT);
+                android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                imgAvatar.setImageBitmap(decodedByte);
+                imgAvatar.setPadding(0, 0, 0, 0);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

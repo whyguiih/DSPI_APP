@@ -161,16 +161,20 @@ public class LoginActivity extends AppCompatActivity {
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
-                            String nivel = response.getString("nivel");
                             String email = response.getString("email_usuario");
+                            String nome = response.optString("nome_usuario", email); // Tenta pegar nome, ou usa email
+                            String foto = response.optString("foto_usuario", ""); // Tenta pegar foto da API
 
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            intent.putExtra("nivel_de_acesso", nivel);
+                            intent.putExtra("nivel_de_acesso", "6");
                             intent.putExtra("email_usuario", email);
 
                             getSharedPreferences("SESSAO_USER", MODE_PRIVATE)
                                     .edit()
                                     .putString("email_logado", email)
+                                    .putString("nome_usuario", nome)
+                                    .putString("foto_usuario", foto)
+                                    .putString("nivel_de_acesso", "6")
                                     .apply();
 
                             startActivity(intent);

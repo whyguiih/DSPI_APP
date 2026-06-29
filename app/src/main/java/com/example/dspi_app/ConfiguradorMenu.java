@@ -31,28 +31,29 @@ public class ConfiguradorMenu {
                 navegarPara(activity, ProjetosActivity.class, currentTabIndex, nivelFinal)
         );
 
-        activity.findViewById(R.id.btnNai).setOnClickListener(v ->
-                navegarPara(activity, NaiActivity.class, currentTabIndex, nivelFinal)
-        );
+        View btnNai = activity.findViewById(R.id.btnNai);
+        if (nivelFinal.equals("6")) {
+            btnNai.setAlpha(0.4f);
+            btnNai.setOnClickListener(v -> {
+                Toast.makeText(activity, "Acesso Negado à área NAI.", Toast.LENGTH_SHORT).show();
+            });
+        } else {
+            btnNai.setAlpha(1.0f);
+            btnNai.setOnClickListener(v ->
+                    navegarPara(activity, NaiActivity.class, currentTabIndex, nivelFinal)
+            );
+        }
 
         activity.findViewById(R.id.btnConta).setOnClickListener(v ->
                 navegarPara(activity, ContaActivity.class, currentTabIndex, nivelFinal)
         );
 
         View btnEmpresas = activity.findViewById(R.id.btnEmpresas);
-
-        if (nivelFinal.equals("1") || nivelFinal.equals("4")) {
-            btnEmpresas.setAlpha(1.0f);
-            btnEmpresas.setOnClickListener(v ->
-                    navegarPara(activity, EmpresasActivity.class, currentTabIndex, nivelFinal)
-            );
-        } else {
-            // Bloqueia todos os outros níveis (5, 6, etc.)
-            btnEmpresas.setAlpha(0.4f);
-            btnEmpresas.setOnClickListener(v -> {
-                Toast.makeText(activity, "Acesso Negado.", Toast.LENGTH_SHORT).show();
-            });
-        }
+        // Todos os usuários agora têm acesso às Empresas
+        btnEmpresas.setAlpha(1.0f);
+        btnEmpresas.setOnClickListener(v ->
+                navegarPara(activity, EmpresasActivity.class, currentTabIndex, nivelFinal)
+        );
 
     }
 
