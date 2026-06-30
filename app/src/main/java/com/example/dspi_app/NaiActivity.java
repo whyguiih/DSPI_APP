@@ -1,52 +1,92 @@
 package com.example.dspi_app;
 
-import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
-import android.view.animation.DecelerateInterpolator;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 public class NaiActivity extends AppCompatActivity {
-    private final int CURRENT_TAB_INDEX = 2;
+
+    private LinearLayout chatContainer;
+    private EditText etMessage;
+    private ImageButton btnSend;
+    private ScrollView chatScrollView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_nai);
 
-        View mainLayout = findViewById(R.id.mainLayout);
-        ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
-            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
-            return WindowInsetsCompat.CONSUMED;
-        });
+        // 1. Vincular componentes da interface
+        chatContainer = findViewById(R.id.chatContainer);
+        etMessage = findViewById(R.id.etMessage);
+        btnSend = findViewById(R.id.btnSend);
+        chatScrollView = findViewById(R.id.chatScrollView);
 
-        configurarBolhaAnimada();
+        // 2. Configurar o Menu Inferior (Bottom Nav)
+        // Certifique-se de que o método no seu ConfiguradorMenu suporta a seleção da MIA
+        // Exemplo: Substitua o ID abaixo pelo ID correto do ícone da MIA no seu bottom_nav.xml
+        ConfiguradorMenu configurador = new ConfiguradorMenu(this);
+        // configurador.configurar(R.id.nav_mia); // Descomente e ajuste conforme a sua lógica do ConfiguradorMenu
 
-        String nivel = getIntent().getStringExtra("nivel_de_acesso");
+        // 3. Ação de clique para enviar mensagem
+        btnSend.setOnClickListener(v -> {
+            String message = etMessage.getText().toString().trim();
+            if (!message.isEmpty()) {
+                // Adiciona a mensagem do usuário na tela
+                addMessage(message, true);
+                etMessage.setText("");
 
-        ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
-    }
-
-    private void configurarBolhaAnimada() {
-        int oldTabIndex = getIntent().getIntExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
-        View activeBubble = findViewById(R.id.activeBubble);
-        LinearLayout bottomNavLayout = findViewById(R.id.bottomNavLayout);
-
-        bottomNavLayout.post(() -> {
-            float tabWidth = bottomNavLayout.getWidth() / 5f;
-            activeBubble.getLayoutParams().width = (int) tabWidth;
-            activeBubble.requestLayout();
-            activeBubble.setTranslationX(oldTabIndex * tabWidth);
-            if (oldTabIndex != CURRENT_TAB_INDEX) {
-                activeBubble.animate().translationX(CURRENT_TAB_INDEX * tabWidth).setDuration(350).setInterpolator(new DecelerateInterpolator(1.5f)).start();
+                // Simulação simples de resposta da IA (MIA)
+                chatContainer.postDelayed(() -> {
+                    addMessage("Entendi! Estou processando as informações sobre os seus projetos. Como mais posso te ajudar?", false);
+                }, 1000);
             }
         });
+
+        // 4. Mensagem inicial de boas-vindas da MIA
+        addMessage("Olá, sou a MIA! Sua inteligência artificial do Integra. Como posso te ajudar hoje?", false);
+    }
+
+    /**
+     * Adiciona um "balão" de mensagem dinamicamente na tela
+     */
+    private void addMessage(String text, boolean isUser) {
+        TextView textView = new TextView(this);
+        textView.setText(text);
+        textView.setTextColor(Color.WHITE);
+        textView.setTextSize(15f);
+        // Padding interno do balão
+        textView.setPadding(40, 24, 40, 24);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, 8, 0, 16);
+
+        if (isUser) {
+            // Estilo para o Usuário (Alinhado à direita)
+            params.gravity = Gravity.END;
+            textView.setBackgroundResource(R.drawable.bg_active_bubble); // Usa seu drawable de botão ativo
+            params.setMarginStart(100); // Evita que grude do lado esquerdo
+        } else {
+            // Estilo para a MIA (Alinhado à esquerda)
+            params.gravity = Gravity.START;
+            textView.setBackgroundResource(R.drawable.bg_glass); // Usa o fundo de vidro padrão
+            params.setMarginEnd(100); // Evita que grude do lado direito
+        }
+
+        textView.setLayoutParams(params);
+        chatContainer.addView(textView);
+
+        // Faz o Scroll rolar automaticamente para a mensagem mais recente
+        chatScrollView.post(() -> chatScrollView.fullScroll(View.FOCUS_DOWN));
     }
 }
