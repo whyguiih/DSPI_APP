@@ -55,7 +55,7 @@ public class ContaActivity extends AppCompatActivity {
         LinearLayout btnSair = findViewById(R.id.btnSair);
 
         // Esconder o botão "Meus Projetos" para usuários de nível 6
-        if ("6".equals(nivel)) {
+        if ("6".equals(nivel) || "2".equals(nivel) || "1".equals(nivel) ) {
             btnMeusProjetos.setVisibility(View.GONE);
         }
 

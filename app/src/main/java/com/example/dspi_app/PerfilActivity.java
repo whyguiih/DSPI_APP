@@ -31,7 +31,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PerfilActivity extends AppCompatActivity {
+public class                       PerfilActivity extends AppCompatActivity {
 
     private final int CURRENT_TAB_INDEX = 3; // Mantém a aba "Conta" ativa
     private String nivel;

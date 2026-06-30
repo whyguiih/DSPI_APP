@@ -32,10 +32,10 @@ public class ConfiguradorMenu {
         );
 
         View btnNai = activity.findViewById(R.id.btnNai);
-        if (nivelFinal.equals("6")) {
+        if (nivelFinal.equals("6") || nivelFinal.equals("4")) {
             btnNai.setAlpha(0.4f);
             btnNai.setOnClickListener(v -> {
-                Toast.makeText(activity, "Acesso Negado à área NAI.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, "Acesso Negado à área Mia.", Toast.LENGTH_SHORT).show();
             });
         } else {
             btnNai.setAlpha(1.0f);

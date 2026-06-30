@@ -37,15 +37,18 @@ public class FormularioRepository {
     // CARREGAR
     // =========================================================
     public void carregarDados(String tipo, OnDadosCarregadosListener listener) {
-        String emailUsuario = getEmailUsuario();
-        if (emailUsuario.isEmpty()) {
+        carregarDados(tipo, getEmailUsuario(), listener);
+    }
+
+    public void carregarDados(String tipo, String email, OnDadosCarregadosListener listener) {
+        if (email == null || email.isEmpty()) {
             listener.onErro("Usuário não autenticado.");
             return;
         }
 
         JSONObject jsonBody = new JSONObject();
         try {
-            jsonBody.put("usuario", emailUsuario);
+            jsonBody.put("usuario", email);
             jsonBody.put("tipo", tipo);
         } catch (JSONException e) {
             listener.onErro("Erro ao montar requisição.");

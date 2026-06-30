@@ -95,6 +95,7 @@ public class FormularioActivity extends AppCompatActivity {
     private Button btnEditarDados;
     private boolean modoEdicao = false;
     private String emailUsuario;
+    private String targetEmail; // E-mail do dono do projeto que está sendo visualizado
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,6 +116,10 @@ public class FormularioActivity extends AppCompatActivity {
         configurarBolhaAnimada();
 
         emailUsuario = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).getString("email_logado", "");
+        targetEmail = getIntent().getStringExtra("projeto_usuario");
+        if (targetEmail == null || targetEmail.isEmpty()) {
+            targetEmail = emailUsuario;
+        }
 
         // Vincular componentes - Equipe
         etNomeEquipe = findViewById(R.id.etNomeEquipe);
@@ -356,7 +361,7 @@ public class FormularioActivity extends AppCompatActivity {
         btnEditarDados = findViewById(R.id.btnEditarDados);
 
         String nivelValidacao = getIntent().getStringExtra("nivel_de_acesso");
-        if (nivelValidacao != null && nivelValidacao.trim().equals("5")) {
+        if (nivelValidacao != null && (nivelValidacao.trim().equals("5") || nivelValidacao.trim().equals("2"))) {
             btnEditarDados.setVisibility(View.GONE);
         }
 
@@ -469,11 +474,11 @@ public class FormularioActivity extends AppCompatActivity {
         }
     }
 
-    // 🎯 MÉTODO UNIFICADO: Carrega qualquer formulário dinamicamente pelo tipo
+    // MÉTODO UNIFICADO: Carrega qualquer formulário dinamicamente pelo tipo
     private void carregarDadosDoBanco(String tipo) {
         FormularioRepository repository = new FormularioRepository(this);
 
-        repository.carregarDados(tipo, new FormularioRepository.OnDadosCarregadosListener() {
+        repository.carregarDados(tipo, targetEmail, new FormularioRepository.OnDadosCarregadosListener() {
             @Override
             public void onSucesso(JSONObject dados) {
                 if (tipo.equals("equipe")) {

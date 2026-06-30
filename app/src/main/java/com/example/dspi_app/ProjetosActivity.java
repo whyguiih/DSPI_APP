@@ -66,9 +66,9 @@ public class ProjetosActivity extends AppCompatActivity {
         Button btnAbrirFormulario = findViewById(R.id.btnAbrirFormulario);
 
         // =========================================================================
-        // TRAVA PARA ALUNO E EMPRESA: Não veem o botão do formulário
+        // TRAVA PARA ALUNO, EMPRESA E ORIENTADOR (5): Não veem o botão do formulário
         // =========================================================================
-        if ("4".equals(nivel) || "6".equals(nivel)) {
+        if ("4".equals(nivel) || "6".equals(nivel) || "1".equals(nivel) || "2".equals(nivel) || "5".equals(nivel)) {
             btnAbrirFormulario.setVisibility(View.GONE);
         }
 
@@ -202,8 +202,21 @@ public class ProjetosActivity extends AppCompatActivity {
     }
 
     private void abrirPaginaDetalhes(Projeto projeto) {
-        Intent intent = new Intent(ProjetosActivity.this, ProjetoDetalhesActivity.class);
-        intent.putExtra("projeto_selecionado", projeto);
+        Intent intent;
+        String userLogado = nomeUsuario.trim();
+        String nomeEqp = projeto.getNomeEquipe() != null ? projeto.getNomeEquipe().trim() : "";
+        boolean isMeuProjeto = !userLogado.isEmpty() && nomeEqp.equalsIgnoreCase(userLogado);
+
+        if ("2".equals(nivel) || isMeuProjeto) {
+            // Nível 2 ou o próprio dono do projeto vão para o Formulário
+            intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
+            intent.putExtra("projeto_usuario", projeto.getNomeEquipe());
+        } else {
+            // Restante (Nível 5, 4, 6 vendo projetos alheios) vão para Detalhes resumido
+            intent = new Intent(ProjetosActivity.this, ProjetoDetalhesActivity.class);
+            intent.putExtra("projeto_selecionado", projeto);
+        }
+
         intent.putExtra("nivel_de_acesso", nivel);
         intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
         startActivity(intent);
