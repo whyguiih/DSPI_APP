@@ -37,9 +37,9 @@
                     android:layout_height="100dp"
                     android:layout_marginTop="16dp"
                     android:src="@drawable/ic_conta"
-                    app:tint="#FFFFFF"
                     android:background="@drawable/bg_input_glass"
-                    android:padding="20dp"/>
+                    android:padding="20dp"
+                    android:scaleType="centerCrop"/>
 
                 <TextView
                     android:id="@+id/txtNomeUsuario"

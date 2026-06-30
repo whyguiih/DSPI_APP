@@ -13,6 +13,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 
 public class ContaActivity extends AppCompatActivity {
 
@@ -113,13 +115,22 @@ public class ContaActivity extends AppCompatActivity {
         txtEmailUsuario.setText(email);
 
         if (!foto.isEmpty()) {
-            try {
+            if (foto.startsWith("http")) {
+                Glide.with(this)
+                        .load(foto)
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(imgAvatar);
+                imgAvatar.setPadding(0, 0, 0, 0);
+            } else {
                 byte[] decodedString = android.util.Base64.decode(foto, android.util.Base64.DEFAULT);
                 android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                imgAvatar.setImageBitmap(decodedByte);
+                
+                Glide.with(this)
+                        .load(decodedByte)
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(imgAvatar);
+                        
                 imgAvatar.setPadding(0, 0, 0, 0);
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
     }

@@ -26,6 +26,9 @@ import java.io.InputStream;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.HashMap;
@@ -48,7 +51,12 @@ public class                       PerfilActivity extends AppCompatActivity {
                     try {
                         InputStream inputStream = getContentResolver().openInputStream(imageUri);
                         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                        imgPerfil.setImageBitmap(bitmap);
+                        
+                        Glide.with(this)
+                                .load(bitmap)
+                                .apply(RequestOptions.circleCropTransform())
+                                .into(imgPerfil);
+
                         imgPerfil.setPadding(0, 0, 0, 0);
                         fotoBase64 = bitmapToBase64(bitmap);
                     } catch (Exception e) {
@@ -89,18 +97,22 @@ public class                       PerfilActivity extends AppCompatActivity {
         fotoBase64 = prefs.getString("foto_usuario", "");
 
         if (!fotoBase64.isEmpty()) {
-            try {
-                if (fotoBase64.startsWith("http")) {
-                    // Se for uma URL (do Google), você precisaria de Glide/Picasso aqui.
-                    // Por enquanto, apenas ignoramos ou tratamos como string.
-                } else {
+            if (fotoBase64.startsWith("http")) {
+                Glide.with(this)
+                        .load(fotoBase64)
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(imgPerfil);
+                imgPerfil.setPadding(0, 0, 0, 0);
+            } else {
                     byte[] decodedString = Base64.decode(fotoBase64, Base64.DEFAULT);
                     Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                    imgPerfil.setImageBitmap(decodedByte);
+                    
+                    Glide.with(this)
+                            .load(decodedByte)
+                            .apply(RequestOptions.circleCropTransform())
+                            .into(imgPerfil);
+                            
                     imgPerfil.setPadding(0, 0, 0, 0);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         }
 

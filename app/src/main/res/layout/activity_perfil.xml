@@ -69,7 +69,7 @@
                         android:src="@drawable/ic_conta"
                         android:background="@drawable/bg_input_glass"
                         android:padding="24dp"
-                        app:tint="#FFFFFF" />
+                        android:scaleType="centerCrop" />
 
                     <ImageButton
                         android:id="@+id/btnAlterarFoto"
