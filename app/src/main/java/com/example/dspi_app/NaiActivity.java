@@ -4,12 +4,17 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 public class NaiActivity extends AppCompatActivity {
 
@@ -18,10 +23,24 @@ public class NaiActivity extends AppCompatActivity {
     private ImageButton btnSend;
     private ScrollView chatScrollView;
 
+    // Considerando que o ícone da MIA é o 3º no bottom_nav.xml (Index 2)
+    private final int CURRENT_TAB_INDEX = 2;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Configuração para a interface respeitar os limites da tela (Notificações e Navegação)
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_nai);
+
+        // Aplica o padding para não invadir as barras do sistema
+        View mainLayout = findViewById(R.id.mainLayout);
+        ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
 
         // 1. Vincular componentes da interface
         chatContainer = findViewById(R.id.chatContainer);
@@ -29,11 +48,11 @@ public class NaiActivity extends AppCompatActivity {
         btnSend = findViewById(R.id.btnSend);
         chatScrollView = findViewById(R.id.chatScrollView);
 
-        // 2. Configurar o Menu Inferior (Bottom Nav)
-        // Certifique-se de que o método no seu ConfiguradorMenu suporta a seleção da MIA
-        // Exemplo: Substitua o ID abaixo pelo ID correto do ícone da MIA no seu bottom_nav.xml
-        ConfiguradorMenu configurador = new ConfiguradorMenu(this);
-        // configurador.configurar(R.id.nav_mia); // Descomente e ajuste conforme a sua lógica do ConfiguradorMenu
+        // 2. Configurar o Menu Inferior (Bottom Nav) e a Bolha Animada
+        configurarBolhaAnimada();
+
+        String nivel = getIntent().getStringExtra("nivel_de_acesso");
+        ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         // 3. Ação de clique para enviar mensagem
         btnSend.setOnClickListener(v -> {
@@ -52,6 +71,31 @@ public class NaiActivity extends AppCompatActivity {
 
         // 4. Mensagem inicial de boas-vindas da MIA
         addMessage("Olá, sou a MIA! Sua inteligência artificial do Integra. Como posso te ajudar hoje?", false);
+    }
+
+    /**
+     * Animação do botão ativo no menu inferior, idêntico à MainActivity
+     */
+    private void configurarBolhaAnimada() {
+        int oldTabIndex = getIntent().getIntExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
+        View activeBubble = findViewById(R.id.activeBubble);
+        LinearLayout bottomNavLayout = findViewById(R.id.bottomNavLayout);
+
+        if (activeBubble != null && bottomNavLayout != null) {
+            bottomNavLayout.post(() -> {
+                float tabWidth = bottomNavLayout.getWidth() / 5f;
+                activeBubble.getLayoutParams().width = (int) tabWidth;
+                activeBubble.requestLayout();
+                activeBubble.setTranslationX(oldTabIndex * tabWidth);
+                if (oldTabIndex != CURRENT_TAB_INDEX) {
+                    activeBubble.animate()
+                            .translationX(CURRENT_TAB_INDEX * tabWidth)
+                            .setDuration(350)
+                            .setInterpolator(new DecelerateInterpolator(1.5f))
+                            .start();
+                }
+            });
+        }
     }
 
     /**
@@ -74,13 +118,13 @@ public class NaiActivity extends AppCompatActivity {
         if (isUser) {
             // Estilo para o Usuário (Alinhado à direita)
             params.gravity = Gravity.END;
-            textView.setBackgroundResource(R.drawable.bg_active_bubble); // Usa seu drawable de botão ativo
-            params.setMarginStart(100); // Evita que grude do lado esquerdo
+            textView.setBackgroundResource(R.drawable.bg_active_bubble);
+            params.setMarginStart(100);
         } else {
             // Estilo para a MIA (Alinhado à esquerda)
             params.gravity = Gravity.START;
-            textView.setBackgroundResource(R.drawable.bg_glass); // Usa o fundo de vidro padrão
-            params.setMarginEnd(100); // Evita que grude do lado direito
+            textView.setBackgroundResource(R.drawable.bg_glass);
+            params.setMarginEnd(100);
         }
 
         textView.setLayoutParams(params);
