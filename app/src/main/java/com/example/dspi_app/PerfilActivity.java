@@ -34,7 +34,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class                       PerfilActivity extends AppCompatActivity {
+public class PerfilActivity extends AppCompatActivity {
 
     private final int CURRENT_TAB_INDEX = 3; // Mantém a aba "Conta" ativa
     private String nivel;
@@ -51,13 +51,14 @@ public class                       PerfilActivity extends AppCompatActivity {
                     try {
                         InputStream inputStream = getContentResolver().openInputStream(imageUri);
                         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                        
+
                         Glide.with(this)
                                 .load(bitmap)
                                 .apply(RequestOptions.circleCropTransform())
                                 .into(imgPerfil);
 
                         imgPerfil.setPadding(0, 0, 0, 0);
+                        // Mantemos a conversão para Base64 aqui para poder enviar no POST
                         fotoBase64 = bitmapToBase64(bitmap);
                     } catch (Exception e) {
                         Toast.makeText(this, "Erro ao selecionar imagem", Toast.LENGTH_SHORT).show();
@@ -94,25 +95,29 @@ public class                       PerfilActivity extends AppCompatActivity {
         emailAntigo = prefs.getString("email_logado", "email@exemplo.com");
         inputNome.setText(prefs.getString("nome_usuario", "Nome do Usuário"));
         inputEmail.setText(emailAntigo);
+
+        // Agora "foto_usuario" provavelmente será um link HTTP do Cloudflare R2
         fotoBase64 = prefs.getString("foto_usuario", "");
 
         if (!fotoBase64.isEmpty()) {
             if (fotoBase64.startsWith("http")) {
+                // Se for link, o Glide baixa a imagem magicamente do R2
                 Glide.with(this)
                         .load(fotoBase64)
                         .apply(RequestOptions.circleCropTransform())
                         .into(imgPerfil);
                 imgPerfil.setPadding(0, 0, 0, 0);
             } else {
-                    byte[] decodedString = Base64.decode(fotoBase64, Base64.DEFAULT);
-                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                    
-                    Glide.with(this)
-                            .load(decodedByte)
-                            .apply(RequestOptions.circleCropTransform())
-                            .into(imgPerfil);
-                            
-                    imgPerfil.setPadding(0, 0, 0, 0);
+                // Fallback para contas antigas que ainda têm a foto em Base64 localmente
+                byte[] decodedString = Base64.decode(fotoBase64, Base64.DEFAULT);
+                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
+                Glide.with(this)
+                        .load(decodedByte)
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(imgPerfil);
+
+                imgPerfil.setPadding(0, 0, 0, 0);
             }
         }
 
@@ -138,7 +143,7 @@ public class                       PerfilActivity extends AppCompatActivity {
 
     private void enviarParaAPI(String nome, String email, String foto) {
         String url = "https://api-dspi.whyguiih.workers.dev/atualizar-perfil";
-        
+
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("email_atual", emailAntigo);
@@ -153,11 +158,18 @@ public class                       PerfilActivity extends AppCompatActivity {
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
+
+                            // EXTRAI A URL DO R2 DEVOLVIDA PELA API
+                            // Se a API não devolver "foto_url" por algum motivo, usa a variável 'foto' como segurança
+                            String urlFotoR2 = response.has("foto_url") ? response.getString("foto_url") : foto;
+
                             SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
                             SharedPreferences.Editor editor = prefs.edit();
                             editor.putString("nome_usuario", nome);
                             editor.putString("email_logado", email);
-                            editor.putString("foto_usuario", foto);
+
+                            // Salva a URL leve em vez do Base64
+                            editor.putString("foto_usuario", urlFotoR2);
                             editor.apply();
 
                             Toast.makeText(this, "Perfil atualizado com sucesso!", Toast.LENGTH_SHORT).show();

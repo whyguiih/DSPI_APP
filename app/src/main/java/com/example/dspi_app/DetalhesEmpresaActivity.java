@@ -2,7 +2,10 @@ package com.example.dspi_app;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
@@ -22,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.bumptech.glide.Glide;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -115,15 +119,36 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         String enderecoFormatado = endereco != null ? endereco.trim() : "Endereço não informado";
         txtEndereco.setText(enderecoFormatado);
 
+        // LÓGICA DE FOTO ATUALIZADA AQUI:
         if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
-            String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
-            int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
-            if (resourceId != 0) {
-                imgEmpresaLogo.setImageResource(resourceId);
-                imgEmpresaLogo.setImageTintList(null);
-                imgEmpresaLogo.setPadding(0, 0, 0, 0);
-                imgEmpresaLogo.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imgEmpresaLogo.setImageTintList(null);
+            imgEmpresaLogo.setPadding(0, 0, 0, 0);
+            imgEmpresaLogo.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+            if (fotoPerfil.startsWith("http")) {
+                // Imagem gerada no R2
+                Glide.with(this)
+                        .load(fotoPerfil)
+                        .into(imgEmpresaLogo);
+            } else if (fotoPerfil.length() > 100) {
+                // Imagem salva em Base64 localmente
+                try {
+                    byte[] decodedString = Base64.decode(fotoPerfil, Base64.DEFAULT);
+                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                    Glide.with(this).load(decodedByte).into(imgEmpresaLogo);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                // Nome de imagem na pasta drawable
+                String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
+                int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
+                if (resourceId != 0) {
+                    imgEmpresaLogo.setImageResource(resourceId);
+                }
             }
+        } else {
+            imgEmpresaLogo.setImageResource(R.drawable.ic_empresas);
         }
 
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
@@ -171,7 +196,6 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
 
                                 String empresaVinc = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada() : "";
 
-                                // Verifica se o projeto está vinculado a empresa que está sendo exibida na tela agora
                                 if (!empresaVinc.trim().isEmpty() && empresaVinc.trim().equalsIgnoreCase(nomeEmpresaQueEstaSendoVisualizada.trim())) {
                                     projetosAfiliados.add(p);
                                 }
@@ -180,15 +204,11 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
                             if (!projetosAfiliados.isEmpty()) {
                                 recyclerView.setAdapter(new ProjetosActivity.ProjetoAdapter(projetosAfiliados, projeto -> {
 
-                                    // =========================================================================
-                                    // BLOQUEIO MÁGICO AQUI: Se for Empresa e tentar clicar no projeto de OUTRA empresa
-                                    // =========================================================================
                                     if ("4".equals(nivel) && !nomeEmpresaQueEstaSendoVisualizada.trim().equalsIgnoreCase(nomeUsuarioLogado.trim())) {
                                         Toast.makeText(DetalhesEmpresaActivity.this, "Acesso Negado: Você só pode acessar os detalhes dos seus próprios projetos afiliados.", Toast.LENGTH_LONG).show();
-                                        return; // O return força a função a parar aqui. A tela não abre!
+                                        return;
                                     }
 
-                                    // Se passar do bloqueio (Se for Aluno, Professor, ou a PRÓPRIA empresa dona do projeto), abre normal
                                     Intent intent = new Intent(DetalhesEmpresaActivity.this, ProjetoDetalhesActivity.class);
                                     intent.putExtra("projeto_selecionado", projeto);
                                     intent.putExtra("nivel_de_acesso", nivel);

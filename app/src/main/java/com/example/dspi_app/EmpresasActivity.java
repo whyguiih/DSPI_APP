@@ -1,7 +1,10 @@
 package com.example.dspi_app;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
@@ -18,6 +21,8 @@ import androidx.core.view.WindowInsetsCompat;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -73,7 +78,6 @@ public class EmpresasActivity extends AppCompatActivity {
                                     String endereco = empresa.optString("endereco", "");
                                     String fotoPerfil = empresa.optString("foto_perfil", "");
                                     String descricao = empresa.optString("descricao", "Nenhuma descrição disponível ainda.");
-
                                     String setor = empresa.optString("setor", "Não informado");
 
                                     adicionarEmpresaNaTela(listaEmpresasLayout, nome, cnpj, telefone, email, endereco, fotoPerfil, descricao, setor);
@@ -106,11 +110,35 @@ public class EmpresasActivity extends AppCompatActivity {
         txtEndereco.setText(endereco);
 
         if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
-            String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
-            int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
-            if (resourceId != 0) {
-                imgEmpresa.setImageResource(resourceId);
+            if (fotoPerfil.startsWith("http")) {
+                // É um Link gerado pelo Cloudflare R2
+                Glide.with(this)
+                        .load(fotoPerfil)
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(imgEmpresa);
+            } else if (fotoPerfil.length() > 100) {
+                // É um texto gigante de Base64 das contas antigas
+                try {
+                    byte[] decodedString = Base64.decode(fotoPerfil, Base64.DEFAULT);
+                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                    Glide.with(this)
+                            .load(decodedByte)
+                            .apply(RequestOptions.circleCropTransform())
+                            .into(imgEmpresa);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                // É um nome de imagem dentro da pasta drawable local do app
+                String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
+                int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
+                if (resourceId != 0) {
+                    imgEmpresa.setImageResource(resourceId);
+                }
             }
+        } else {
+            // Imagem padrão caso não tenha foto
+            imgEmpresa.setImageResource(R.drawable.ic_empresas);
         }
 
         itemEmpresa.setOnClickListener(v -> {
