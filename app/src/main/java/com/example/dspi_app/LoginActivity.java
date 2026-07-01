@@ -4,31 +4,33 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.*;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.splashscreen.SplashScreen;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.CredentialManagerCallback;
+import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.GetCredentialResponse;
+import androidx.credentials.exceptions.GetCredentialException;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import androidx.credentials.CredentialManager;
-import androidx.credentials.GetCredentialRequest;
-import androidx.credentials.GetCredentialResponse;
-import androidx.credentials.exceptions.GetCredentialException;
-
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -44,71 +46,85 @@ public class LoginActivity extends AppCompatActivity {
         credentialManager = CredentialManager.create(this);
 
         View mainLayout = findViewById(R.id.mainLayout);
-        ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
-            androidx.core.graphics.Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
-            return WindowInsetsCompat.CONSUMED;
-        });
+        if (mainLayout != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
+                androidx.core.graphics.Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+                return WindowInsetsCompat.CONSUMED;
+            });
+        }
 
         EditText nome = findViewById(R.id.inputEmail);
         EditText senha = findViewById(R.id.inputSenha);
         Button btnEntrar = findViewById(R.id.btnEntrar);
-
-        // ATENÇÃO: Verifique no seu XML se o ID do botão do Google é "Google" ou "btnGoogle"
         Button btnGoogle = findViewById(R.id.Google);
-        btnGoogle.setOnClickListener(v -> loginComGoogle());
 
-        btnEntrar.setOnClickListener(v -> {
-            String Pnome = nome.getText().toString().trim();
-            String Psenha = senha.getText().toString().trim();
+        if (btnGoogle != null) {
+            btnGoogle.setOnClickListener(v -> loginComGoogle());
+        }
 
-            if (Pnome.isEmpty() || Psenha.isEmpty()) {
-                Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        if (btnEntrar != null) {
+            btnEntrar.setOnClickListener(v -> {
+                String Pnome = nome.getText().toString().trim();
+                String Psenha = senha.getText().toString().trim();
 
-            String url = "https://api-dspi.whyguiih.workers.dev/login";
-            JSONObject jsonBody = new JSONObject();
-            try {
-                jsonBody.put("nome_usuarios", Pnome);
-                jsonBody.put("senha", Psenha);
-            } catch (JSONException e) {
-                Log.e("LoginActivity", "Erro ao montar JSON de login", e);
-            }
+                if (Pnome.isEmpty() || Psenha.isEmpty()) {
+                    Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody, response -> {
+                String url = "https://api-dspi.whyguiih.workers.dev/login";
+                JSONObject jsonBody = new JSONObject();
                 try {
-                    if (response.getBoolean("success")) {
-                        String nivel = response.getString("nivel");
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        intent.putExtra("nivel_de_acesso", nivel);
-                        intent.putExtra("email_usuario", Pnome);
-
-                        getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit().putString("email_logado", Pnome).apply();
-
-                        startActivity(intent);
-                        finish();
-                    } else {
-                        String mensagem = response.optString("message", "Login falhou");
-                        Toast.makeText(this, mensagem, Toast.LENGTH_LONG).show();
-                    }
+                    jsonBody.put("nome_usuarios", Pnome);
+                    jsonBody.put("senha", Psenha);
                 } catch (JSONException e) {
-                    Toast.makeText(this, "Erro no formato da resposta", Toast.LENGTH_SHORT).show();
+                    Log.e("LoginActivity", "Erro ao montar JSON de login", e);
                 }
-            }, error -> {
-                Log.e("VOLLEY_ERROR", "Erro de Servidor: " + error.toString());
-                Toast.makeText(this, "Erro interno do servidor. Tente mais tarde.", Toast.LENGTH_LONG).show();
-            }) {
-                @Override
-                public Map<String, String> getHeaders() {
-                    Map<String, String> headers = new HashMap<>();
-                    headers.put("Content-Type", "application/json");
-                    return headers;
-                }
-            };
 
-            Volley.newRequestQueue(this).add(jsonObjectRequest);
-        });
+                JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody, response -> {
+                    try {
+                        if (response.getBoolean("success")) {
+                            String nivel = response.getString("nivel");
+                            String email = response.optString("email", response.optString("email_usuario", ""));
+                            String foto = response.optString("foto_perfil", response.optString("foto_usuario", ""));
+                            String nomeExibicao = response.optString("nome_usuarios", response.optString("nome_usuario", Pnome));
+
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            intent.putExtra("nivel_de_acesso", nivel);
+                            intent.putExtra("email_usuario", email);
+
+                            getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit()
+                                    .putString("email_logado", email)
+                                    .putString("nome_usuario", nomeExibicao)
+                                    .putString("foto_usuario", foto)
+                                    .putString("nivel_de_acesso", nivel)
+                                    .apply();
+
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            String mensagem = response.optString("message", "Login falhou");
+                            Toast.makeText(this, mensagem, Toast.LENGTH_LONG).show();
+                        }
+                    } catch (JSONException e) {
+                        Toast.makeText(this, "Erro no formato da resposta", Toast.LENGTH_SHORT).show();
+                    }
+                }, error -> {
+                    Log.e("VOLLEY_ERROR", "Erro de Servidor: " + error.toString());
+                    Toast.makeText(this, "Erro interno do servidor. Tente mais tarde.", Toast.LENGTH_LONG).show();
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() {
+                        Map<String, String> headers = new HashMap<>();
+                        headers.put("Content-Type", "application/json");
+                        return headers;
+                    }
+                };
+
+                Volley.newRequestQueue(this).add(jsonObjectRequest);
+            });
+        }
     }
 
     private void loginComGoogle() {
@@ -122,8 +138,8 @@ public class LoginActivity extends AppCompatActivity {
                 .addCredentialOption(googleIdOption)
                 .build();
 
-        credentialManager.getCredentialAsync(this, request, null, getMainExecutor(),
-                new androidx.credentials.CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
+        credentialManager.getCredentialAsync(this, request, null, ContextCompat.getMainExecutor(this),
+                new CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
                     @Override
                     public void onResult(GetCredentialResponse result) {
                         try {
@@ -146,7 +162,6 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
-
     private void enviarTokenParaAPI(String idToken) {
         String url = "https://api-dspi.whyguiih.workers.dev/login-google";
 
@@ -161,16 +176,15 @@ public class LoginActivity extends AppCompatActivity {
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
-                            String email = response.getString("email_usuario");
-                            String nome = response.optString("nome_usuario", email); // Tenta pegar nome, ou usa email
-                            String foto = response.optString("foto_usuario", ""); // Tenta pegar foto da API
+                            String email = response.optString("email", response.optString("email_usuario", ""));
+                            String nome = response.optString("nome_usuarios", response.optString("nome_usuario", email));
+                            String foto = response.optString("foto_perfil", response.optString("foto_usuario", ""));
 
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                             intent.putExtra("nivel_de_acesso", "6");
                             intent.putExtra("email_usuario", email);
 
-                            getSharedPreferences("SESSAO_USER", MODE_PRIVATE)
-                                    .edit()
+                            getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit()
                                     .putString("email_logado", email)
                                     .putString("nome_usuario", nome)
                                     .putString("foto_usuario", foto)
