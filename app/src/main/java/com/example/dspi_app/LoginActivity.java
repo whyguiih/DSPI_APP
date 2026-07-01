@@ -176,19 +176,23 @@ public class LoginActivity extends AppCompatActivity {
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
+
+                            // AGORA PUXA O NÍVEL QUE VEIO DA API (antes estava chumbado "6")
+                            String nivel = response.optString("nivel", "6");
+
                             String email = response.optString("email", response.optString("email_usuario", ""));
                             String nome = response.optString("nome_usuarios", response.optString("nome_usuario", email));
                             String foto = response.optString("foto_perfil", response.optString("foto_usuario", ""));
 
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            intent.putExtra("nivel_de_acesso", "6");
+                            intent.putExtra("nivel_de_acesso", nivel); // Usa o nível dinâmico
                             intent.putExtra("email_usuario", email);
 
                             getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit()
                                     .putString("email_logado", email)
                                     .putString("nome_usuario", nome)
                                     .putString("foto_usuario", foto)
-                                    .putString("nivel_de_acesso", "6")
+                                    .putString("nivel_de_acesso", nivel) // Usa o nível dinâmico
                                     .apply();
 
                             startActivity(intent);
