@@ -65,10 +65,11 @@ public class LoginActivity extends AppCompatActivity {
 
         if (btnEntrar != null) {
             btnEntrar.setOnClickListener(v -> {
-                String Pnome = nome.getText().toString().trim();
-                String Psenha = senha.getText().toString().trim();
+                // Pega o texto do inputEmail (que agora de fato é o e-mail!)
+                String emailDigitado = nome.getText().toString().trim();
+                String senhaDigitada = senha.getText().toString().trim();
 
-                if (Pnome.isEmpty() || Psenha.isEmpty()) {
+                if (emailDigitado.isEmpty() || senhaDigitada.isEmpty()) {
                     Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -76,8 +77,9 @@ public class LoginActivity extends AppCompatActivity {
                 String url = "https://api-dspi.whyguiih.workers.dev/login";
                 JSONObject jsonBody = new JSONObject();
                 try {
-                    jsonBody.put("nome_usuarios", Pnome);
-                    jsonBody.put("senha", Psenha);
+                    // MUDANÇA AQUI: Enviamos "email" para a API em vez de "nome_usuarios"
+                    jsonBody.put("email", emailDigitado);
+                    jsonBody.put("senha", senhaDigitada);
                 } catch (JSONException e) {
                     Log.e("LoginActivity", "Erro ao montar JSON de login", e);
                 }
@@ -86,9 +88,14 @@ public class LoginActivity extends AppCompatActivity {
                     try {
                         if (response.getBoolean("success")) {
                             String nivel = response.getString("nivel");
-                            String email = response.optString("email", response.optString("email_usuario", ""));
-                            String foto = response.optString("foto_perfil", response.optString("foto_usuario", ""));
-                            String nomeExibicao = response.optString("nome_usuarios", response.optString("nome_usuario", Pnome));
+
+                            // Puxa o e-mail e a foto vindos do banco
+                            String email = response.optString("email", emailDigitado);
+                            String foto = response.optString("foto_perfil", "");
+
+                            // AQUI: Puxa O NOME ESTRITAMENTE DO BANCO DE DADOS ("nome_usuario")
+                            // Se a API não mandar nada, ele deixa vazio (""), nunca mais vai exibir o e-mail no lugar do nome!
+                            String nomeExibicao = response.optString("nome_usuario", "");
 
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                             intent.putExtra("nivel_de_acesso", nivel);
@@ -96,7 +103,7 @@ public class LoginActivity extends AppCompatActivity {
 
                             getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit()
                                     .putString("email_logado", email)
-                                    .putString("nome_usuario", nomeExibicao)
+                                    .putString("nome_usuario", nomeExibicao) // Salva o nome real que veio do banco
                                     .putString("foto_usuario", foto)
                                     .putString("nivel_de_acesso", nivel)
                                     .apply();
@@ -104,7 +111,7 @@ public class LoginActivity extends AppCompatActivity {
                             startActivity(intent);
                             finish();
                         } else {
-                            String mensagem = response.optString("message", "Login falhou");
+                            String mensagem = response.optString("message", "E-mail ou senha incorretos!");
                             Toast.makeText(this, mensagem, Toast.LENGTH_LONG).show();
                         }
                     } catch (JSONException e) {
