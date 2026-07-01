@@ -47,7 +47,7 @@ public class NaiActivity extends AppCompatActivity {
     // ==========================================
     // CONFIGURAÇÕES DO ANYTHING LLM
     // ==========================================
-    private final String BASE_URL = "https://ought-debtor-reprocess.ngrok-free.dev";
+    private final String BASE_URL = "https://consultation-telecom-verse-joyce.trycloudflare.com";
     private final String API_KEY = "77SDBH4-8BEM47G-JTQCEAH-79PPHCT";
     private final String WORKSPACE_SLUG = "mia";
     // ==========================================

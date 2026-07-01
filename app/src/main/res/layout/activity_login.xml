@@ -52,7 +52,7 @@
             android:layout_marginTop="32dp"
             android:background="@drawable/bg_input_glass"
             android:fontFamily="@font/neo_sans"
-            android:hint="Usuário / E-mail"
+            android:hint="Usuário"
             android:inputType="textEmailAddress"
             android:paddingHorizontal="20dp"
             android:textColor="#FFFFFF"
