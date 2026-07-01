@@ -4,18 +4,20 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Spanned;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
+import androidx.core.text.HtmlCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -45,18 +47,13 @@ public class NaiActivity extends AppCompatActivity {
     // ==========================================
     // CONFIGURAÇÕES DO ANYTHING LLM
     // ==========================================
-    // Substitua pela URL que o Ngrok te deu
     private final String BASE_URL = "https://ought-debtor-reprocess.ngrok-free.dev";
-
-    // Pegue no AnythingLLM > Configurações > API Keys
     private final String API_KEY = "77SDBH4-8BEM47G-JTQCEAH-79PPHCT";
-
-    // O "slug" do seu Workspace (como ele aparece na URL do AnythingLLM, ex: "meu-projeto")
     private final String WORKSPACE_SLUG = "mia";
     // ==========================================
 
     private OkHttpClient client;
-    private Handler mainHandler; // Para rodar animações na thread principal
+    private Handler mainHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,22 +61,13 @@ public class NaiActivity extends AppCompatActivity {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_nai);
 
-        // No onCreate do seu NaiActivity.java
-
         View mainLayout = findViewById(R.id.mainLayout);
-        // Substitua o seu bloco atual de ViewCompat.setOnApplyWindowInsetsListener por este:
         ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, windowInsets) -> {
-            // Pegamos as bordas do sistema (status/nav) E o teclado (ime)
             Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars()
                     | WindowInsetsCompat.Type.ime());
-
-            // Aplicamos o padding
             v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
-
             return WindowInsetsCompat.CONSUMED;
         });
-
-// REMOVA qualquer outro setOnApplyWindowInsetsListener que você tenha criado para o inputLayout ou teclado!
 
         chatContainer = findViewById(R.id.chatContainer);
         etMessage = findViewById(R.id.etMessage);
@@ -90,7 +78,6 @@ public class NaiActivity extends AppCompatActivity {
         String nivel = getIntent().getStringExtra("nivel_de_acesso");
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
-        // Configuração do Cliente HTTP (OkHttp)
         client = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
@@ -102,9 +89,10 @@ public class NaiActivity extends AppCompatActivity {
         btnSend.setOnClickListener(v -> {
             String message = etMessage.getText().toString().trim();
             if (!message.isEmpty()) {
-                // 1. Cria a bolha do usuário
+                // 1. Cria a bolha do usuário formatada
                 TextView userBubble = createMessageBubble(true);
-                userBubble.setText(message);
+                Spanned formattedUserText = HtmlCompat.fromHtml(formatMarkdownToHtml(message), HtmlCompat.FROM_HTML_MODE_COMPACT);
+                userBubble.setText(formattedUserText);
                 etMessage.setText("");
                 scrollChatToBottom();
 
@@ -118,21 +106,18 @@ public class NaiActivity extends AppCompatActivity {
             }
         });
 
-        // Mensagem inicial de boas-vindas da MIA (com efeito de máquina de escrever)
+        // Mensagem inicial de boas-vindas da MIA
         TextView welcomeBubble = createMessageBubble(false);
         animateTypewriter(welcomeBubble, "Olá, sou a MIA! Sua inteligência artificial do Integra. Como posso te ajudar hoje?");
     }
 
-    /**
-     * Envia a mensagem para a API do AnythingLLM usando OkHttp
-     */
     private void sendMessageToAnythingLLM(String userMessage, TextView loadingBubble) {
         String url = BASE_URL + "/api/v1/workspace/" + WORKSPACE_SLUG + "/chat";
 
         try {
             JSONObject jsonBody = new JSONObject();
             jsonBody.put("message", userMessage);
-            jsonBody.put("mode", "chat"); // Usa o histórico do workspace
+            jsonBody.put("mode", "chat");
 
             RequestBody body = RequestBody.create(
                     jsonBody.toString(),
@@ -163,7 +148,6 @@ public class NaiActivity extends AppCompatActivity {
                             String responseData = response.body().string();
                             JSONObject jsonResponse = new JSONObject(responseData);
 
-                            // A API do AnythingLLM retorna a resposta no campo "textResponse"
                             String aiText = jsonResponse.optString("textResponse", "Erro ao obter resposta.");
 
                             mainHandler.post(() -> {
@@ -191,10 +175,6 @@ public class NaiActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Cria uma bolha de mensagem vazia e a adiciona à tela
-     * @return O TextView criado
-     */
     private TextView createMessageBubble(boolean isUser) {
         TextView textView = new TextView(this);
         textView.setTextColor(Color.WHITE);
@@ -222,9 +202,6 @@ public class NaiActivity extends AppCompatActivity {
         return textView;
     }
 
-    /**
-     * Anima os 3 pontinhos na bolha enquanto espera a requisição
-     */
     private Runnable loadingRunnable;
     private void startLoadingAnimation(TextView loadingBubble) {
         loadingRunnable = new Runnable() {
@@ -238,15 +215,12 @@ public class NaiActivity extends AppCompatActivity {
                 for (int i = 0; i < dotCount; i++) dots.append(".");
 
                 loadingBubble.setText(dots.toString());
-                mainHandler.postDelayed(this, 400); // Velocidade dos pontinhos
+                mainHandler.postDelayed(this, 400);
             }
         };
         mainHandler.post(loadingRunnable);
     }
 
-    /**
-     * Para a animação e limpa a bolha para receber o texto real
-     */
     private void stopLoadingAnimation(TextView loadingBubble) {
         if (loadingRunnable != null) {
             mainHandler.removeCallbacks(loadingRunnable);
@@ -255,25 +229,53 @@ public class NaiActivity extends AppCompatActivity {
     }
 
     /**
-     * Efeito de Máquina de Escrever: Letra por letra
+     * Efeito de Máquina de Escrever corrigido:
+     * Faz a bolha crescer dinamicamente enquanto preserva a formatação visual.
      */
     private void animateTypewriter(TextView textView, String fullText) {
-        final long DELAY_MS = 25; // Velocidade de digitação (quanto menor, mais rápido)
+        final long DELAY_MS = 20;
+
+        // 1. Converte o texto Markdown para HTML e gera um objeto Spanned (que contém o texto + formatações)
+        String htmlText = formatMarkdownToHtml(fullText);
+        Spanned spannedText = HtmlCompat.fromHtml(htmlText, HtmlCompat.FROM_HTML_MODE_COMPACT);
+        int totalChars = spannedText.length();
 
         Runnable typewriterRunnable = new Runnable() {
             int index = 0;
+
             @Override
             public void run() {
-                if (index <= fullText.length()) {
-                    textView.setText(fullText.substring(0, index));
+                if (index <= totalChars) {
+                    // O subSequence corta o texto até o index atual, mas CARREGA JUNTO
+                    // as formatações (negrito, itálico) correspondentes a esse trecho.
+                    // Isso faz a bolha expandir fisicamente a cada letra inserida.
+                    CharSequence currentText = spannedText.subSequence(0, index);
+
+                    textView.setText(currentText);
                     index++;
                     mainHandler.postDelayed(this, DELAY_MS);
-                    // Rola a tela para baixo enquanto digita
+
                     scrollChatToBottom();
                 }
             }
         };
         mainHandler.post(typewriterRunnable);
+    }
+
+    /**
+     * Converte caracteres de formatação Markdown da IA para marcações HTML.
+     */
+    private String formatMarkdownToHtml(String text) {
+        if (text == null) return "";
+
+        text = text.replaceAll("(?s)```(.*?)```", "<br><tt>$1</tt><br>");
+        text = text.replaceAll("(?s)\\*\\*(.*?)\\*\\*", "<b>$1</b>");
+        text = text.replaceAll("(?s)(?<!\\*)\\*(?!\\*)(.*?)(?<!\\*)\\*(?!\\*)", "<i>$1</i>");
+        text = text.replaceAll("(?s)`(.*?)`", "<tt>$1</tt>");
+        text = text.replaceAll("(?m)^- (.*)$", "&#8226; $1");
+        text = text.replace("\n", "<br>");
+
+        return text;
     }
 
     private void scrollChatToBottom() {
