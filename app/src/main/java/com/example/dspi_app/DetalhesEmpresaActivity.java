@@ -26,6 +26,7 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -129,13 +130,17 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
                 // Imagem gerada no R2
                 Glide.with(this)
                         .load(fotoPerfil)
+                        .apply(RequestOptions.circleCropTransform())
                         .into(imgEmpresaLogo);
             } else if (fotoPerfil.length() > 100) {
                 // Imagem salva em Base64 localmente
                 try {
                     byte[] decodedString = Base64.decode(fotoPerfil, Base64.DEFAULT);
                     Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                    Glide.with(this).load(decodedByte).into(imgEmpresaLogo);
+                    Glide.with(this)
+                            .load(decodedByte)
+                            .apply(RequestOptions.circleCropTransform())
+                            .into(imgEmpresaLogo);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
