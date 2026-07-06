@@ -3,12 +3,15 @@ package com.example.dspi_app;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,6 +39,9 @@ public class ProjetosActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 1;
     private String nivel;
     private String nomeUsuario;
+    private List<Projeto> todosMeusProjetos = new ArrayList<>();
+    private List<Projeto> todosOutrosProjetos = new ArrayList<>();
+    private EditText etPesquisa;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +92,20 @@ public class ProjetosActivity extends AppCompatActivity {
         rvMeusProjetos.setLayoutManager(new LinearLayoutManager(this));
         rvOutrosProjetos.setLayoutManager(new LinearLayoutManager(this));
 
+        etPesquisa = findViewById(R.id.etPesquisa);
+        etPesquisa.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filtrarProjetos(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
         buscarProjetosDaApi();
     }
 
@@ -97,8 +117,8 @@ public class ProjetosActivity extends AppCompatActivity {
                     try {
                         if (response.getBoolean("success")) {
                             JSONArray data = response.getJSONArray("data");
-                            List<Projeto> meusProjetos = new ArrayList<>();
-                            List<Projeto> outrosProjetos = new ArrayList<>();
+                            todosMeusProjetos.clear();
+                            todosOutrosProjetos.clear();
 
                             String userLogado = nomeUsuario.trim();
 
@@ -132,19 +152,19 @@ public class ProjetosActivity extends AppCompatActivity {
 
                                 if ("4".equals(nivel)) {
                                     if (!userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado)) {
-                                        meusProjetos.add(p);
+                                        todosMeusProjetos.add(p);
                                     } else if (empresaVinc.isEmpty() || empresaVinc.equalsIgnoreCase("null") || empresaVinc.equalsIgnoreCase("Nenhuma")) {
-                                        outrosProjetos.add(p);
+                                        todosOutrosProjetos.add(p);
                                     }
                                 } else {
                                     if (!userLogado.isEmpty() && nomeEqp.equalsIgnoreCase(userLogado)) {
-                                        meusProjetos.add(p);
+                                        todosMeusProjetos.add(p);
                                     } else {
-                                        outrosProjetos.add(p);
+                                        todosOutrosProjetos.add(p);
                                     }
                                 }
                             }
-                            configurarListasDeProjetos(meusProjetos, outrosProjetos);
+                            configurarListasDeProjetos(todosMeusProjetos, todosOutrosProjetos);
                         } else {
                             Toast.makeText(this, "Erro da API: " + response.optString("error"), Toast.LENGTH_LONG).show();
                         }
@@ -156,6 +176,26 @@ public class ProjetosActivity extends AppCompatActivity {
                 error -> Toast.makeText(this, "Falha de Conexão com API", Toast.LENGTH_LONG).show()
         );
         Volley.newRequestQueue(this).add(request);
+    }
+
+    private void filtrarProjetos(String query) {
+        String termo = query.toLowerCase().trim();
+        List<Projeto> filtradosMeus = new ArrayList<>();
+        List<Projeto> filtradosOutros = new ArrayList<>();
+
+        for (Projeto p : todosMeusProjetos) {
+            if (p.getNomeProjeto().toLowerCase().contains(termo) || p.getNomeEquipe().toLowerCase().contains(termo)) {
+                filtradosMeus.add(p);
+            }
+        }
+
+        for (Projeto p : todosOutrosProjetos) {
+            if (p.getNomeProjeto().toLowerCase().contains(termo) || p.getNomeEquipe().toLowerCase().contains(termo)) {
+                filtradosOutros.add(p);
+            }
+        }
+
+        configurarListasDeProjetos(filtradosMeus, filtradosOutros);
     }
 
     private void configurarListasDeProjetos(List<Projeto> meusProjetos, List<Projeto> outrosProjetos) {

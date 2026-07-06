@@ -38,6 +38,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
+import androidx.appcompat.app.AlertDialog;
 
 public class PerfilActivity extends AppCompatActivity {
 
@@ -165,7 +166,14 @@ public class PerfilActivity extends AppCompatActivity {
                 return;
             }
 
-            enviarParaAPI(novoNome, novoEmail, fotoBase64);
+            new AlertDialog.Builder(this)
+                    .setTitle("Confirmar Alterações")
+                    .setMessage("Deseja realmente salvar as alterações no seu perfil?")
+                    .setPositiveButton("Sim", (dialog, which) -> {
+                        enviarParaAPI(novoNome, novoEmail, fotoBase64);
+                    })
+                    .setNegativeButton("Não", null)
+                    .show();
         });
     }
 

@@ -28,9 +28,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.bumptech.glide.load.resource.bitmap.CenterCrop;
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
-
 public class EmpresasActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 3; // 3 = Empresas
     private final String BASE_URL = "https://api-dspi.whyguiih.workers.dev"; // Sua API
@@ -112,15 +109,12 @@ public class EmpresasActivity extends AppCompatActivity {
         txtNome.setText(nome);
         txtEndereco.setText(endereco);
 
-        // Define o raio do arredondamento (ex: 8dp convertidos para pixels)
-        int radiusPx = (int) (8 * getResources().getDisplayMetrics().density);
-
         if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
             if (fotoPerfil.startsWith("http")) {
                 // É um Link gerado pelo Cloudflare R2
                 Glide.with(this)
                         .load(fotoPerfil)
-                        .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                        .apply(RequestOptions.circleCropTransform())
                         .into(imgEmpresa);
             } else if (fotoPerfil.length() > 100) {
                 // É um texto gigante de Base64 das contas antigas
@@ -129,7 +123,7 @@ public class EmpresasActivity extends AppCompatActivity {
                     Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
                     Glide.with(this)
                             .load(decodedByte)
-                            .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                            .apply(RequestOptions.circleCropTransform())
                             .into(imgEmpresa);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -139,23 +133,12 @@ public class EmpresasActivity extends AppCompatActivity {
                 String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
                 int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
                 if (resourceId != 0) {
-                    Glide.with(this)
-                            .load(resourceId)
-                            .transform(new CenterCrop(), new RoundedCorners(radiusPx))
-                            .into(imgEmpresa);
-                } else {
-                    Glide.with(this)
-                            .load(R.drawable.ic_empresas)
-                            .transform(new CenterCrop(), new RoundedCorners(radiusPx))
-                            .into(imgEmpresa);
+                    imgEmpresa.setImageResource(resourceId);
                 }
             }
         } else {
             // Imagem padrão caso não tenha foto
-            Glide.with(this)
-                    .load(R.drawable.ic_empresas)
-                    .transform(new CenterCrop(), new RoundedCorners(radiusPx))
-                    .into(imgEmpresa);
+            imgEmpresa.setImageResource(R.drawable.ic_empresas);
         }
 
         itemEmpresa.setOnClickListener(v -> {
@@ -165,22 +148,11 @@ public class EmpresasActivity extends AppCompatActivity {
             intent.putExtra("telefone_contato", telefone);
             intent.putExtra("email_contato", email);
             intent.putExtra("endereco", endereco);
+            intent.putExtra("foto_perfil", fotoPerfil);
             intent.putExtra("descricao", descricao);
             intent.putExtra("setor", setor);
+
             intent.putExtra("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
-
-            // CORREÇÃO DO BUG TransactionTooLarge: Se a foto for um texto gigante (Base64), usa SharedPreferences
-            if (fotoPerfil != null && fotoPerfil.length() > 500) {
-                getSharedPreferences("TEMP_FOTO", MODE_PRIVATE)
-                        .edit()
-                        .putString("foto_base64_temp", fotoPerfil)
-                        .apply();
-                intent.putExtra("foto_perfil", "BUSCAR_NO_PREFS"); // Envia apenas um aviso
-            } else {
-                // Se for um link HTTP ou estiver vazio, pode enviar normal
-                intent.putExtra("foto_perfil", fotoPerfil);
-            }
-
             startActivity(intent);
         });
 

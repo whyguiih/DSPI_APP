@@ -31,6 +31,27 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
+        <EditText
+            android:id="@+id/etPesquisa"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_input_glass"
+            android:drawableStart="@android:drawable/ic_menu_search"
+            android:drawablePadding="12dp"
+            android:fontFamily="@font/neo_sans_regular"
+            android:hint="Pesquisar projetos..."
+            android:paddingHorizontal="20dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#99FFFFFF"
+            android:inputType="text"
+            android:maxLines="1"
+            app:layout_constraintTop_toBottomOf="@id/tvTituloProjetos"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
         <Button
             android:id="@+id/btnAbrirFormulario"
             android:layout_width="wrap_content"
@@ -42,7 +63,7 @@
             android:textColor="#FFFFFF"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvTituloProjetos" />
+            app:layout_constraintTop_toBottomOf="@+id/etPesquisa" />
 
         <androidx.core.widget.NestedScrollView
             android:id="@+id/scrollViewProjetos"
