@@ -16,6 +16,9 @@ import androidx.core.view.WindowInsetsCompat;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+
 public class ContaActivity extends AppCompatActivity {
 
     // Índice 3 representa a aba "Conta" no Bottom Navigation (0=Inicio, 1=Projetos, 2=Nai, 3=Conta, 4=Empresas)
@@ -118,20 +121,29 @@ public class ContaActivity extends AppCompatActivity {
             if (foto.startsWith("http")) {
                 Glide.with(this)
                         .load(foto)
-                        .apply(RequestOptions.circleCropTransform())
+                        .transform(new CenterCrop(), new RoundedCorners(32)) // Alterado aqui
                         .into(imgAvatar);
                 imgAvatar.setPadding(0, 0, 0, 0);
             } else {
                 byte[] decodedString = android.util.Base64.decode(foto, android.util.Base64.DEFAULT);
                 android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                
+
                 Glide.with(this)
                         .load(decodedByte)
-                        .apply(RequestOptions.circleCropTransform())
+                        .transform(new CenterCrop(), new RoundedCorners(32)) // Alterado aqui
                         .into(imgAvatar);
-                        
+
                 imgAvatar.setPadding(0, 0, 0, 0);
             }
+        } else {
+            // Caso o usuário tenha removido a foto, exibe o ícone padrão
+            Glide.with(this)
+                    .load(R.drawable.ic_conta)
+                    .transform(new CenterCrop(), new RoundedCorners(32))
+                    .into(imgAvatar);
+
+            int paddingPx = (int) (20 * getResources().getDisplayMetrics().density);
+            imgAvatar.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
         }
     }
 }

@@ -34,6 +34,11 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.media.ExifInterface;
+import android.graphics.Matrix;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+
 public class PerfilActivity extends AppCompatActivity {
 
     private final int CURRENT_TAB_INDEX = 3; // Mantém a aba "Conta" ativa
@@ -89,6 +94,7 @@ public class PerfilActivity extends AppCompatActivity {
         ImageButton btnBack = findViewById(R.id.btnBack);
         View btnSalvar = findViewById(R.id.btnSalvar);
         View btnAlterarFoto = findViewById(R.id.btnAlterarFoto);
+        View btnRemoverFoto = findViewById(R.id.btnRemoverFoto);
 
         // Carregar dados atuais
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
@@ -122,6 +128,20 @@ public class PerfilActivity extends AppCompatActivity {
         }
 
         btnBack.setOnClickListener(v -> finish());
+
+        btnRemoverFoto.setOnClickListener(v -> {
+            fotoBase64 = ""; // Define vazio. Será enviado para API e apagará o registro da foto
+
+            // Retorna o placeholder padrão arredondado
+            Glide.with(this)
+                    .load(R.drawable.ic_conta)
+                    .transform(new CenterCrop(), new RoundedCorners(32))
+                    .into(imgPerfil);
+
+            // Retornamos um padding genérico para o ícone padrão não ficar colado nas bordas
+            int paddingPx = (int) (24 * getResources().getDisplayMetrics().density);
+            imgPerfil.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+        });
 
         btnAlterarFoto.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
