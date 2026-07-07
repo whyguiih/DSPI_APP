@@ -26,17 +26,14 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.bitmap.CenterCrop;
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 
 public class DetalhesEmpresaActivity extends AppCompatActivity {
 
@@ -72,16 +69,22 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         }
 
         ImageButton btnVoltar = findViewById(R.id.btnVoltar);
-        btnVoltar.setOnClickListener(v -> finish());
+        if (btnVoltar != null) {
+            btnVoltar.setOnClickListener(v -> finish());
+        }
 
-        String nome = getIntent().getStringExtra("nome_empresa"); // Empresa que está sendo visualizada
-        String cnpj = getIntent().getStringExtra("cnpj");
-        String telefone = getIntent().getStringExtra("telefone_contato");
-        String email = getIntent().getStringExtra("email_contato");
-        String endereco = getIntent().getStringExtra("endereco");
-        String fotoPerfil = getIntent().getStringExtra("foto_perfil");
-        String descricao = getIntent().getStringExtra("descricao");
-        String setor = getIntent().getStringExtra("setor");
+        // ===================================================================
+        // RESGATE SEGURO DOS DADOS DA INTENT (Com chaves padronizadas)
+        // ===================================================================
+        Intent intent = getIntent();
+        String nome = intent.hasExtra("nome") ? intent.getStringExtra("nome") : intent.getStringExtra("nome_empresa");
+        String cnpj = intent.getStringExtra("cnpj");
+        String telefone = intent.hasExtra("telefone") ? intent.getStringExtra("telefone") : intent.getStringExtra("telefone_contato");
+        String email = intent.hasExtra("email") ? intent.getStringExtra("email") : intent.getStringExtra("email_contato");
+        String endereco = intent.getStringExtra("endereco");
+        String fotoPerfil = intent.getStringExtra("foto_perfil");
+        String descricao = intent.hasExtra("sobre") ? intent.getStringExtra("sobre") : intent.getStringExtra("descricao");
+        String setor = intent.getStringExtra("setor");
 
         // Vincula as Views
         TextView tvNomeEmpresa = findViewById(R.id.tvNomeEmpresa);
@@ -94,10 +97,10 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         ImageView imgEmpresaLogo = findViewById(R.id.imgEmpresaLogo);
         RecyclerView recyclerProjetosAfiliados = findViewById(R.id.recycler_projetos_afiliados);
 
-        // Preenchimentos básicos
-        tvNomeEmpresa.setText(nome != null ? nome : "Empresa");
-        txtSetorEmpresa.setText(setor != null && !setor.isEmpty() ? "Setor: " + setor : "Setor: Não informado");
-        txtSobreEmpresa.setText(descricao != null && !descricao.isEmpty() ? descricao : "Nenhuma descrição disponível ainda.");
+        // Preenchimentos básicos de texto
+        if (tvNomeEmpresa != null) tvNomeEmpresa.setText(nome != null ? nome : "Empresa");
+        if (txtSetorEmpresa != null) txtSetorEmpresa.setText(setor != null && !setor.isEmpty() ? "Setor: " + setor : "Setor: Não informado");
+        if (txtSobreEmpresa != null) txtSobreEmpresa.setText(descricao != null && !descricao.isEmpty() ? descricao : "Nenhuma descrição disponível ainda.");
 
         String cnpjFormatado = cnpj != null ? cnpj : "";
         String apenasNumerosCnpj = cnpjFormatado.replaceAll("\\D", "");
@@ -106,7 +109,7 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
                     apenasNumerosCnpj.substring(0, 2), apenasNumerosCnpj.substring(2, 5),
                     apenasNumerosCnpj.substring(5, 8), apenasNumerosCnpj.substring(8, 12), apenasNumerosCnpj.substring(12, 14));
         }
-        txtCnpjEmpresa.setText(!cnpjFormatado.isEmpty() ? "CNPJ: " + cnpjFormatado : "CNPJ: Não informado");
+        if (txtCnpjEmpresa != null) txtCnpjEmpresa.setText(!cnpjFormatado.isEmpty() ? "CNPJ: " + cnpjFormatado : "CNPJ: Não informado");
 
         String telefoneFormatado = telefone != null ? telefone : "";
         String apenasNumeros = telefoneFormatado.replaceAll("\\D", "");
@@ -115,21 +118,19 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         } else if (apenasNumeros.length() == 10) {
             telefoneFormatado = String.format("(%s) %s-%s", apenasNumeros.substring(0, 2), apenasNumeros.substring(2, 6), apenasNumeros.substring(6, 10));
         }
-        txtTelefone.setText(!telefoneFormatado.isEmpty() ? telefoneFormatado : "Sem telefone");
+        if (txtTelefone != null) txtTelefone.setText(!telefoneFormatado.isEmpty() ? telefoneFormatado : "Sem telefone");
 
         String emailFormatado = email != null && !email.isEmpty() ? email : "Sem e-mail";
         emailFormatado = emailFormatado.replace("@", "\u2060@\u2060").replace(".", "\u2060.\u2060");
-        txtEmail.setText(emailFormatado);
+        if (txtEmail != null) txtEmail.setText(emailFormatado);
 
         String enderecoFormatado = endereco != null ? endereco.trim() : "Endereço não informado";
-        txtEndereco.setText(enderecoFormatado);
+        if (txtEndereco != null) txtEndereco.setText(enderecoFormatado);
 
-        // LÓGICA DE FOTO ATUALIZADA AQUI:
-        if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
-            imgEmpresaLogo.setImageTintList(null);
-            imgEmpresaLogo.setPadding(0, 0, 0, 0);
-            imgEmpresaLogo.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            // LÓGICA DE FOTO ATUALIZADA E SEGURA:
+        // ===================================================================
+        // LÓGICA DE FOTO ATUALIZADA E SEGURA (Com Glide e cantos arredondados)
+        // ===================================================================
+        if (imgEmpresaLogo != null) {
             int radiusPx = (int) (16 * getResources().getDisplayMetrics().density); // Raio de curvatura da foto
 
             if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
@@ -148,8 +149,11 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
                                 .into(imgEmpresaLogo);
                     } catch (Exception e) {
                         e.printStackTrace();
+                        // Fallback em caso de erro no Base64
+                        Glide.with(this).load(R.drawable.ic_empresas).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresaLogo);
                     }
                 } else {
+                    // É um nome de imagem na pasta drawable (se houver)
                     String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
                     int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
                     if (resourceId != 0) {
@@ -159,19 +163,19 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
                     }
                 }
             } else {
+                // Empresa não tem foto informada
                 Glide.with(this).load(R.drawable.ic_empresas).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresaLogo);
             }
-        } else {
-            imgEmpresaLogo.setImageResource(R.drawable.ic_empresas);
         }
 
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
         configurarBolhaAnimada();
 
-        recyclerProjetosAfiliados.setLayoutManager(new LinearLayoutManager(this));
-
-        if (nome != null && !nome.trim().isEmpty()) {
-            buscarProjetosDaEmpresa(nome, recyclerProjetosAfiliados);
+        if (recyclerProjetosAfiliados != null) {
+            recyclerProjetosAfiliados.setLayoutManager(new LinearLayoutManager(this));
+            if (nome != null && !nome.trim().isEmpty()) {
+                buscarProjetosDaEmpresa(nome, recyclerProjetosAfiliados);
+            }
         }
     }
 

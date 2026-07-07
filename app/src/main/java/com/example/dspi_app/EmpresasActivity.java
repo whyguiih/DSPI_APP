@@ -112,8 +112,8 @@ public class EmpresasActivity extends AppCompatActivity {
         txtNome.setText(nome);
         txtEndereco.setText(endereco);
 
-        // Calculamos o arredondamento (ex: 8dp para a lista)
-        int radiusPx = (int) (8 * container.getResources().getDisplayMetrics().density);
+        // Define o raio do arredondamento (ex: 8dp convertidos para pixels)
+        int radiusPx = (int) (8 * getResources().getDisplayMetrics().density);
 
         if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
             if (fotoPerfil.startsWith("http")) {
@@ -123,7 +123,7 @@ public class EmpresasActivity extends AppCompatActivity {
                         .transform(new CenterCrop(), new RoundedCorners(radiusPx))
                         .into(imgEmpresa);
             } else if (fotoPerfil.length() > 100) {
-                // É um texto gigante de Base64
+                // É um texto gigante de Base64 das contas antigas
                 try {
                     byte[] decodedString = Base64.decode(fotoPerfil, Base64.DEFAULT);
                     Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
@@ -135,18 +135,27 @@ public class EmpresasActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             } else {
-                // É um nome de imagem dentro da pasta drawable
+                // É um nome de imagem dentro da pasta drawable local do app
                 String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
                 int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
                 if (resourceId != 0) {
-                    Glide.with(this).load(resourceId).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresa);
+                    Glide.with(this)
+                            .load(resourceId)
+                            .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                            .into(imgEmpresa);
                 } else {
-                    Glide.with(this).load(R.drawable.ic_empresas).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresa);
+                    Glide.with(this)
+                            .load(R.drawable.ic_empresas)
+                            .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                            .into(imgEmpresa);
                 }
             }
         } else {
             // Imagem padrão caso não tenha foto
-            Glide.with(this).load(R.drawable.ic_empresas).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresa);
+            Glide.with(this)
+                    .load(R.drawable.ic_empresas)
+                    .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                    .into(imgEmpresa);
         }
 
         itemEmpresa.setOnClickListener(v -> {
