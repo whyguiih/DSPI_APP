@@ -129,32 +129,37 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
             imgEmpresaLogo.setImageTintList(null);
             imgEmpresaLogo.setPadding(0, 0, 0, 0);
             imgEmpresaLogo.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            int empresaRadiusPx = (int) (12 * getResources().getDisplayMetrics().density);
+            // LÓGICA DE FOTO ATUALIZADA E SEGURA:
+            int radiusPx = (int) (16 * getResources().getDisplayMetrics().density); // Raio de curvatura da foto
 
-            if (fotoPerfil.startsWith("http")) {
-                Glide.with(this)
-                        .load(fotoPerfil)
-                        .transform(new CenterCrop(), new RoundedCorners(empresaRadiusPx))
-                        .into(imgEmpresaLogo);
-            } else if (fotoPerfil.length() > 100) {
-                // Imagem salva em Base64 localmente
-                try {
-                    byte[] decodedString = Base64.decode(fotoPerfil, Base64.DEFAULT);
-                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+            if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
+                if (fotoPerfil.startsWith("http")) {
                     Glide.with(this)
-                            .load(decodedByte)
-                            .apply(RequestOptions.circleCropTransform())
+                            .load(fotoPerfil)
+                            .transform(new CenterCrop(), new RoundedCorners(radiusPx))
                             .into(imgEmpresaLogo);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } else if (fotoPerfil.length() > 100) {
+                    try {
+                        byte[] decodedString = Base64.decode(fotoPerfil, Base64.DEFAULT);
+                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                        Glide.with(this)
+                                .load(decodedByte)
+                                .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                                .into(imgEmpresaLogo);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
+                    int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
+                    if (resourceId != 0) {
+                        Glide.with(this).load(resourceId).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresaLogo);
+                    } else {
+                        Glide.with(this).load(R.drawable.ic_empresas).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresaLogo);
+                    }
                 }
             } else {
-                // Nome de imagem na pasta drawable
-                String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
-                int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
-                if (resourceId != 0) {
-                    imgEmpresaLogo.setImageResource(resourceId);
-                }
+                Glide.with(this).load(R.drawable.ic_empresas).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresaLogo);
             }
         } else {
             imgEmpresaLogo.setImageResource(R.drawable.ic_empresas);

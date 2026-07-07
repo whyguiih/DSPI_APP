@@ -67,22 +67,21 @@
                 android:paddingHorizontal="20dp"
                 android:paddingBottom="20dp">
 
-                <androidx.cardview.widget.CardView
+                <FrameLayout
                     android:layout_width="120dp"
                     android:layout_height="120dp"
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="10dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="#33FFFFFF">
+                    android:background="@drawable/bg_glass"
+                    android:padding="10dp">
 
                     <ImageView
                         android:id="@+id/imgEmpresaLogo"
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_empresas" />
-                </androidx.cardview.widget.CardView>
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_empresas"
+                        android:scaleType="centerCrop"/>
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/tvNomeEmpresa"

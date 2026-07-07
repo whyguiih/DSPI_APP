@@ -28,6 +28,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+
 public class EmpresasActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 3; // 3 = Empresas
     private final String BASE_URL = "https://api-dspi.whyguiih.workers.dev"; // Sua API
@@ -109,36 +112,41 @@ public class EmpresasActivity extends AppCompatActivity {
         txtNome.setText(nome);
         txtEndereco.setText(endereco);
 
+        // Calculamos o arredondamento (ex: 8dp para a lista)
+        int radiusPx = (int) (8 * container.getResources().getDisplayMetrics().density);
+
         if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
             if (fotoPerfil.startsWith("http")) {
                 // É um Link gerado pelo Cloudflare R2
                 Glide.with(this)
                         .load(fotoPerfil)
-                        .apply(RequestOptions.circleCropTransform())
+                        .transform(new CenterCrop(), new RoundedCorners(radiusPx))
                         .into(imgEmpresa);
             } else if (fotoPerfil.length() > 100) {
-                // É um texto gigante de Base64 das contas antigas
+                // É um texto gigante de Base64
                 try {
                     byte[] decodedString = Base64.decode(fotoPerfil, Base64.DEFAULT);
                     Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
                     Glide.with(this)
                             .load(decodedByte)
-                            .apply(RequestOptions.circleCropTransform())
+                            .transform(new CenterCrop(), new RoundedCorners(radiusPx))
                             .into(imgEmpresa);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             } else {
-                // É um nome de imagem dentro da pasta drawable local do app
+                // É um nome de imagem dentro da pasta drawable
                 String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
                 int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
                 if (resourceId != 0) {
-                    imgEmpresa.setImageResource(resourceId);
+                    Glide.with(this).load(resourceId).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresa);
+                } else {
+                    Glide.with(this).load(R.drawable.ic_empresas).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresa);
                 }
             }
         } else {
             // Imagem padrão caso não tenha foto
-            imgEmpresa.setImageResource(R.drawable.ic_empresas);
+            Glide.with(this).load(R.drawable.ic_empresas).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresa);
         }
 
         itemEmpresa.setOnClickListener(v -> {
