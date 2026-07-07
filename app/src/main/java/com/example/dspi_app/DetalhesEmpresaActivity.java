@@ -83,6 +83,12 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         String email = intent.hasExtra("email") ? intent.getStringExtra("email") : intent.getStringExtra("email_contato");
         String endereco = intent.getStringExtra("endereco");
         String fotoPerfil = intent.getStringExtra("foto_perfil");
+        if ("BUSCAR_NO_PREFS".equals(fotoPerfil)) {
+            fotoPerfil = getSharedPreferences("TEMP_FOTO", MODE_PRIVATE).getString("foto_base64_temp", "");
+
+            // Limpa logo em seguida para não ocupar memória à toa no celular do usuário
+            getSharedPreferences("TEMP_FOTO", MODE_PRIVATE).edit().clear().apply();
+        }
         String descricao = intent.hasExtra("sobre") ? intent.getStringExtra("sobre") : intent.getStringExtra("descricao");
         String setor = intent.getStringExtra("setor");
 

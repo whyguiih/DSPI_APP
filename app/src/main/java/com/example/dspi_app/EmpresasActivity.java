@@ -165,11 +165,22 @@ public class EmpresasActivity extends AppCompatActivity {
             intent.putExtra("telefone_contato", telefone);
             intent.putExtra("email_contato", email);
             intent.putExtra("endereco", endereco);
-            intent.putExtra("foto_perfil", fotoPerfil);
             intent.putExtra("descricao", descricao);
             intent.putExtra("setor", setor);
-
             intent.putExtra("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
+
+            // CORREÇÃO DO BUG TransactionTooLarge: Se a foto for um texto gigante (Base64), usa SharedPreferences
+            if (fotoPerfil != null && fotoPerfil.length() > 500) {
+                getSharedPreferences("TEMP_FOTO", MODE_PRIVATE)
+                        .edit()
+                        .putString("foto_base64_temp", fotoPerfil)
+                        .apply();
+                intent.putExtra("foto_perfil", "BUSCAR_NO_PREFS"); // Envia apenas um aviso
+            } else {
+                // Se for um link HTTP ou estiver vazio, pode enviar normal
+                intent.putExtra("foto_perfil", fotoPerfil);
+            }
+
             startActivity(intent);
         });
 
