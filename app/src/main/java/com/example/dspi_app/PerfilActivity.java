@@ -2,8 +2,11 @@ package com.example.dspi_app;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -12,6 +15,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -27,21 +31,17 @@ import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-import android.media.ExifInterface;
-import android.graphics.Matrix;
-import com.bumptech.glide.load.resource.bitmap.CenterCrop;
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
-
 public class PerfilActivity extends AppCompatActivity {
 
-    private final int CURRENT_TAB_INDEX = 3; // Mantém a aba "Conta" ativa
+    private final int CURRENT_TAB_INDEX = 3;
     private String nivel;
     private EditText inputNome, inputEmail;
     private ImageView imgPerfil;
@@ -54,17 +54,28 @@ public class PerfilActivity extends AppCompatActivity {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Uri imageUri = result.getData().getData();
                     try {
+                        // 1. Carrega o Bitmap original
                         InputStream inputStream = getContentResolver().openInputStream(imageUri);
-                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                        Bitmap srcBitmap = BitmapFactory.decodeStream(inputStream);
+                        if (inputStream != null) inputStream.close();
 
+                        // 2. CORREÇÃO DEFINITIVA DE ORIENTAÇÃO
+                        int degrees = getOrientationDegrees(imageUri);
+                        Bitmap finalBitmap = rotateBitmap(srcBitmap, degrees);
+
+                        // 3. Define o raio de curvatura dos cantos convertido para Pixels (ex: 16dp)
+                        int radiusPx = (int) (16 * getResources().getDisplayMetrics().density);
+
+                        // 4. Exibe no Glide perfeitamente quadrado com cantos arredondados
                         Glide.with(this)
-                                .load(bitmap)
-                                .apply(RequestOptions.circleCropTransform())
+                                .load(finalBitmap)
+                                .transform(new CenterCrop(), new RoundedCorners(radiusPx))
                                 .into(imgPerfil);
 
                         imgPerfil.setPadding(0, 0, 0, 0);
-                        // Mantemos a conversão para Base64 aqui para poder enviar no POST
-                        fotoBase64 = bitmapToBase64(bitmap);
+
+                        // Salva o Base64 já com a rotação corrigida em pé
+                        fotoBase64 = bitmapToBase64(finalBitmap);
                     } catch (Exception e) {
                         Toast.makeText(this, "Erro ao selecionar imagem", Toast.LENGTH_SHORT).show();
                     }
@@ -94,58 +105,53 @@ public class PerfilActivity extends AppCompatActivity {
         ImageButton btnBack = findViewById(R.id.btnBack);
         View btnSalvar = findViewById(R.id.btnSalvar);
         View btnAlterarFoto = findViewById(R.id.btnAlterarFoto);
-        View btnRemoverFoto = findViewById(R.id.btnRemoverFoto);
+        TextView btnRemoverFoto = findViewById(R.id.btnRemoverFoto);
 
-        // Carregar dados atuais
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         emailAntigo = prefs.getString("email_logado", "email@exemplo.com");
         inputNome.setText(prefs.getString("nome_usuario", "Nome do Usuário"));
         inputEmail.setText(emailAntigo);
 
-        // Agora "foto_usuario" provavelmente será um link HTTP do Cloudflare R2
         fotoBase64 = prefs.getString("foto_usuario", "");
+
+        int radiusPx = (int) (16 * getResources().getDisplayMetrics().density);
 
         if (!fotoBase64.isEmpty()) {
             if (fotoBase64.startsWith("http")) {
-                // Se for link, o Glide baixa a imagem magicamente do R2
                 Glide.with(this)
                         .load(fotoBase64)
-                        .apply(RequestOptions.circleCropTransform())
+                        .transform(new CenterCrop(), new RoundedCorners(radiusPx))
                         .into(imgPerfil);
                 imgPerfil.setPadding(0, 0, 0, 0);
             } else {
-                // Fallback para contas antigas que ainda têm a foto em Base64 localmente
                 byte[] decodedString = Base64.decode(fotoBase64, Base64.DEFAULT);
                 Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
 
                 Glide.with(this)
                         .load(decodedByte)
-                        .apply(RequestOptions.circleCropTransform())
+                        .transform(new CenterCrop(), new RoundedCorners(radiusPx))
                         .into(imgPerfil);
-
                 imgPerfil.setPadding(0, 0, 0, 0);
             }
         }
 
         btnBack.setOnClickListener(v -> finish());
 
-        btnRemoverFoto.setOnClickListener(v -> {
-            fotoBase64 = ""; // Define vazio. Será enviado para API e apagará o registro da foto
-
-            // Retorna o placeholder padrão arredondado
-            Glide.with(this)
-                    .load(R.drawable.ic_conta)
-                    .transform(new CenterCrop(), new RoundedCorners(32))
-                    .into(imgPerfil);
-
-            // Retornamos um padding genérico para o ícone padrão não ficar colado nas bordas
-            int paddingPx = (int) (24 * getResources().getDisplayMetrics().density);
-            imgPerfil.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
-        });
-
         btnAlterarFoto.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             pickImageLauncher.launch(intent);
+        });
+
+        btnRemoverFoto.setOnClickListener(v -> {
+            fotoBase64 = "";
+
+            Glide.with(this)
+                    .load(R.drawable.ic_conta)
+                    .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                    .into(imgPerfil);
+
+            int paddingPx = (int) (24 * getResources().getDisplayMetrics().density);
+            imgPerfil.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
         });
 
         btnSalvar.setOnClickListener(v -> {
@@ -159,6 +165,46 @@ public class PerfilActivity extends AppCompatActivity {
 
             enviarParaAPI(novoNome, novoEmail, fotoBase64);
         });
+    }
+
+    // MÉTODO AUXILIAR: Detecta rotação por múltiplos caminhos (Provedor de Mídia ou Metadados EXIF)
+    private int getOrientationDegrees(Uri uri) {
+        // Caminho 1: Tenta ler a coluna de orientação diretamente do banco de dados do Android
+        String[] projection = { MediaStore.Images.ImageColumns.ORIENTATION };
+        try (Cursor cursor = getContentResolver().query(uri, projection, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int colIndex = cursor.getColumnIndex(MediaStore.Images.ImageColumns.ORIENTATION);
+                if (colIndex != -1) {
+                    return cursor.getInt(colIndex);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Caminho 2: Fallback para leitura física de cabeçalho EXIF se o caminho 1 falhar
+        try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
+            if (inputStream != null) {
+                ExifInterface exif = new ExifInterface(inputStream);
+                int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+                switch (orientation) {
+                    case ExifInterface.ORIENTATION_ROTATE_90: return 90;
+                    case ExifInterface.ORIENTATION_ROTATE_180: return 180;
+                    case ExifInterface.ORIENTATION_ROTATE_270: return 270;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // MÉTODO AUXILIAR: Gira mecanicamente o bitmap com base nos graus encontrados
+    private Bitmap rotateBitmap(Bitmap bitmap, int degrees) {
+        if (degrees == 0) return bitmap;
+        Matrix matrix = new Matrix();
+        matrix.postRotate(degrees);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
     private void enviarParaAPI(String nome, String email, String foto) {
@@ -178,21 +224,16 @@ public class PerfilActivity extends AppCompatActivity {
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
-
-                            // EXTRAI A URL DO R2 DEVOLVIDA PELA API
-                            // Se a API não devolver "foto_url" por algum motivo, usa a variável 'foto' como segurança
                             String urlFotoR2 = response.has("foto_url") ? response.getString("foto_url") : foto;
 
                             SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
                             SharedPreferences.Editor editor = prefs.edit();
                             editor.putString("nome_usuario", nome);
                             editor.putString("email_logado", email);
-
-                            // Salva a URL leve em vez do Base64
                             editor.putString("foto_usuario", urlFotoR2);
                             editor.apply();
 
-                            Toast.makeText(this, "Perfil atualizado com sucesso!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Perfil updated com sucesso!", Toast.LENGTH_SHORT).show();
                             setResult(RESULT_OK);
                             finish();
                         } else {

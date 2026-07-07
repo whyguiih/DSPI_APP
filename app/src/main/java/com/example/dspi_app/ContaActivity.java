@@ -104,7 +104,6 @@ public class ContaActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Recarregar dados caso tenham mudado no PerfilActivity
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         TextView txtNomeUsuario = findViewById(R.id.txtNomeUsuario);
         TextView txtEmailUsuario = findViewById(R.id.txtEmailUsuario);
@@ -117,11 +116,14 @@ public class ContaActivity extends AppCompatActivity {
         txtNomeUsuario.setText(nome);
         txtEmailUsuario.setText(email);
 
+        // Conversão dinâmica de DP para Pixels para manter proporção perfeita
+        int radiusPx = (int) (16 * getResources().getDisplayMetrics().density);
+
         if (!foto.isEmpty()) {
             if (foto.startsWith("http")) {
                 Glide.with(this)
                         .load(foto)
-                        .transform(new CenterCrop(), new RoundedCorners(32)) // Alterado aqui
+                        .transform(new CenterCrop(), new RoundedCorners(radiusPx)) // Modificado aqui
                         .into(imgAvatar);
                 imgAvatar.setPadding(0, 0, 0, 0);
             } else {
@@ -130,16 +132,16 @@ public class ContaActivity extends AppCompatActivity {
 
                 Glide.with(this)
                         .load(decodedByte)
-                        .transform(new CenterCrop(), new RoundedCorners(32)) // Alterado aqui
+                        .transform(new CenterCrop(), new RoundedCorners(radiusPx)) // Modificado aqui
                         .into(imgAvatar);
 
                 imgAvatar.setPadding(0, 0, 0, 0);
             }
         } else {
-            // Caso o usuário tenha removido a foto, exibe o ícone padrão
+            // Caso o usuário não possua foto ou tenha excluído
             Glide.with(this)
                     .load(R.drawable.ic_conta)
-                    .transform(new CenterCrop(), new RoundedCorners(32))
+                    .transform(new CenterCrop(), new RoundedCorners(radiusPx))
                     .into(imgAvatar);
 
             int paddingPx = (int) (20 * getResources().getDisplayMetrics().density);
