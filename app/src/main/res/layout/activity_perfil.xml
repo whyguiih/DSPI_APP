@@ -61,8 +61,8 @@
                     android:layout_width="136dp"
                     android:layout_height="136dp"
                     android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_glass"
-                    android:padding="10dp">
+                    android:background="@drawable/bg_moldura_foto"
+                    android:padding="8dp">
 
                     <ImageView
                         android:id="@+id/imgPerfil"

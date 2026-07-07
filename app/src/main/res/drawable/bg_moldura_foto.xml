@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <!-- Cor do fundo de vidro transparente -->
+    <solid android:color="#26FFFFFF" />
+    <!-- Mesmo arredondamento que estamos usando no Glide (16dp) -->
+    <corners android:radius="16dp" />
+    <!-- Bordinha sutil para dar acabamento -->
+    <stroke android:width="1dp" android:color="#4DFFFFFF" />
+</shape>
