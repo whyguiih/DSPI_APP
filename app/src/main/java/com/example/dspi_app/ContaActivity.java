@@ -138,14 +138,14 @@ public class ContaActivity extends AppCompatActivity {
                 imgAvatar.setPadding(0, 0, 0, 0);
             }
         } else {
-            // Caso o usuário não possua foto ou tenha excluído
             Glide.with(this)
                     .load(R.drawable.ic_conta)
                     .transform(new CenterCrop(), new RoundedCorners(radiusPx))
                     .into(imgAvatar);
 
-            int paddingPx = (int) (20 * getResources().getDisplayMetrics().density);
-            imgAvatar.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+            // Garante que o ícone padrão fique centralizado dentro da moldura de vidro
+            int innerPadding = (int) (14 * getResources().getDisplayMetrics().density);
+            imgAvatar.setPadding(innerPadding, innerPadding, innerPadding, innerPadding);
         }
     }
 }

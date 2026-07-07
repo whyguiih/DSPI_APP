@@ -78,12 +78,10 @@
 
                     <ImageView
                         android:id="@+id/imgEmpresaLogo"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:src="@drawable/ic_empresas"
-                        app:tint="#FFFFFF"
-                        android:padding="28dp"
-                        android:scaleType="centerInside"/>
+                        android:layout_width="100dp"
+                        android:layout_height="100dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_empresas" />
                 </androidx.cardview.widget.CardView>
 
                 <TextView

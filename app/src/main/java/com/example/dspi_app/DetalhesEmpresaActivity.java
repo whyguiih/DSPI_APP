@@ -34,6 +34,10 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+
 public class DetalhesEmpresaActivity extends AppCompatActivity {
 
     private final int CURRENT_TAB_INDEX = 3;
@@ -125,12 +129,12 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
             imgEmpresaLogo.setImageTintList(null);
             imgEmpresaLogo.setPadding(0, 0, 0, 0);
             imgEmpresaLogo.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            int empresaRadiusPx = (int) (12 * getResources().getDisplayMetrics().density);
 
             if (fotoPerfil.startsWith("http")) {
-                // Imagem gerada no R2
                 Glide.with(this)
                         .load(fotoPerfil)
-                        .apply(RequestOptions.circleCropTransform())
+                        .transform(new CenterCrop(), new RoundedCorners(empresaRadiusPx))
                         .into(imgEmpresaLogo);
             } else if (fotoPerfil.length() > 100) {
                 // Imagem salva em Base64 localmente

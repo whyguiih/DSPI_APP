@@ -58,23 +58,23 @@
                 android:gravity="center_horizontal">
 
                 <FrameLayout
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
-                    android:layout_marginTop="16dp">
+                    android:layout_width="136dp"
+                    android:layout_height="136dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_glass"
+                    android:padding="10dp">
 
                     <ImageView
                         android:id="@+id/imgPerfil"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@drawable/ic_conta"
-                        android:background="@drawable/bg_input_glass"
-                        android:padding="24dp"
                         android:scaleType="centerCrop" />
 
                     <ImageButton
                         android:id="@+id/btnAlterarFoto"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
                         android:layout_gravity="bottom|end"
                         android:background="@drawable/bg_active_bubble"
                         android:src="@android:drawable/ic_menu_camera"
@@ -87,7 +87,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Remover Foto"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#FF5252"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:fontFamily="@font/neo_sans"

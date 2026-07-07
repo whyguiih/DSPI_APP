@@ -142,6 +142,7 @@ public class PerfilActivity extends AppCompatActivity {
             pickImageLauncher.launch(intent);
         });
 
+        // Dentro do onCreate, na ação do btnRemoverFoto:
         btnRemoverFoto.setOnClickListener(v -> {
             fotoBase64 = "";
 
@@ -150,8 +151,9 @@ public class PerfilActivity extends AppCompatActivity {
                     .transform(new CenterCrop(), new RoundedCorners(radiusPx))
                     .into(imgPerfil);
 
-            int paddingPx = (int) (24 * getResources().getDisplayMetrics().density);
-            imgPerfil.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+            // Adiciona um pequeno recuo apenas para o ícone padrão ficar centralizado e bonito
+            int innerPadding = (int) (16 * getResources().getDisplayMetrics().density);
+            imgPerfil.setPadding(innerPadding, innerPadding, innerPadding, innerPadding);
         });
 
         btnSalvar.setOnClickListener(v -> {

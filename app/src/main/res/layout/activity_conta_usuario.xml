@@ -31,15 +31,20 @@
                 android:padding="20dp"
                 android:gravity="center_horizontal">
 
-                <ImageView
-                    android:id="@+id/imgAvatar"
-                    android:layout_width="100dp"
-                    android:layout_height="100dp"
+                <FrameLayout
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
                     android:layout_marginTop="16dp"
-                    android:src="@drawable/ic_conta"
-                    android:background="@drawable/bg_input_glass"
-                    android:padding="20dp"
-                    android:scaleType="centerCrop"/>
+                    android:background="@drawable/bg_glass"
+                    android:padding="10dp">
+
+                    <ImageView
+                        android:id="@+id/imgAvatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_conta"
+                        android:scaleType="centerCrop"/>
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/txtNomeUsuario"
