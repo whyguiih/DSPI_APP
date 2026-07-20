@@ -15,6 +15,17 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class MainActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 0;
 
@@ -36,8 +47,125 @@ public class MainActivity extends AppCompatActivity {
         String nivel = getIntent().getStringExtra("nivel_de_acesso");
         String email = getIntent().getStringExtra("email_usuario");
 
+        if (email == null || email.isEmpty()) {
+            email = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).getString("email_logado", "");
+        }
+
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
+
+        if (email != null && !email.isEmpty()) {
+            verificarCronogramaEAvisar(email);
+        }
     }
+
+    private void verificarCronogramaEAvisar(String emailOuNome) {
+        String url = "https://api-dspi.whyguiih.workers.dev/buscar-dados";
+        JSONObject jsonBody = new JSONObject();
+        try {
+            // Enviamos o email/nome logado para a API buscar onde ele é 'responsavel'
+            jsonBody.put("usuario", emailOuNome);
+            jsonBody.put("tipo", "cronograma");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
+                response -> {
+                    try {
+                        if (response.getBoolean("success") && response.getBoolean("existe")) {
+                            // A API agora pode retornar um array de tarefas ou um objeto único
+                            // Vamos tratar ambos para garantir compatibilidade
+                            Object data = response.get("data");
+                            
+                            if (data instanceof JSONObject) {
+                                processarTarefa((JSONObject) data);
+                            } else if (data instanceof org.json.JSONArray) {
+                                org.json.JSONArray tarefas = (org.json.JSONArray) data;
+                                for (int i = 0; i < tarefas.length(); i++) {
+                                    processarTarefa(tarefas.getJSONObject(i));
+                                }
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                },
+                error -> android.util.Log.e("API_ERROR", "Erro ao buscar alertas"));
+
+        Volley.newRequestQueue(this).add(request);
+    }
+
+    private void processarTarefa(JSONObject dados) {
+        String dataInicio = dados.optString("data_inicio", "");
+        String dataFinal = dados.optString("data_final", "");
+        if (dataFinal.isEmpty()) dataFinal = dados.optString("dados_final", "");
+        
+        String etapa = dados.optString("etapas", "da tarefa atual");
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String hoje = sdf.format(new Date());
+
+        boolean comecaHoje = isMesmoDia(dataInicio, hoje);
+        boolean terminaHoje = isMesmoDia(dataFinal, hoje);
+
+        if (comecaHoje && terminaHoje) {
+            mostrarAlertaWeb("⚠Atenção! Hoje começa e termina: " + etapa + "!", "#F44336");
+        } else if (terminaHoje) {
+            mostrarAlertaWeb("Prazo final: Hoje deve ser entregue: " + etapa + "!", "#FF9800");
+        } else if (comecaHoje) {
+            mostrarAlertaWeb("Hoje começa: " + etapa + "!", "#2196F3");
+        }
+    }
+
+    private boolean isMesmoDia(String dataBanco, String hoje) {
+        if (dataBanco == null || dataBanco.isEmpty()) return false;
+        
+        dataBanco = dataBanco.trim();
+        // Caso 1: Formatos idênticos (ex: YYYY-MM-DD)
+        if (dataBanco.equals(hoje)) return true;
+
+        // Caso 2: Banco está em DD/MM/YYYY (comum em preenchimento manual)
+        if (dataBanco.contains("/")) {
+            try {
+                String[] partes = dataBanco.split("/");
+                if (partes.length == 3) {
+                    // Converte DD/MM/YYYY para YYYY-MM-DD para comparar com 'hoje'
+                    String dataInvertida = partes[2] + "-" + partes[1] + "-" + partes[0];
+                    return dataInvertida.equals(hoje);
+                }
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+
+
+    private void mostrarAlertaWeb(String mensagem, String corHexa) {
+        try {
+            View rootView = findViewById(android.R.id.content);
+            // Aumentado o tempo para 8 segundos (8000ms)
+            com.google.android.material.snackbar.Snackbar snackbar = com.google.android.material.snackbar.Snackbar.make(rootView, mensagem, 8000);
+            View snackbarView = snackbar.getView();
+            snackbarView.setBackgroundColor(android.graphics.Color.parseColor(corHexa));
+
+            android.widget.FrameLayout.LayoutParams params = (android.widget.FrameLayout.LayoutParams) snackbarView.getLayoutParams();
+            params.gravity = android.view.Gravity.TOP;
+            params.topMargin = 120;
+            snackbarView.setLayoutParams(params);
+
+            TextView textView = snackbarView.findViewById(com.google.android.material.R.id.snackbar_text);
+            textView.setTextColor(android.graphics.Color.BLACK);
+            textView.setTextSize(16);
+            textView.setMaxLines(3);
+            snackbar.show();
+        } catch (Exception e) {
+            Toast.makeText(this, mensagem, Toast.LENGTH_LONG).show(); // Fallback se a tela bugar
+        }
+    }
+    
+
 
     private void configurarMenuLateral() {
         ViewAnimator viewAnimator = findViewById(R.id.viewAnimator);
@@ -158,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
                     "• Quais os recursos-chave mais caros?\n" +
                     "• Quais as atividades-chave mais caras?\n" +
                     "• Seu negócio é mais:\n" +
-                    "• Guiado por custos (estrutura de custo mais enxuta, proposta de valor de baixo preço, máxima automação, terceirização extensiva)\n" +
+                    "• Guiado por custos (structure de custo mais enxuta, proposta de valor de baixo preço, máxima automação, terceirização extensiva)\n" +
                     "• Guiado por valor (focada na criação de valor, proposta de valor premium)\n\n" +
                     "Exemplos de Características:\n" +
                     "• Custos  Fixos (salários, aluguéis, serviços públicos)\n" +
