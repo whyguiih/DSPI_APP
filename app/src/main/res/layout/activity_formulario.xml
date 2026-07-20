@@ -173,6 +173,9 @@
 
                 <LinearLayout android:id="@+id/formPitch" style="@style/FormContainerStyle" android:visibility="gone">
                     <EditText android:id="@+id/etPitchRoteiro" style="@style/InputGlassStyle" android:hint="Roteiro do Pitch" android:lines="5" android:gravity="top|start" />
+                    <Button android:id="@+id/btnUploadVideo" style="@style/InputGlassStyle" android:layout_width="match_parent" android:layout_height="56dp" android:text="Upload do Vídeo do Pitch" android:textColor="#FFFFFF" android:layout_marginTop="16dp" />
+                    <ProgressBar android:id="@+id/pbVideoUpload" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone" android:progressTint="#FFFFFF" android:indeterminate="false" />
+                    <TextView android:id="@+id/tvVideoStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:layout_marginTop="8dp" android:text="Nenhum vídeo enviado" android:gravity="center" />
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/formIA" style="@style/FormContainerStyle" android:visibility="gone">

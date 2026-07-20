@@ -12,7 +12,11 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
+import android.net.Uri;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -70,6 +74,10 @@ public class FormularioActivity extends AppCompatActivity {
 
     //Pitch
     private EditText etPitchRoteiro;
+    private Button btnUploadVideo;
+    private ProgressBar pbVideoUpload;
+    private TextView tvVideoStatus;
+    private ActivityResultLauncher<String> videoPickerLauncher;
 
     //Uso de ia
     private EditText etIaNomeFerramenta,etIaLinkAcesso,etIaTipoLicenca,etIaEtapaUso,etIaCriacaoPrompt,etIaDescricaoUso;
@@ -211,6 +219,20 @@ public class FormularioActivity extends AppCompatActivity {
 
         //Vincular pitch
         etPitchRoteiro = findViewById(R.id.etPitchRoteiro);
+        btnUploadVideo = findViewById(R.id.btnUploadVideo);
+        pbVideoUpload = findViewById(R.id.pbVideoUpload);
+        tvVideoStatus = findViewById(R.id.tvVideoStatus);
+
+        videoPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        realizarUploadVideo(uri);
+                    }
+                }
+        );
+
+        btnUploadVideo.setOnClickListener(v -> videoPickerLauncher.launch("video/*"));
 
         //Vincular formulario
         etIaNomeFerramenta = findViewById(R.id.etIaNomeFerramenta);
@@ -1079,6 +1101,38 @@ public class FormularioActivity extends AppCompatActivity {
         }
     }
 
+    private void realizarUploadVideo(Uri uri) {
+        tvVideoStatus.setText("Preparando envio...");
+        pbVideoUpload.setVisibility(View.VISIBLE);
+        pbVideoUpload.setProgress(0);
+        btnUploadVideo.setEnabled(false);
+
+        FormularioRepository repository = new FormularioRepository(this);
+        repository.uploadVideo(uri, new FormularioRepository.OnUploadProgressListener() {
+            @Override
+            public void onProgress(int progress) {
+                pbVideoUpload.setProgress(progress);
+                tvVideoStatus.setText("Enviando vídeo: " + progress + "%");
+            }
+
+            @Override
+            public void onSucesso() {
+                tvVideoStatus.setText("Vídeo enviado com sucesso!");
+                pbVideoUpload.setVisibility(View.GONE);
+                btnUploadVideo.setEnabled(true);
+                Toast.makeText(FormularioActivity.this, "Vídeo do pitch enviado!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onErro(String erro) {
+                tvVideoStatus.setText("Erro ao enviar vídeo.");
+                pbVideoUpload.setVisibility(View.GONE);
+                btnUploadVideo.setEnabled(true);
+                Toast.makeText(FormularioActivity.this, erro, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
     private void definirCamposEditaveis(LinearLayout formulario, boolean habilitado) {
         for (int i = 0; i < formulario.getChildCount(); i++) {
             View view = formulario.getChildAt(i);
@@ -1097,6 +1151,9 @@ public class FormularioActivity extends AppCompatActivity {
                 } else {
                     editText.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#FFFFFF")));
                 }
+            } else if (view instanceof android.widget.Button && view.getId() != R.id.btnEditarDados) {
+                view.setEnabled(habilitado);
+                view.setAlpha(habilitado ? 1.0f : 0.5f);
             }
         }
     }
