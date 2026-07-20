@@ -14,6 +14,10 @@ import androidx.core.view.WindowInsetsCompat;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+import android.widget.VideoView;
+import android.widget.ImageButton;
+import android.widget.SeekBar;
+import android.os.Handler;
 import android.net.Uri;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -77,6 +81,12 @@ public class FormularioActivity extends AppCompatActivity {
     private Button btnUploadVideo;
     private ProgressBar pbVideoUpload;
     private TextView tvVideoStatus;
+    private VideoView vvPitch;
+    private View videoContainer;
+    private ImageButton btnPlayPause, btnRewind, btnForward;
+    private SeekBar videoSeekBar;
+    private Handler videoHandler = new Handler();
+    private Runnable updateSeekBar;
     private ActivityResultLauncher<String> videoPickerLauncher;
 
     //Uso de ia
@@ -222,6 +232,14 @@ public class FormularioActivity extends AppCompatActivity {
         btnUploadVideo = findViewById(R.id.btnUploadVideo);
         pbVideoUpload = findViewById(R.id.pbVideoUpload);
         tvVideoStatus = findViewById(R.id.tvVideoStatus);
+        vvPitch = findViewById(R.id.vvPitch);
+        videoContainer = findViewById(R.id.videoContainer);
+        btnPlayPause = findViewById(R.id.btnPlayPause);
+        btnRewind = findViewById(R.id.btnRewind);
+        btnForward = findViewById(R.id.btnForward);
+        videoSeekBar = findViewById(R.id.videoSeekBar);
+
+        configurarControlesVideo();
 
         videoPickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.GetContent(),
@@ -663,6 +681,10 @@ public class FormularioActivity extends AppCompatActivity {
 
                     if (dadosPitch != null) {
                         etPitchRoteiro.setText(dadosPitch.optString("roteiro", ""));
+                        String videoUrl = dadosPitch.optString("video_url", "");
+                        if (!videoUrl.isEmpty()) {
+                            configurarPlayerVideo(videoUrl);
+                        }
                     }
                 }
 
@@ -954,6 +976,9 @@ public class FormularioActivity extends AppCompatActivity {
 
             else if (tipo.equals("pitch")) {
                 jsonCampos.put("roteiro", etPitchRoteiro.getText().toString().trim());
+                if (videoContainer.getVisibility() == View.VISIBLE && vvPitch.getTag() != null) {
+                    jsonCampos.put("video_url", vvPitch.getTag().toString());
+                }
             }
 
             else if (tipo.equals("uso_ia")) {
@@ -1116,10 +1141,13 @@ public class FormularioActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onSucesso() {
+            public void onSucesso(String videoUrl) {
                 tvVideoStatus.setText("Vídeo enviado com sucesso!");
                 pbVideoUpload.setVisibility(View.GONE);
                 btnUploadVideo.setEnabled(true);
+                if (!videoUrl.isEmpty()) {
+                    configurarPlayerVideo(videoUrl);
+                }
                 Toast.makeText(FormularioActivity.this, "Vídeo do pitch enviado!", Toast.LENGTH_SHORT).show();
             }
 
@@ -1131,6 +1159,76 @@ public class FormularioActivity extends AppCompatActivity {
                 Toast.makeText(FormularioActivity.this, erro, Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void configurarControlesVideo() {
+        btnPlayPause.setOnClickListener(v -> {
+            if (vvPitch.isPlaying()) {
+                vvPitch.pause();
+                btnPlayPause.setImageResource(android.R.drawable.ic_media_play);
+            } else {
+                vvPitch.start();
+                btnPlayPause.setImageResource(android.R.drawable.ic_media_pause);
+                atualizarProgressoSeekBar();
+            }
+        });
+
+        btnRewind.setOnClickListener(v -> {
+            int current = vvPitch.getCurrentPosition();
+            vvPitch.seekTo(Math.max(current - 10000, 0));
+        });
+
+        btnForward.setOnClickListener(v -> {
+            int current = vvPitch.getCurrentPosition();
+            vvPitch.seekTo(Math.min(current + 10000, vvPitch.getDuration()));
+        });
+
+        vvPitch.setOnPreparedListener(mp -> {
+            videoSeekBar.setMax(vvPitch.getDuration());
+            atualizarProgressoSeekBar();
+        });
+
+        vvPitch.setOnCompletionListener(mp -> {
+            btnPlayPause.setImageResource(android.R.drawable.ic_media_play);
+            videoSeekBar.setProgress(0);
+        });
+
+        videoSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    vvPitch.seekTo(progress);
+                }
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        updateSeekBar = new Runnable() {
+            @Override
+            public void run() {
+                if (vvPitch != null) {
+                    videoSeekBar.setProgress(vvPitch.getCurrentPosition());
+                    videoHandler.postDelayed(this, 500);
+                }
+            }
+        };
+    }
+
+    private void atualizarProgressoSeekBar() {
+        videoHandler.removeCallbacks(updateSeekBar);
+        videoHandler.post(updateSeekBar);
+    }
+
+    private void configurarPlayerVideo(String url) {
+        if (url == null || url.isEmpty()) return;
+
+        vvPitch.setTag(url);
+        videoContainer.setVisibility(View.VISIBLE);
+        tvVideoStatus.setText("Pitch em vídeo enviado!");
+
+        Uri videoUri = Uri.parse(url);
+        vvPitch.setVideoURI(videoUri);
     }
 
     private void definirCamposEditaveis(LinearLayout formulario, boolean habilitado) {

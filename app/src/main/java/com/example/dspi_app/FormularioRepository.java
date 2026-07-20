@@ -35,7 +35,7 @@ public class FormularioRepository {
 
     public interface OnUploadProgressListener {
         void onProgress(int progress);
-        void onSucesso();
+        void onSucesso(String videoUrl);
         void onErro(String erro);
     }
 
@@ -213,7 +213,13 @@ public class FormularioRepository {
                     String body = response.body() != null ? response.body().string() : "";
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
                         if (response.isSuccessful()) {
-                            listener.onSucesso();
+                            try {
+                                JSONObject json = new JSONObject(body);
+                                String url = json.optString("video_url", "");
+                                listener.onSucesso(url);
+                            } catch (Exception e) {
+                                listener.onSucesso("");
+                            }
                         } else {
                             listener.onErro("Erro " + response.code() + ": " + body);
                         }

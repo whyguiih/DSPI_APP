@@ -175,6 +175,75 @@
                     <EditText android:id="@+id/etPitchRoteiro" style="@style/InputGlassStyle" android:hint="Roteiro do Pitch" android:lines="5" android:gravity="top|start" />
                     <Button android:id="@+id/btnUploadVideo" style="@style/InputGlassStyle" android:layout_width="match_parent" android:layout_height="56dp" android:text="Upload do Vídeo do Pitch" android:textColor="#FFFFFF" android:layout_marginTop="16dp" />
                     <ProgressBar android:id="@+id/pbVideoUpload" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:visibility="gone" android:progressTint="#FFFFFF" android:indeterminate="false" />
+
+                    <FrameLayout
+                        android:id="@+id/videoContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="250dp"
+                        android:layout_marginTop="16dp"
+                        android:visibility="gone"
+                        android:background="@drawable/bg_glass">
+
+                        <VideoView
+                            android:id="@+id/vvPitch"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center" />
+
+                        <!-- Camada de controles customizados -->
+                        <LinearLayout
+                            android:id="@+id/videoControls"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom"
+                            android:orientation="vertical"
+                            android:background="#88000000"
+                            android:padding="8dp">
+
+                            <SeekBar
+                                android:id="@+id/videoSeekBar"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:progressTint="#FFFFFF"
+                                android:thumbTint="#FFFFFF" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:orientation="horizontal">
+
+                                <ImageButton
+                                    android:id="@+id/btnRewind"
+                                    android:layout_width="48dp"
+                                    android:layout_height="48dp"
+                                    android:background="?attr/selectableItemBackgroundBorderless"
+                                    android:src="@android:drawable/ic_media_rew"
+                                    app:tint="#FFFFFF"
+                                    android:contentDescription="Voltar 10s" />
+
+                                <ImageButton
+                                    android:id="@+id/btnPlayPause"
+                                    android:layout_width="56dp"
+                                    android:layout_height="56dp"
+                                    android:background="?attr/selectableItemBackgroundBorderless"
+                                    android:src="@android:drawable/ic_media_play"
+                                    app:tint="#FFFFFF"
+                                    android:contentDescription="Play/Pause" />
+
+                                <ImageButton
+                                    android:id="@+id/btnForward"
+                                    android:layout_width="48dp"
+                                    android:layout_height="48dp"
+                                    android:background="?attr/selectableItemBackgroundBorderless"
+                                    android:src="@android:drawable/ic_media_ff"
+                                    app:tint="#FFFFFF"
+                                    android:contentDescription="Avançar 10s" />
+
+                            </LinearLayout>
+                        </LinearLayout>
+                    </FrameLayout>
+
                     <TextView android:id="@+id/tvVideoStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:layout_marginTop="8dp" android:text="Nenhum vídeo enviado" android:gravity="center" />
                 </LinearLayout>
 
