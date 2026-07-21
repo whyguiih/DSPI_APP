@@ -11,12 +11,14 @@ public class Projeto implements Serializable {
     // NOVO CAMPO: Essencial para a empresa saber quais projetos são dela
     private String empresaVinculada;
     private String comentarioEmpresa;
+    private String videoUrl;
 
 
     public Projeto(String nomeProjeto, String nomeEquipe, String status, String integrantes, String orientador,
                    String propostaChave, String segmentosClientes, String atividadesChaves, String recursosChaves,
                    String relacionamentosClientes, String canais, String estruturaCustos, String fluxoReceita,
-                   String parceirosChaves, String tarefas, String dificuldadesEnxergadas, String empresaVinculada) {
+                   String parceirosChaves, String tarefas, String dificuldadesEnxergadas, String empresaVinculada,
+                   String videoUrl) {
         this.nomeProjeto = nomeProjeto;
         this.nomeEquipe = nomeEquipe;
         this.status = status;
@@ -34,6 +36,7 @@ public class Projeto implements Serializable {
         this.tarefas = tarefas;
         this.dificuldadesEnxergadas = dificuldadesEnxergadas;
         this.empresaVinculada = empresaVinculada;
+        this.videoUrl = videoUrl;
     }
 
     public String getNomeProjeto() { return nomeProjeto; }
@@ -53,6 +56,7 @@ public class Projeto implements Serializable {
     public String getTarefas() { return tarefas; }
     public String getDificuldadesEnxergadas() { return dificuldadesEnxergadas; }
     public String getEmpresaVinculada() { return empresaVinculada; }
+    public String getVideoUrl() { return videoUrl; }
 
     public String getComentarioEmpresa() {
         return comentarioEmpresa;

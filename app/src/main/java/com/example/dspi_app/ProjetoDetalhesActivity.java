@@ -1,15 +1,22 @@
 package com.example.dspi_app;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.MediaController;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -100,6 +107,12 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         adicionarCampo("Tarefas Atuais:", p.getTarefas());
         adicionarCampo("Dificuldades Enxergadas:", p.getDificuldadesEnxergadas());
 
+        // SEÇÃO DE VÍDEO (PITCH)
+        String videoUrl = p.getVideoUrl();
+        if (videoUrl != null && !videoUrl.trim().isEmpty() && !videoUrl.equalsIgnoreCase("null")) {
+            adicionarSecaoVideo(videoUrl);
+        }
+
         // LÓGICA DE COMENTÁRIOS: Empresa Edita, Aluno (Equipe) apenas LÊ (sem botão)
         String comentario = p.getComentarioEmpresa() != null ? p.getComentarioEmpresa().trim() : "";
         boolean temComentario = !comentario.isEmpty() && !comentario.equalsIgnoreCase("null");
@@ -117,6 +130,73 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
             // A equipe (aluno) vê APENAS o balão de vidro com a mensagem da empresa
             adicionarSecaoComentarioExistente(comentario);
         }
+    }
+
+    private void adicionarSecaoVideo(String videoUrl) {
+        adicionarCabecalho("Vídeo do Pitch");
+
+        // Container do Player (Glass Effect)
+        FrameLayout playerContainer = new FrameLayout(this);
+        LinearLayout.LayoutParams lpContainer = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 650);
+        lpContainer.setMargins(0, 8, 0, 32);
+        playerContainer.setLayoutParams(lpContainer);
+        playerContainer.setPadding(10, 10, 10, 10);
+        playerContainer.setBackground(getResources().getDrawable(R.drawable.bg_input_glass, getTheme()));
+
+        // VideoView
+        VideoView videoView = new VideoView(this);
+        FrameLayout.LayoutParams lpVideo = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
+        lpVideo.gravity = Gravity.CENTER;
+        videoView.setLayoutParams(lpVideo);
+
+        // Progress Bar (Loading)
+        ProgressBar progressBar = new ProgressBar(this);
+        FrameLayout.LayoutParams lpProgress = new FrameLayout.LayoutParams(100, 100);
+        lpProgress.gravity = Gravity.CENTER;
+        progressBar.setLayoutParams(lpProgress);
+
+        // MediaController
+        MediaController mediaController = new MediaController(this);
+        mediaController.setAnchorView(playerContainer);
+        videoView.setMediaController(mediaController);
+
+        videoView.setVideoURI(Uri.parse(videoUrl));
+
+        videoView.setOnPreparedListener(mp -> {
+            progressBar.setVisibility(View.GONE);
+            // Inicia silenciado por padrão ou deixa o usuário dar play
+            // videoView.start(); 
+        });
+
+        videoView.setOnErrorListener((mp, what, extra) -> {
+            progressBar.setVisibility(View.GONE);
+            Toast.makeText(this, "Erro ao carregar vídeo.", Toast.LENGTH_SHORT).show();
+            return true;
+        });
+
+        playerContainer.addView(videoView);
+        playerContainer.addView(progressBar);
+        layoutDetalhes.addView(playerContainer);
+
+        // Botão para Tela Cheia (Opcional, abre no player externo)
+        Button btnFullscreen = new Button(this);
+        LinearLayout.LayoutParams lpFull = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 120);
+        lpFull.setMargins(0, -16, 0, 32);
+        btnFullscreen.setLayoutParams(lpFull);
+        btnFullscreen.setText("EXPANDIR VÍDEO");
+        btnFullscreen.setTextSize(12);
+        btnFullscreen.setTypeface(getResources().getFont(R.font.neo_sans_bold_italic));
+        btnFullscreen.setTextColor(0xFFFFFFFF);
+        btnFullscreen.setBackground(getResources().getDrawable(R.drawable.bg_button_glass, getTheme()));
+        btnFullscreen.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(videoUrl));
+            intent.setDataAndType(Uri.parse(videoUrl), "video/mp4");
+            startActivity(intent);
+        });
+        layoutDetalhes.addView(btnFullscreen);
     }
 
     private void adicionarSecaoComentarioExistente(String comentarioTexto) {
