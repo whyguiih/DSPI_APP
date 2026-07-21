@@ -137,11 +137,13 @@ export default {
               e.nome_projeto, e.nome_equipe, e.nome_integrante, e.nome_orientador,
               a.status, a.tarefas, a.dificuldades_enxergadas, a.comentario_empresa,
               c.proposta_chave, c.segmentos_clientes, c.atividades_chaves, c.recursos_chaves, c.relacionamentos_clientes, c.canais, c.estrutura_custos, c.fluxo_receita, c.parceiros_chaves,
-              ic.empresa AS empresa_vinculada
+              ic.empresa AS empresa_vinculada,
+              p.video_url
             FROM tb_equipe e
             LEFT JOIN tb_acompanhamento_projeto a ON e.usuario = a.usuario
             LEFT JOIN tb_canva c ON e.usuario = c.usuario
             LEFT JOIN tb_informacoes_complementares ic ON e.usuario = ic.usuario
+            LEFT JOIN tb_pitch p ON (e.nome_equipe = p.usuario OR e.usuario = p.usuario)
           `).all();
 
           const { results: empresas } = await env.DB.prepare(`
@@ -327,7 +329,8 @@ export default {
             "conhecimentos": "tb_conhecimentos", "recursos": "tb_recursos_aplicados",
             "cronograma": "tb_cronograma", "canva": "tb_canva", "curriculo": "tb_curriculo_alunos",
             "empresas": "tb_empresas", "pitch": "tb_pitch", "uso_ia": "tb_uso_ia",
-            "informacoes_complementares": "tb_informacoes_complementares", "informacoes_completude": "tb_informacoes_completude"
+            "informacoes_complementares": "tb_informacoes_complementares", "informacoes_completude": "tb_informacoes_completude",
+            "participantes": "tb_participantes", "relatorio": "tb_relatorio"
           };
 
           const tabela = tabelas[tipo];
@@ -370,7 +373,8 @@ export default {
           "cronograma": "tb_cronograma", "canva": "tb_canva", "curriculo": "tb_curriculo_alunos",
           "empresas": "tb_empresas", "pitch": "tb_pitch", "uso_ia": "tb_uso_ia",
           "acompanhamento_projeto": "tb_acompanhamento_projeto",
-          "informacoes_complementares": "tb_informacoes_complementares", "informacoes_completude": "tb_informacoes_completude"
+          "informacoes_complementares": "tb_informacoes_complementares", "informacoes_completude": "tb_informacoes_completude",
+          "participantes": "tb_participantes", "relatorio": "tb_relatorio"
         };
 
         try {

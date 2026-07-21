@@ -32,4 +32,18 @@
         android:fontFamily="@font/neo_sans"
         android:textColor="#E6FFFFFF"
         android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/tvBadgePitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_button_login"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="2dp"
+        android:text="▶ PITCH DISPONÍVEL"
+        android:textColor="#FFFFFF"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 </LinearLayout>

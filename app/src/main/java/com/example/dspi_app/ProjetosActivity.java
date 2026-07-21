@@ -147,7 +147,8 @@ public class ProjetosActivity extends AppCompatActivity {
                                         obj.optString("parceiros_chaves", ""),
                                         obj.optString("tarefas", ""),
                                         obj.optString("dificuldades_enxergadas", ""),
-                                        obj.optString("empresa_vinculada", "")
+                                        obj.optString("empresa_vinculada", ""),
+                                        obj.optString("video_url", "")
                                 );
 
                                 p.setComentarioEmpresa(obj.optString("comentario_empresa", ""));
@@ -294,6 +295,14 @@ public class ProjetosActivity extends AppCompatActivity {
             String st = projeto.getStatus();
             holder.tvStatus.setText("Status: " + (st == null || st.trim().isEmpty() || st.equals("null") ? "Não Iniciado" : st));
             holder.tvEquipe.setText("Equipe: " + projeto.getNomeEquipe());
+
+            // Exibe badge se houver vídeo
+            if (projeto.getVideoUrl() != null && !projeto.getVideoUrl().isEmpty() && !projeto.getVideoUrl().equals("null")) {
+                holder.tvBadgePitch.setVisibility(View.VISIBLE);
+            } else {
+                holder.tvBadgePitch.setVisibility(View.GONE);
+            }
+
             holder.itemView.setOnClickListener(v -> listener.onItemClick(projeto));
         }
 
@@ -301,12 +310,13 @@ public class ProjetosActivity extends AppCompatActivity {
         public int getItemCount() { return projetos.size(); }
 
         public static class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvNome, tvStatus, tvEquipe;
+            TextView tvNome, tvStatus, tvEquipe, tvBadgePitch;
             public ViewHolder(View itemView) {
                 super(itemView);
                 tvNome = itemView.findViewById(R.id.tvItemNomeProjeto);
                 tvStatus = itemView.findViewById(R.id.tvItemStatus);
                 tvEquipe = itemView.findViewById(R.id.tvItemEquipe);
+                tvBadgePitch = itemView.findViewById(R.id.tvBadgePitch);
             }
         }
     }
