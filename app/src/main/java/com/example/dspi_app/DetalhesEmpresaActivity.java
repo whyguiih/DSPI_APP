@@ -220,8 +220,11 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
                                         obj.optString("parceiros_chaves", ""),
                                         obj.optString("tarefas", ""),
                                         obj.optString("dificuldades_enxergadas", ""),
-                                        obj.optString("empresa_vinculada", "")
+                                        obj.optString("empresa_vinculada", ""),
+                                        obj.optString("video_url", "")
                                 );
+
+                                p.setComentarioEmpresa(obj.optString("comentario_empresa", ""));
 
                                 String empresaVinc = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada() : "";
 
