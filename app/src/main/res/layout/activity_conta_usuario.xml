@@ -84,7 +84,7 @@
                         <TextView style="@style/ListGlassText" android:text="Editar Perfil"/>
                     </LinearLayout>
 
-                    <LinearLayout android:id="@+id/btnEditarPerfil" style="@style/ListGlassButtonStyle">
+                    <LinearLayout android:id="@+id/btnMeuCurriculo" style="@style/ListGlassButtonStyle">
                         <ImageView style="@style/ListGlassIcon" android:src="@drawable/ic_curriculo" app:tint="#FFFFFF"/>
                         <TextView style="@style/ListGlassText" android:text="Meu Currículo"/>
                     </LinearLayout>
