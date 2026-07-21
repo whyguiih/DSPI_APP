@@ -190,6 +190,15 @@
                             android:layout_height="match_parent"
                             android:layout_gravity="center" />
 
+                        <!-- NOVO: Spinner de carregamento -->
+                        <ProgressBar
+                            android:id="@+id/pbVideoBuffer"
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:layout_gravity="center"
+                            android:indeterminateTint="#FFFFFF"
+                            android:visibility="gone" />
+
                         <!-- Camada de controles customizados -->
                         <LinearLayout
                             android:id="@+id/videoControls"

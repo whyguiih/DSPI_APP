@@ -85,6 +85,7 @@ public class FormularioActivity extends AppCompatActivity {
     private View videoContainer;
     private ImageButton btnPlayPause, btnRewind, btnForward;
     private SeekBar videoSeekBar;
+    private ProgressBar pbVideoBuffer;
     private Handler videoHandler = new Handler();
     private Runnable updateSeekBar;
     private ActivityResultLauncher<String> videoPickerLauncher;
@@ -238,6 +239,7 @@ public class FormularioActivity extends AppCompatActivity {
         btnRewind = findViewById(R.id.btnRewind);
         btnForward = findViewById(R.id.btnForward);
         videoSeekBar = findViewById(R.id.videoSeekBar);
+        pbVideoBuffer = findViewById(R.id.pbVideoBuffer);
 
         configurarControlesVideo();
 
@@ -1225,10 +1227,28 @@ public class FormularioActivity extends AppCompatActivity {
 
         vvPitch.setTag(url);
         videoContainer.setVisibility(View.VISIBLE);
+        pbVideoBuffer.setVisibility(View.VISIBLE);
+        btnPlayPause.setVisibility(View.GONE);
         tvVideoStatus.setText("Pitch em vídeo enviado!");
 
         Uri videoUri = Uri.parse(url);
         vvPitch.setVideoURI(videoUri);
+
+        vvPitch.setOnPreparedListener(mp -> {
+            pbVideoBuffer.setVisibility(View.GONE);
+            btnPlayPause.setVisibility(View.VISIBLE);
+            videoSeekBar.setMax(vvPitch.getDuration());
+            atualizarProgressoSeekBar();
+        });
+
+        vvPitch.setOnInfoListener((mp, what, extra) -> {
+            if (what == 701) { // MEDIA_INFO_BUFFERING_START
+                pbVideoBuffer.setVisibility(View.VISIBLE);
+            } else if (what == 702) { // MEDIA_INFO_BUFFERING_END
+                pbVideoBuffer.setVisibility(View.GONE);
+            }
+            return false;
+        });
     }
 
     private void definirCamposEditaveis(LinearLayout formulario, boolean habilitado) {
