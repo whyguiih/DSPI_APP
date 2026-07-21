@@ -60,7 +60,12 @@ public class ProjetosActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
-        nomeUsuario = prefs.getString("email_logado", "");
+        
+        // CORREÇÃO: Prioriza o nome de exibição em vez do e-mail
+        nomeUsuario = prefs.getString("nome_usuario", "");
+        if (nomeUsuario == null || nomeUsuario.trim().isEmpty()) {
+            nomeUsuario = prefs.getString("email_logado", "");
+        }
 
         if (nomeUsuario == null || nomeUsuario.trim().isEmpty()) {
             nomeUsuario = getIntent().getStringExtra("email_usuario");
@@ -151,6 +156,7 @@ public class ProjetosActivity extends AppCompatActivity {
                                 String nomeEqp = p.getNomeEquipe() != null ? p.getNomeEquipe().trim() : "";
 
                                 if ("4".equals(nivel)) {
+                                    // CORREÇÃO: Empresa compara com seu NOME (nomeUsuario agora tem o nome real)
                                     if (!userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado)) {
                                         todosMeusProjetos.add(p);
                                     } else if (empresaVinc.isEmpty() || empresaVinc.equalsIgnoreCase("null") || empresaVinc.equalsIgnoreCase("Nenhuma")) {

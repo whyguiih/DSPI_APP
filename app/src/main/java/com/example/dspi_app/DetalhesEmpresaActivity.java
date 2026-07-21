@@ -60,7 +60,12 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
 
-        nomeUsuarioLogado = prefs.getString("email_logado", "");
+        // CORREÇÃO: Prioriza o nome de exibição para bater com 'empresa_vinculada' da API
+        nomeUsuarioLogado = prefs.getString("nome_usuario", "");
+        if (nomeUsuarioLogado == null || nomeUsuarioLogado.trim().isEmpty()) {
+            nomeUsuarioLogado = prefs.getString("email_logado", "");
+        }
+
         if (nomeUsuarioLogado == null || nomeUsuarioLogado.trim().isEmpty()) {
             nomeUsuarioLogado = getIntent().getStringExtra("email_usuario");
         }
