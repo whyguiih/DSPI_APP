@@ -122,6 +122,23 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btnEntrar" />
 
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnCadastro"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_button_login"
+            android:elevation="0dp"
+            android:fontFamily="@font/neo_sans"
+            android:stateListAnimator="@null"
+            android:text="CRIAR CONTA"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@id/Google"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
