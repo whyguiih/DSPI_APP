@@ -49,7 +49,7 @@ public class CarregamentoCurriculoActivity extends AppCompatActivity {
         executor.execute(() -> {
             try {
                 // Rota atualizada para apenas preencher o banco
-                URL url = new URL("https://seu-worker.dspi.workers.dev/preencher-curriculo");
+                URL url = new URL("https://api-dspi.whyguiih.workers.dev/preencher-curriculo");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
