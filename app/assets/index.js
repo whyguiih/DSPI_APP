@@ -816,5 +816,4 @@ if (path === "/gerar-canva") {
 
     return new Response("Rota não encontrada", { status: 404, headers: corsHeaders });
   }
-
 };
