@@ -690,33 +690,31 @@ if (path === "/gerar-canva") {
         try {
           // -------------------------------------------------------------
           // ETAPA 1: Buscar dados base na tb_participantes
-          // Prioridade de busca: 1º (Nome+CPF), 2º (Nome+Email), 3º (Nome)
           // -------------------------------------------------------------
           let participante = null;
 
           if (cpf_usuario) {
-            participante = await env.DB.prepare("SELECT * FROM tb_participantes WHERE nome = ? AND cpf = ?").bind(nome_usuario, cpf_usuario).first();
+            participante = await env.DB.prepare("SELECT * FROM tb_participantes WHERE nome_enai_cax = ? AND cpf = ?").bind(nome_usuario, cpf_usuario).first();
           }
           if (!participante && email_usuario) {
-            participante = await env.DB.prepare("SELECT * FROM tb_participantes WHERE nome = ? AND email = ?").bind(nome_usuario, email_usuario).first();
+            participante = await env.DB.prepare("SELECT * FROM tb_participantes WHERE nome_enai_cax = ? AND email = ?").bind(nome_usuario, email_usuario).first();
           }
           if (!participante) {
-            participante = await env.DB.prepare("SELECT * FROM tb_participantes WHERE nome = ?").bind(nome_usuario).first();
+            participante = await env.DB.prepare("SELECT * FROM tb_participantes WHERE nome_enai_cax = ?").bind(nome_usuario).first();
           }
 
-          // Extraindo valores (usa o que veio do banco, ou o que veio do App como fallback)
           let dbNome = nome_usuario;
-          let dbDataNascimento = "";
-          let dbCpf = cpf_usuario || "";
-          let dbTelefone = "";
-          let dbEmail = email_usuario || "";
+          let dbDataNascimento = null;
+          let dbCpf = cpf_usuario || null;
+          let dbTelefone = null;
+          let dbEmail = email_usuario || null;
           let idInfoComplementares = null;
 
           if (participante) {
-            dbNome = participante.nome || dbNome;
-            dbDataNascimento = participante.data_nascimento || participante.data_nacimento || ""; // Respeita a grafia do seu banco
+            dbNome = participante.nome_enai_cax || dbNome;
+            dbDataNascimento = participante.data_nascimento || participante.data_nacimento || null;
             dbCpf = participante.cpf || dbCpf;
-            dbTelefone = participante.telefone || "";
+            dbTelefone = participante.telefone || null;
             dbEmail = participante.email || dbEmail;
             idInfoComplementares = participante.id_informacoes_complementares;
           }
@@ -724,46 +722,44 @@ if (path === "/gerar-canva") {
           // -------------------------------------------------------------
           // ETAPA 2: Buscar na tb_informacoes_complementares
           // -------------------------------------------------------------
-          let dbProjeto = "";
-          let dbUsuarioEquipe = ""; // Aqui pega o usuário da equipe
-          let dbEmpresaVinculada = "";
+          let dbProjeto = null;
+          let dbUsuarioEquipe = null;
+          let dbEmpresaVinculada = null;
 
           if (idInfoComplementares) {
-            // Usa o ID mapeado da tb_participantes
-            const infoComp = await env.DB.prepare("SELECT projeto, usuario, empresa FROM tb_informacoes_complementares WHERE id = ? OR id_informacoes_complementares = ?")
+            // CORREÇÃO: Usamos SELECT * para evitar erro de "no such column" no banco
+            const infoComp = await env.DB.prepare("SELECT * FROM tb_informacoes_complementares WHERE id = ? OR id_informacoes_complementares = ?")
               .bind(idInfoComplementares, idInfoComplementares).first();
 
             if (infoComp) {
-              dbProjeto = infoComp.projeto || "";
-              dbUsuarioEquipe = infoComp.usuario || ""; // Usuário matriz da equipe
-              dbEmpresaVinculada = infoComp.empresa || infoComp.empresa_vinculado || "";
+              dbProjeto = infoComp.projeto || null;
+              dbUsuarioEquipe = infoComp.usuario || null;
+              dbEmpresaVinculada = infoComp.empresa || infoComp.empresa_vinculado || infoComp.empresa_vinculada || null;
             }
           }
 
           // -------------------------------------------------------------
           // ETAPA 3: Buscar tarefas na tb_acompanhamento_projeto
           // -------------------------------------------------------------
-          const tarefasQuery = await env.DB.prepare("SELECT tarefas, tarefa, nome_tarefa FROM tb_acompanhamento_projeto WHERE responsavel = ? AND status = 'Concluído'").bind(dbNome).all();
+          // CORREÇÃO: Usamos SELECT * para não forçar colunas que não existem
+          const tarefasQuery = await env.DB.prepare("SELECT * FROM tb_acompanhamento_projeto WHERE responsavel = ? AND status = 'Concluído'").bind(dbNome).all();
 
           let tarefasFeitasStr = "Nenhuma tarefa concluída registrada.";
           if (tarefasQuery && tarefasQuery.results.length > 0) {
-            // Mapeia a coluna correta (caso o nome varie) e junta com ' - '
-            tarefasFeitasStr = tarefasQuery.results.map(t => t.tarefas || t.tarefa || t.nome_tarefa).join(" - ");
+            // O JavaScript decide qual o nome certo da coluna sem quebrar
+            tarefasFeitasStr = tarefasQuery.results.map(t => t.tarefas || t.tarefa || t.nome_tarefa || "Tarefa sem nome").join(" - ");
           }
 
           // -------------------------------------------------------------
           // ETAPA 4: Preencher tb_curriculo_alunos
           // -------------------------------------------------------------
-          // Campos que receberão inputs diretos futuramente começam vazios
-          const habilidades = "";
-          const fez_projeto = "";
-          const cidade = "";
-          const motivo_projeto = "";
-          const aprendo_mais = "";
-          const prefiro_trabalhar = "";
-          const nome_resp = "";
-          const num_resp = "";
-          const email_resp = "";
+          // Campos futuros agora enviando null explicitamente
+          const habilidades = null;
+          const fez_projeto = null;
+          const cidade = null;
+          const motivo_projeto = null;
+          const aprendo_mais = null;
+          const prefiro_trabalhar = null;
 
           // Verifica se já existe a linha (pelo email ou cpf)
           const curriculoExistente = await env.DB.prepare("SELECT 1 FROM tb_curriculo_alunos WHERE email = ? OR cpf = ?").bind(dbEmail, dbCpf).first();
@@ -782,24 +778,22 @@ if (path === "/gerar-canva") {
               dbEmail, dbCpf
             ).run();
           } else {
+            // INSERT atualizado sem os campos de responsáveis
             await env.DB.prepare(`
               INSERT INTO tb_curriculo_alunos (
                 nome, data_nacimento, cpf, empresa_vinculado, projeto,
-                telefone, email, nome_responsavel, numero_responsavel, email_responsavel,
-                habilidades, fez_projeto, cidade, motivo_projeto, aprendo_mais,
-                prefiro_trabalhar, usuario, tarefas_feitas
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                telefone, email, habilidades, fez_projeto, cidade,
+                motivo_projeto, aprendo_mais, prefiro_trabalhar,
+                usuario, tarefas_feitas
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).bind(
               dbNome, dbDataNascimento, dbCpf, dbEmpresaVinculada, dbProjeto,
-              dbTelefone, dbEmail, nome_resp, num_resp, email_resp,
-              habilidades, fez_projeto, cidade, motivo_projeto, aprendo_mais,
-              prefiro_trabalhar, dbUsuarioEquipe, tarefasFeitasStr
+              dbTelefone, dbEmail, habilidades, fez_projeto, cidade,
+              motivo_projeto, aprendo_mais, prefiro_trabalhar,
+              dbUsuarioEquipe, tarefasFeitasStr
             ).run();
           }
 
-          // -------------------------------------------------------------
-          // FINALIZAÇÃO: Sucesso
-          // -------------------------------------------------------------
           return new Response(JSON.stringify({
             success: true,
             message: "Dados rastreados e inseridos na tabela de currículo com sucesso!"
@@ -816,4 +810,5 @@ if (path === "/gerar-canva") {
 
     return new Response("Rota não encontrada", { status: 404, headers: corsHeaders });
   }
+
 };
