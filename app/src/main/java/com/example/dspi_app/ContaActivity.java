@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +26,8 @@ public class ContaActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 3;
     private String nivel;
     private String emailLogado;
+
+    private String nomeUsuario;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +59,7 @@ public class ContaActivity extends AppCompatActivity {
         // Vincular componentes da tela
         LinearLayout btnEditarPerfil = findViewById(R.id.btnEditarPerfil);
         LinearLayout btnMeusProjetos = findViewById(R.id.btnMeusProjetos);
+        LinearLayout btnMeuCurriculo = findViewById(R.id.btnMeuCurriculo); // Confira se o ID está certo!
 
         LinearLayout btnSair = findViewById(R.id.btnSair);
 
@@ -85,6 +89,16 @@ public class ContaActivity extends AppCompatActivity {
             startActivity(intent);
             overridePendingTransition(0, 0);
             finish(); // Fecha a tela de conta para não empilhar
+        });
+
+        btnMeuCurriculo.setOnClickListener(v -> {
+            // Atenção aqui ao nome correto da SUA activity:
+            Intent intent = new Intent(ContaActivity.this, CarregamentoCurriculoActivity.class);
+
+            // Você precisa garantir que essas variáveis de fato têm o nome e email do usuário logado
+            intent.putExtra("NOME_USUARIO", nomeUsuario);
+            intent.putExtra("EMAIL_USUARIO", emailLogado);
+            startActivity(intent);
         });
 
 
