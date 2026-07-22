@@ -9,6 +9,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -36,6 +37,8 @@ public class LoginActivity extends AppCompatActivity {
 
     private CredentialManager credentialManager;
 
+    private AppCompatButton btnCadastro;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         SplashScreen.installSplashScreen(this);
@@ -44,6 +47,8 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         credentialManager = CredentialManager.create(this);
+
+        btnCadastro = findViewById(R.id.btnCadastro);
 
         View mainLayout = findViewById(R.id.mainLayout);
         if (mainLayout != null) {
@@ -118,8 +123,15 @@ public class LoginActivity extends AppCompatActivity {
                         Toast.makeText(this, "Erro no formato da resposta", Toast.LENGTH_SHORT).show();
                     }
                 }, error -> {
-                    Log.e("VOLLEY_ERROR", "Erro de Servidor: " + error.toString());
-                    Toast.makeText(this, "Erro interno do servidor. Tente mais tarde.", Toast.LENGTH_LONG).show();
+                    String erroMsg = "Erro de Servidor";
+                    if (error.networkResponse != null) {
+                        erroMsg += " (Status: " + error.networkResponse.statusCode + ")";
+                    }
+                    if (error.getMessage() != null) {
+                        erroMsg += ": " + error.getMessage();
+                    }
+                    Log.e("VOLLEY_ERROR", erroMsg, error);
+                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
                 }) {
                     @Override
                     public Map<String, String> getHeaders() {
@@ -132,6 +144,11 @@ public class LoginActivity extends AppCompatActivity {
                 Volley.newRequestQueue(this).add(jsonObjectRequest);
             });
         }
+
+        btnCadastro.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, CadastroActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void loginComGoogle() {
@@ -213,8 +230,15 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 },
                 error -> {
-                    Log.e("VOLLEY_ERROR", "Erro de Servidor: " + error.toString());
-                    Toast.makeText(LoginActivity.this, "Erro ao validar conta Google no servidor.", Toast.LENGTH_LONG).show();
+                    String erroMsg = "Erro de Servidor (Google)";
+                    if (error.networkResponse != null) {
+                        erroMsg += " (Status: " + error.networkResponse.statusCode + ")";
+                    }
+                    if (error.getMessage() != null) {
+                        erroMsg += ": " + error.getMessage();
+                    }
+                    Log.e("VOLLEY_ERROR", erroMsg, error);
+                    Toast.makeText(LoginActivity.this, erroMsg, Toast.LENGTH_LONG).show();
                 }) {
             @Override
             public Map<String, String> getHeaders() {

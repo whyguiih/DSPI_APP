@@ -142,6 +142,15 @@
                     <EditText android:id="@+id/etCanvaEstruturaCustos" style="@style/InputGlassStyle" android:hint="Estrutura de custos" />
                     <EditText android:id="@+id/etCanvaFluxoReceita" style="@style/InputGlassStyle" android:hint="Fluxo de receita" />
                     <EditText android:id="@+id/etCanvaParceirosChaves" style="@style/InputGlassStyle" android:hint="Parceiros chaves" />
+
+                    <Button
+                        android:id="@+id/btnAcaoCanva"
+                        style="@style/InputGlassStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="16dp"
+                        android:text="Gerar Canvas"
+                        android:textColor="#FFFFFF" />
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/formCurriculo" style="@style/FormContainerStyle" android:visibility="gone">
@@ -426,6 +435,25 @@
                     <EditText android:id="@+id/etRelQuantUtilizada2" style="@style/InputGlassStyle" android:hint="Quantidade Utilizada 2" android:inputType="number" />
                     <EditText android:id="@+id/etRelFormaPagamento" style="@style/InputGlassStyle" android:hint="Forma Pagamento" />
                     <EditText android:id="@+id/etRelPrecoTotal" style="@style/InputGlassStyle" android:hint="Preço Total" android:inputType="numberDecimal" />
+
+                    <Button
+                        android:id="@+id/btnGerarRelatorio"
+                        style="@style/InputGlassStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="16dp"
+                        android:text="Gerar Relatório PDF"
+                        android:textColor="#FFFFFF" />
+
+                    <Button
+                        android:id="@+id/btnVisualizarRelatorio"
+                        style="@style/InputGlassStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:text="Abrir PDF do Relatório"
+                        android:textColor="#FFFFFF"
+                        android:visibility="gone" />
                 </LinearLayout>
 
             </LinearLayout>

@@ -90,7 +90,22 @@ public class FormularioRepository {
                         listener.onErro("Erro ao processar resposta.");
                     }
                 },
-                error -> listener.onErro("Falha na conexão com o servidor.")
+                error -> {
+                    String erroMsg = "Falha na conexão";
+                    if (error.networkResponse != null) {
+                        erroMsg += " (Status: " + error.networkResponse.statusCode + ")";
+                        try {
+                            String body = new String(error.networkResponse.data, "UTF-8");
+                            JSONObject jsonError = new JSONObject(body);
+                            if (jsonError.has("error")) {
+                                erroMsg = jsonError.getString("error");
+                            }
+                        } catch (Exception ignored) {}
+                    } else if (error.getMessage() != null) {
+                        erroMsg += ": " + error.getMessage();
+                    }
+                    listener.onErro(erroMsg);
+                }
         );
 
         Volley.newRequestQueue(context).add(request);
