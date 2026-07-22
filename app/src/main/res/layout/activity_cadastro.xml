@@ -114,6 +114,24 @@
                     android:fontFamily="@font/neo_sans"
                     app:layout_constraintTop_toBottomOf="@id/inputSenhaCadastro" />
 
+                <AutoCompleteTextView
+                    android:id="@+id/inputNivelAcesso"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_input_glass"
+                    android:hint="Nível de acesso"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#B3FFFFFF"
+                    android:textSize="16sp"
+                    android:paddingHorizontal="20dp"
+                    android:fontFamily="@font/neo_sans"
+                    android:inputType="none"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:cursorVisible="false"
+                    app:layout_constraintTop_toBottomOf="@id/inputConfirmaSenha"/>
+
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnCadastrar"
                     android:layout_width="match_parent"
@@ -127,7 +145,7 @@
                     android:fontFamily="@font/neo_sans"
                     android:elevation="0dp"
                     android:stateListAnimator="@null"
-                    app:layout_constraintTop_toBottomOf="@id/inputConfirmaSenha" />
+                    app:layout_constraintTop_toBottomOf="@id/inputNivelAcesso" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
