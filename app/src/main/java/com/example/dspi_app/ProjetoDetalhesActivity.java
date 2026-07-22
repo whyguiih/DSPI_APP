@@ -300,7 +300,17 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
                         }
                     } catch (JSONException e) {}
                 },
-                error -> Toast.makeText(this, "Erro de Conexão", Toast.LENGTH_LONG).show()
+                error -> {
+                    String erroMsg = "Erro de Conexão";
+                    if (error.networkResponse != null) {
+                        erroMsg += " (Status: " + error.networkResponse.statusCode + ")";
+                    }
+                    if (error.getMessage() != null) {
+                        erroMsg += ": " + error.getMessage();
+                    }
+                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
+                    Log.e("API_ERROR", erroMsg, error);
+                }
         ) {
             @Override public Map<String, String> getHeaders() {
                 Map<String, String> h = new HashMap<>(); h.put("Content-Type", "application/json; charset=utf-8"); return h;
