@@ -61,28 +61,37 @@
             app:layout_constraintTop_toBottomOf="@id/txtBemVindo" />
 
 
-        <EditText
-            android:id="@+id/inputSenha"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutSenha"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:background="@drawable/bg_input_glass"
-            android:fontFamily="@font/neo_sans"
-            android:hint="Senha"
-            android:inputType="textPassword"
-            android:paddingHorizontal="20dp"
-            android:textColor="#FFFFFF"
-            android:textColorHint="#B3FFFFFF"
-            android:textSize="16sp"
-            app:layout_constraintTop_toBottomOf="@id/inputEmail"
-            tools:layout_editor_absoluteX="32dp" />
+            app:hintEnabled="false"
+            app:endIconMode="password_toggle"
+            app:endIconTint="#FFFFFF"
+            app:layout_constraintTop_toBottomOf="@id/inputEmail">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/inputSenha"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:background="@drawable/bg_input_glass"
+                android:fontFamily="@font/neo_sans"
+                android:hint="Senha"
+                android:inputType="textPassword"
+                android:paddingHorizontal="20dp"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#B3FFFFFF"
+                android:textSize="16sp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnEntrar"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginStart="5dp"
-            android:layout_marginTop="100dp"
+            android:layout_marginTop="25dp"
             android:layout_marginEnd="5dp"
             android:layout_marginBottom="12dp"
             android:background="@drawable/bg_button_login"
@@ -97,7 +106,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/inputEmail" />
+            app:layout_constraintTop_toBottomOf="@+id/layoutSenha" />
 
         <Button
             android:id="@+id/Google"

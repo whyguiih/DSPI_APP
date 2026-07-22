@@ -84,35 +84,55 @@
                     android:fontFamily="@font/neo_sans"
                     app:layout_constraintTop_toBottomOf="@id/inputNome" />
 
-                <EditText
-                    android:id="@+id/inputSenhaCadastro"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layoutSenhaCadastro"
                     android:layout_width="match_parent"
-                    android:layout_height="55dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="Senha"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="textPassword"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputEmailCadastro" />
+                    app:hintEnabled="false"
+                    app:endIconMode="password_toggle"
+                    app:endIconTint="#FFFFFF"
+                    app:layout_constraintTop_toBottomOf="@id/inputEmailCadastro">
 
-                <EditText
-                    android:id="@+id/inputConfirmaSenha"
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/inputSenhaCadastro"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:hint="Senha"
+                        android:textColorHint="#B3FFFFFF"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:paddingHorizontal="20dp"
+                        android:inputType="textPassword"
+                        android:fontFamily="@font/neo_sans" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layoutConfirmaSenha"
                     android:layout_width="match_parent"
-                    android:layout_height="55dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="Confirmar Senha"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="textPassword"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputSenhaCadastro" />
+                    app:hintEnabled="false"
+                    app:endIconMode="password_toggle"
+                    app:endIconTint="#FFFFFF"
+                    app:layout_constraintTop_toBottomOf="@id/layoutSenhaCadastro">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/inputConfirmaSenha"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:hint="Confirmar Senha"
+                        android:textColorHint="#B3FFFFFF"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:paddingHorizontal="20dp"
+                        android:inputType="textPassword"
+                        android:fontFamily="@font/neo_sans" />
+
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <AutoCompleteTextView
                     android:id="@+id/inputNivelAcesso"
@@ -130,7 +150,7 @@
                     android:focusable="true"
                     android:clickable="true"
                     android:cursorVisible="false"
-                    app:layout_constraintTop_toBottomOf="@id/inputConfirmaSenha"/>
+                    app:layout_constraintTop_toBottomOf="@id/layoutConfirmaSenha"/>
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnCadastrar"
