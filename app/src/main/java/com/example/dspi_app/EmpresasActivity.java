@@ -91,7 +91,14 @@ public class EmpresasActivity extends AppCompatActivity {
                         Toast.makeText(this, "Erro ao ler as empresas.", Toast.LENGTH_SHORT).show();
                     }
                 },
-                error -> Toast.makeText(this, "Falha na conexão com o servidor.", Toast.LENGTH_SHORT).show()
+                error -> {
+                    String erroMsg = "Falha na conexão";
+                    if (error.networkResponse != null) {
+                        erroMsg += " (Status: " + error.networkResponse.statusCode + ")";
+                    }
+                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
+                    android.util.Log.e("API_ERROR", erroMsg, error);
+                }
         );
 
         Volley.newRequestQueue(this).add(request);

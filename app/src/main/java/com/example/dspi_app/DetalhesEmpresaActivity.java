@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
@@ -257,7 +258,17 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
                         Toast.makeText(this, "Erro ao carregar projetos afiliados", Toast.LENGTH_SHORT).show();
                     }
                 },
-                error -> Toast.makeText(this, "Falha na conexão com a API", Toast.LENGTH_SHORT).show()
+                error -> {
+                    String erroMsg = "Falha na conexão com a API";
+                    if (error.networkResponse != null) {
+                        erroMsg += " (Status: " + error.networkResponse.statusCode + ")";
+                    }
+                    if (error.getMessage() != null) {
+                        erroMsg += ": " + error.getMessage();
+                    }
+                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
+                    Log.e("API_ERROR", erroMsg, error);
+                }
         );
 
         Volley.newRequestQueue(this).add(request);

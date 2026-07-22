@@ -180,7 +180,17 @@ public class ProjetosActivity extends AppCompatActivity {
                         Toast.makeText(this, "Erro ao processar dados", Toast.LENGTH_SHORT).show();
                     }
                 },
-                error -> Toast.makeText(this, "Falha de Conexão com API", Toast.LENGTH_LONG).show()
+                error -> {
+                    String erroMsg = "Falha de Conexão com API";
+                    if (error.networkResponse != null) {
+                        erroMsg += " (Status: " + error.networkResponse.statusCode + ")";
+                    }
+                    if (error.getMessage() != null) {
+                        erroMsg += ": " + error.getMessage();
+                    }
+                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
+                    Log.e("API_ERROR", erroMsg, error);
+                }
         );
         Volley.newRequestQueue(this).add(request);
     }
