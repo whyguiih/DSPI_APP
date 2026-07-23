@@ -1,5 +1,7 @@
 package com.example.dspi_app;
 
+import android.app.DownloadManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -9,6 +11,7 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.View;
@@ -55,27 +58,21 @@ public class PerfilActivity extends AppCompatActivity {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Uri imageUri = result.getData().getData();
                     try {
-                        // 1. Carrega o Bitmap original
                         InputStream inputStream = getContentResolver().openInputStream(imageUri);
                         Bitmap srcBitmap = BitmapFactory.decodeStream(inputStream);
                         if (inputStream != null) inputStream.close();
 
-                        // 2. CORREÇÃO DEFINITIVA DE ORIENTAÇÃO
                         int degrees = getOrientationDegrees(imageUri);
                         Bitmap finalBitmap = rotateBitmap(srcBitmap, degrees);
 
-                        // 3. Define o raio de curvatura dos cantos convertido para Pixels (ex: 16dp)
                         int radiusPx = (int) (16 * getResources().getDisplayMetrics().density);
 
-                        // 4. Exibe no Glide perfeitamente quadrado com cantos arredondados
                         Glide.with(this)
                                 .load(finalBitmap)
                                 .transform(new CenterCrop(), new RoundedCorners(radiusPx))
                                 .into(imgPerfil);
 
                         imgPerfil.setPadding(0, 0, 0, 0);
-
-                        // Salva o Base64 já com a rotação corrigida em pé
                         fotoBase64 = bitmapToBase64(finalBitmap);
                     } catch (Exception e) {
                         Toast.makeText(this, "Erro ao selecionar imagem", Toast.LENGTH_SHORT).show();
@@ -114,7 +111,6 @@ public class PerfilActivity extends AppCompatActivity {
         inputEmail.setText(emailAntigo);
 
         fotoBase64 = prefs.getString("foto_usuario", "");
-
         int radiusPx = (int) (16 * getResources().getDisplayMetrics().density);
 
         if (!fotoBase64.isEmpty()) {
@@ -127,7 +123,6 @@ public class PerfilActivity extends AppCompatActivity {
             } else {
                 byte[] decodedString = Base64.decode(fotoBase64, Base64.DEFAULT);
                 Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-
                 Glide.with(this)
                         .load(decodedByte)
                         .transform(new CenterCrop(), new RoundedCorners(radiusPx))
@@ -143,16 +138,12 @@ public class PerfilActivity extends AppCompatActivity {
             pickImageLauncher.launch(intent);
         });
 
-        // Dentro do onCreate, na ação do btnRemoverFoto:
         btnRemoverFoto.setOnClickListener(v -> {
             fotoBase64 = "";
-
             Glide.with(this)
                     .load(R.drawable.ic_conta)
                     .transform(new CenterCrop(), new RoundedCorners(radiusPx))
                     .into(imgPerfil);
-
-            // Adiciona um pequeno recuo apenas para o ícone padrão ficar centralizado e bonito
             int innerPadding = (int) (16 * getResources().getDisplayMetrics().density);
             imgPerfil.setPadding(innerPadding, innerPadding, innerPadding, innerPadding);
         });
@@ -175,24 +166,76 @@ public class PerfilActivity extends AppCompatActivity {
                     .setNegativeButton("Não", null)
                     .show();
         });
+
+        // Botão para Gerar/Verificar Currículo (Igual ao padrão do relatório)
+        View btnVerificarCurriculo = findViewById(R.id.btnVerificarCurriculo);
+        if (btnVerificarCurriculo != null) {
+            btnVerificarCurriculo.setOnClickListener(v -> gerarCurriculoPDF());
+        }
     }
 
-    // MÉTODO AUXILIAR: Detecta rotação por múltiplos caminhos (Provedor de Mídia ou Metadados EXIF)
+    private void gerarCurriculoPDF() {
+        Toast.makeText(this, "Sincronizando dados profissionais...", Toast.LENGTH_SHORT).show();
+        String url = "https://api-dspi.whyguiih.workers.dev/preencher-curriculo";
+        
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("nome_usuario", inputNome.getText().toString());
+            jsonBody.put("email_usuario", inputEmail.getText().toString());
+        } catch (JSONException e) { e.printStackTrace(); }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
+                response -> {
+                    try {
+                        if (response.getBoolean("success")) {
+                            Toast.makeText(this, "Currículo pronto! Baixando...", Toast.LENGTH_SHORT).show();
+                            String nomeParaArquivo = inputNome.getText().toString().trim();
+                            baixarCurriculoNoAndroid(nomeParaArquivo);
+                        } else {
+                            mostrarErroGrande("Aviso do Servidor", response.optString("message"));
+                        }
+                    } catch (JSONException e) {
+                        mostrarErroGrande("Erro de Processamento", "Houve uma falha ao ler a resposta do servidor de currículos.");
+                    }
+                },
+                error -> mostrarErroGrande("Erro de Conexão", "Não foi possível conectar ao servidor de nuvem para gerar o currículo. Verifique sua conexão.")
+        );
+        Volley.newRequestQueue(this).add(request);
+    }
+
+    private void baixarCurriculoNoAndroid(String nomeAluno) {
+        // Usar Uri.encode para compatibilidade com Flask (%20 em vez de +)
+        String nomeCodificado = Uri.encode(nomeAluno);
+        
+        // Forçar explicitamente o uso de HTTP (sem S) para o servidor local
+        String urlPython = "http://10.0.0.192:5000/download-curriculo/" + nomeCodificado;
+        android.util.Log.d("DOWNLOAD_DEBUG", "Solicitando PDF em: " + urlPython);
+
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
+        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+        request.setAllowedOverRoaming(true);
+        request.setTitle("Currículo " + nomeAluno);
+        request.setDescription("Baixando seu currículo profissional...");
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+        String nomeArquivoSeguro = nomeAluno.replaceAll("[^a-zA-Z0-9]", "_");
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Curriculo_" + nomeArquivoSeguro + ".pdf");
+
+        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        if (manager != null) {
+            manager.enqueue(request);
+        }
+    }
+
     private int getOrientationDegrees(Uri uri) {
-        // Caminho 1: Tenta ler a coluna de orientação diretamente do banco de dados do Android
         String[] projection = { MediaStore.Images.ImageColumns.ORIENTATION };
         try (Cursor cursor = getContentResolver().query(uri, projection, null, null, null)) {
             if (cursor != null && cursor.moveToFirst()) {
                 int colIndex = cursor.getColumnIndex(MediaStore.Images.ImageColumns.ORIENTATION);
-                if (colIndex != -1) {
-                    return cursor.getInt(colIndex);
-                }
+                if (colIndex != -1) return cursor.getInt(colIndex);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
 
-        // Caminho 2: Fallback para leitura física de cabeçalho EXIF se o caminho 1 falhar
         try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
             if (inputStream != null) {
                 ExifInterface exif = new ExifInterface(inputStream);
@@ -203,13 +246,10 @@ public class PerfilActivity extends AppCompatActivity {
                     case ExifInterface.ORIENTATION_ROTATE_270: return 270;
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) { e.printStackTrace(); }
         return 0;
     }
 
-    // MÉTODO AUXILIAR: Gira mecanicamente o bitmap com base nos graus encontrados
     private Bitmap rotateBitmap(Bitmap bitmap, int degrees) {
         if (degrees == 0) return bitmap;
         Matrix matrix = new Matrix();
@@ -219,43 +259,32 @@ public class PerfilActivity extends AppCompatActivity {
 
     private void enviarParaAPI(String nome, String email, String foto) {
         String url = "https://api-dspi.whyguiih.workers.dev/atualizar-perfil";
-
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("email_atual", emailAntigo);
             jsonBody.put("novo_nome", nome);
             jsonBody.put("novo_email", email);
             jsonBody.put("foto_perfil", foto);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        } catch (JSONException e) { e.printStackTrace(); }
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
                             String urlFotoR2 = response.has("foto_url") ? response.getString("foto_url") : foto;
-
-                            SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
-                            SharedPreferences.Editor editor = prefs.edit();
+                            SharedPreferences.Editor editor = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit();
                             editor.putString("nome_usuario", nome);
                             editor.putString("email_logado", email);
                             editor.putString("foto_usuario", urlFotoR2);
                             editor.apply();
-
-                            Toast.makeText(this, "Perfil updated com sucesso!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Perfil atualizado com sucesso!", Toast.LENGTH_SHORT).show();
                             setResult(RESULT_OK);
                             finish();
-                        } else {
-                            Toast.makeText(this, "Erro ao atualizar no servidor", Toast.LENGTH_SHORT).show();
                         }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+                    } catch (JSONException e) { e.printStackTrace(); }
                 },
-                error -> {
-                    Toast.makeText(this, "Erro de conexão com o servidor", Toast.LENGTH_SHORT).show();
-                }) {
+                error -> Toast.makeText(this, "Erro de conexão", Toast.LENGTH_SHORT).show()
+        ) {
             @Override
             public Map<String, String> getHeaders() {
                 Map<String, String> headers = new HashMap<>();
@@ -263,8 +292,16 @@ public class PerfilActivity extends AppCompatActivity {
                 return headers;
             }
         };
-
         Volley.newRequestQueue(this).add(request);
+    }
+
+    private void mostrarErroGrande(String titulo, String mensagem) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(titulo)
+                .setMessage(mensagem)
+                .setPositiveButton("Entendido", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
     }
 
     private String bitmapToBase64(Bitmap bitmap) {

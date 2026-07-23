@@ -30,6 +30,9 @@ import androidx.core.view.WindowInsetsCompat;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class FormularioActivity extends AppCompatActivity {
 
     private final int CURRENT_TAB_INDEX = 1;
@@ -172,16 +175,10 @@ public class FormularioActivity extends AppCompatActivity {
         btnUploadVideo.setOnClickListener(v -> videoPickerLauncher.launch("video/*"));
 
         // ===== BOTÃO GERAR RELATÓRIO =====
-        btnGerarRelatorio.setOnClickListener(v -> {
-            String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
-            fazerRequisicaoNode(usuarioAtual);
-        });
+        btnGerarRelatorio.setOnClickListener(v -> gerarRelatorioPDF());
 
         // ===== BOTÃO CANVA =====
-        btnAcaoCanva.setOnClickListener(v -> {
-            String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
-            fazerRequisicaoCanvaNode(usuarioAtual);
-        });
+        btnAcaoCanva.setOnClickListener(v -> gerarCanvaPDF());
 
         btnEditarDados = findViewById(R.id.btnEditarDados);
 
@@ -222,17 +219,28 @@ public class FormularioActivity extends AppCompatActivity {
         carregarDadosDoBanco("informacoes_completude");
         carregarDadosDoBanco("participantes");
         carregarDadosDoBanco("relatorio");
-    } // FIM DO ONCREATE
+    }
 
     // =========================================================================
-    // MÉTODOS DE REQUISIÇÃO E DOWNLOAD (RELATÓRIO E CANVA)
+    // MÉTODOS DE RELATÓRIO E CANVA
     // =========================================================================
 
-    private void fazerRequisicaoNode(String usuarioAtual) {
+    private void gerarRelatorioPDF() {
+        String nomeEquipeParaArquivo = etNomeEquipe.getText().toString().trim();
+        if (nomeEquipeParaArquivo.isEmpty()) {
+            Toast.makeText(this, "Por favor, preencha o Nome da Equipe na aba Equipe antes de gerar.", Toast.LENGTH_LONG).show();
+            alternarFormulario(formEquipe, tabEquipe);
+            return;
+        }
+
         Toast.makeText(this, "Processando dados na nuvem...", Toast.LENGTH_SHORT).show();
 
-        String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-relatorio?usuario=" + usuarioAtual;
+        // USANDO O NOME DA EQUIPE NA URL PARA O WORKER
+        String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-relatorio?usuario=" + Uri.encode(nomeEquipeParaArquivo);
+
+        // Enviando um JSON body para o Worker
         JSONObject jsonBody = new JSONObject();
+        try { jsonBody.put("usuario", nomeEquipeParaArquivo); } catch (JSONException e) { e.printStackTrace(); }
 
         com.android.volley.toolbox.JsonObjectRequest request = new com.android.volley.toolbox.JsonObjectRequest(
                 com.android.volley.Request.Method.POST,
@@ -241,112 +249,142 @@ public class FormularioActivity extends AppCompatActivity {
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
-                            Toast.makeText(this, "Dados prontos! Iniciando download...", Toast.LENGTH_SHORT).show();
-                            String nomeEquipe = etNomeEquipe.getText().toString().trim();
-                            if (nomeEquipe.isEmpty()) {
-                                nomeEquipe = usuarioAtual;
-                            }
-                            baixarPdfNoAndroid(nomeEquipe);
+                            Toast.makeText(this, "Relatório pronto! Iniciando download...", Toast.LENGTH_SHORT).show();
+                            baixarArquivoNoAndroid(nomeEquipeParaArquivo, "download-relatorio", "Relatorio");
                         } else {
-                            Toast.makeText(this, "Aviso: " + response.optString("message"), Toast.LENGTH_LONG).show();
+                            mostrarErroGrande("Aviso do Servidor", response.optString("message"));
                         }
                     } catch (JSONException e) {
-                        Toast.makeText(this, "Erro ao processar resposta do servidor.", Toast.LENGTH_SHORT).show();
+                        mostrarErroGrande("Erro de Processamento", "Falha ao ler resposta: " + e.getMessage());
                     }
                 },
                 error -> {
-                    String erroMsg = "Erro de conexão. Status: ";
+                    String detalhes = "Falha técnica de rede.";
                     if (error.networkResponse != null) {
-                        erroMsg += error.networkResponse.statusCode;
-                    } else {
-                        erroMsg += "Desconhecido";
+                        detalhes = "Código HTTP: " + error.networkResponse.statusCode + "\n";
+                        try {
+                            String body = new String(error.networkResponse.data, "UTF-8");
+                            detalhes += "Resposta: " + body;
+                        } catch (Exception ignored) {}
+                    } else if (error.getMessage() != null) {
+                        detalhes = error.getMessage();
                     }
-                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
+                    mostrarErroGrande("Erro de Conexão (Relatório)",
+                            "Não foi possível iniciar a geração na nuvem.\n\nDetalhes: " + detalhes);
                 }
         );
+        com.android.volley.toolbox.Volley.newRequestQueue(this).add(request);
+    }
+
+    private void gerarCanvaPDF() {
+        String nomeEquipeParaArquivo = etNomeEquipe.getText().toString().trim();
+        if (nomeEquipeParaArquivo.isEmpty()) {
+            Toast.makeText(this, "Por favor, preencha o Nome da Equipe na aba Equipe antes de gerar.", Toast.LENGTH_LONG).show();
+            alternarFormulario(formEquipe, tabEquipe);
+            return;
+        }
+
+        String usuarioAutenticado = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
+        Toast.makeText(this, "Processando Canva...", Toast.LENGTH_SHORT).show();
+
+        // 1. O Python agora faz TUDO: Busca dados no D1, gera o PDF e retorna o arquivo
+        // A rota no Python é /download-canva/<nome_equipe>
+        String urlPython = "http://10.0.0.192:5000/download-canva/" + Uri.encode(nomeEquipeParaArquivo);
+        
+        android.util.Log.d("CANVA_DEBUG", "Chamando Python: " + urlPython);
+
+        // Validar se o Python está online e se consegue gerar o PDF
+        com.android.volley.toolbox.StringRequest request = new com.android.volley.toolbox.StringRequest(
+                com.android.volley.Request.Method.GET,
+                urlPython,
+                response -> {
+                    // Se o Python respondeu (mesmo que seja o binário do PDF), o link está ok
+                    Toast.makeText(this, "Canva pronto! Iniciando download...", Toast.LENGTH_SHORT).show();
+                    
+                    DownloadManager.Request downloadRequest = new DownloadManager.Request(Uri.parse(urlPython));
+                    downloadRequest.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+                    downloadRequest.setAllowedOverRoaming(true);
+                    downloadRequest.setTitle("Canva " + nomeEquipeParaArquivo);
+                    downloadRequest.setDescription("Baixando Canva PDF...");
+                    downloadRequest.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+                    String nomeArquivoSeguro = nomeEquipeParaArquivo.replaceAll("[^a-zA-Z0-9]", "_");
+                    downloadRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Canva_" + nomeArquivoSeguro + ".pdf");
+
+                    DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                    if (manager != null) {
+                        manager.enqueue(downloadRequest);
+                    }
+                },
+                error -> {
+                    String detalhes = "Servidor Python offline ou erro na geração.";
+                    if (error.networkResponse != null) {
+                        detalhes = "Erro no Servidor.\nCódigo HTTP: " + error.networkResponse.statusCode;
+                        try {
+                            String body = new String(error.networkResponse.data, "UTF-8");
+                            JSONObject jsonError = new JSONObject(body);
+                            detalhes += "\nMotivo: " + jsonError.optString("error");
+                        } catch (Exception ignored) {}
+                    }
+                    mostrarErroGrande("Falha na Geração do Canva",
+                            "O servidor local não conseguiu criar o seu Canva.\n\nVerifique se o Python está rodando e se o nome '" + nomeEquipeParaArquivo + "' existe no banco.\n\nDetalhes: " + detalhes);
+                }
+        );
+
+        request.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(
+                45000, // 45 segundos para geração de PDF
+                0,
+                com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
         com.android.volley.toolbox.Volley.newRequestQueue(this).add(request);
     }
 
-    private void baixarPdfNoAndroid(String nomeEquipeOuUsuario) {
-        String nomeCodificado = Uri.encode(nomeEquipeOuUsuario);
-        String urlPython = "http://10.0.0.192:5000/download-relatorio/" + nomeCodificado;
+    private void baixarArquivoNoAndroid(String identificador, String rotaPython, String prefixoArquivo) {
+        String nomeCodificado = Uri.encode(identificador);
+        String urlPython = "http://10.0.0.192:5000/" + rotaPython + "/" + nomeCodificado;
+        android.util.Log.d("DOWNLOAD_DEBUG", "Testando link: " + urlPython);
 
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
-        request.setTitle("Relatório " + nomeEquipeOuUsuario);
-        request.setDescription("Baixando seu relatório PDF...");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-
-        String nomeArquivoSeguro = nomeEquipeOuUsuario.replaceAll("[^a-zA-Z0-9]", "_");
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Relatorio_" + nomeArquivoSeguro + ".pdf");
-
-        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        if (manager != null) {
-            manager.enqueue(request);
-            Toast.makeText(this, "Download do relatório iniciado...", Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void fazerRequisicaoCanvaNode(String usuarioAtual) {
-        Toast.makeText(this, "Validando dados do Canva...", Toast.LENGTH_SHORT).show();
-
-        String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-canva?usuario=" + usuarioAtual;
-        JSONObject jsonBody = new JSONObject();
-
-        com.android.volley.toolbox.JsonObjectRequest request = new com.android.volley.toolbox.JsonObjectRequest(
-                com.android.volley.Request.Method.POST,
-                urlNode,
-                jsonBody,
+        // Validar link antes de disparar o DownloadManager para capturar o erro real
+        com.android.volley.toolbox.StringRequest request = new com.android.volley.toolbox.StringRequest(
+                com.android.volley.Request.Method.GET,
+                urlPython,
                 response -> {
-                    try {
-                        if (response.getBoolean("success")) {
-                            Toast.makeText(this, "Canva pronto! Iniciando download...", Toast.LENGTH_SHORT).show();
-                            String nomeEquipe = etNomeEquipe.getText().toString().trim();
-                            if (nomeEquipe.isEmpty()) {
-                                nomeEquipe = usuarioAtual;
-                            }
-                            baixarCanvaNoAndroid(nomeEquipe);
-                        } else {
-                            Toast.makeText(this, "Aviso: " + response.optString("message"), Toast.LENGTH_LONG).show();
-                        }
-                    } catch (JSONException e) {
-                        Toast.makeText(this, "Erro ao processar resposta do servidor.", Toast.LENGTH_SHORT).show();
+                    // Link ok! Disparar o download real
+                    DownloadManager.Request downloadRequest = new DownloadManager.Request(Uri.parse(urlPython));
+                    downloadRequest.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+                    downloadRequest.setAllowedOverRoaming(true);
+                    downloadRequest.setTitle(prefixoArquivo + " " + identificador);
+                    downloadRequest.setDescription("Baixando arquivo PDF...");
+                    downloadRequest.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+                    String nomeArquivoSeguro = identificador.replaceAll("[^a-zA-Z0-9]", "_");
+                    downloadRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, prefixoArquivo + "_" + nomeArquivoSeguro + ".pdf");
+
+                    DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                    if (manager != null) {
+                        manager.enqueue(downloadRequest);
                     }
                 },
                 error -> {
-                    String erroMsg = "Erro de conexão. Status: ";
+                    String detalhes = "Arquivo não encontrado ou servidor offline.";
                     if (error.networkResponse != null) {
-                        erroMsg += error.networkResponse.statusCode;
+                        detalhes = "Erro no Servidor Python.\nCódigo HTTP: " + error.networkResponse.statusCode;
                         if (error.networkResponse.statusCode == 404) {
-                            erroMsg = "Canva não preenchido ou não encontrado.";
+                            detalhes += "\n\nO PDF para '" + identificador + "' não foi encontrado.\nVerifique se o nome da equipe está correto e se você salvou o formulário.";
                         }
-                    } else {
-                        erroMsg += "Desconhecido";
                     }
-                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
+                    mostrarErroGrande("Falha no Download",
+                            "Não foi possível baixar o arquivo do seu computador.\n\nLink: " + urlPython + "\n\nDetalhes: " + detalhes);
                 }
         );
 
+        // AUMENTAR TIMEOUT PARA 30 SEGUNDOS (Geração de PDF é um processo lento)
+        request.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(
+                30000,
+                0,
+                com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
         com.android.volley.toolbox.Volley.newRequestQueue(this).add(request);
-    }
-
-    private void baixarCanvaNoAndroid(String nomeEquipeOuUsuario) {
-        String nomeCodificado = Uri.encode(nomeEquipeOuUsuario);
-        String urlPython = "http://10.0.0.192:5000/download-canva/" + nomeCodificado;
-
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
-        request.setTitle("Canva " + nomeEquipeOuUsuario);
-        request.setDescription("Baixando seu Business Model Canvas...");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-
-        String nomeArquivoSeguro = nomeEquipeOuUsuario.replaceAll("[^a-zA-Z0-9]", "_");
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Canva_" + nomeArquivoSeguro + ".pdf");
-
-        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        if (manager != null) {
-            manager.enqueue(request);
-            Toast.makeText(this, "Download do Canva iniciado...", Toast.LENGTH_LONG).show();
-        }
     }
 
     // =========================================================================
@@ -909,8 +947,6 @@ public class FormularioActivity extends AppCompatActivity {
                             etComplEmpresa.setText(dadosCompl.optString("empresa", ""));
                             etComplProjeto.setText(dadosCompl.optString("projeto", ""));
                             etComplDescricaoProjeto.setText(dadosCompl.optString("descricao", ""));
-                            String qtdProjetosStr = etComplQtdProjetos.getText().toString().trim();
-                            int qtdProjetos = qtdProjetosStr.isEmpty() ? 0 : Integer.parseInt(qtdProjetosStr);
                             etComplQtdProjetos.setText(dadosCompl.optString("qtd_projetos", ""));
                             etComplI1Nome.setText(dadosCompl.optString("enai_cax1", ""));
                             etComplI1Email.setText(dadosCompl.optString("email1", ""));
@@ -1520,19 +1556,6 @@ public class FormularioActivity extends AppCompatActivity {
         tabAtiva.setAlpha(1.0f);
     }
 
-    private void abrirPdf(String url) {
-        if (url == null || url.isEmpty()) return;
-        urlRelatorioPdf = url;
-        btnVisualizarRelatorio.setVisibility(View.VISIBLE);
-
-        try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            startActivity(intent);
-        } catch (Exception e) {
-            Toast.makeText(this, "Nenhum visualizador de PDF encontrado", Toast.LENGTH_SHORT).show();
-        }
-    }
-
     private void configurarBolhaAnimada() {
         int oldTabIndex = getIntent().getIntExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
         View activeBubble = findViewById(R.id.activeBubble);
@@ -1547,6 +1570,15 @@ public class FormularioActivity extends AppCompatActivity {
                 activeBubble.animate().translationX(CURRENT_TAB_INDEX * tabWidth).setDuration(350).setInterpolator(new DecelerateInterpolator(1.5f)).start();
             }
         });
+    }
+
+    private void mostrarErroGrande(String titulo, String mensagem) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(titulo)
+                .setMessage(mensagem)
+                .setPositiveButton("Entendido", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
     }
 
     @Override

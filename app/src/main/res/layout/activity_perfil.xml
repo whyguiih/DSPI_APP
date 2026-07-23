@@ -153,6 +153,18 @@
                     android:textStyle="bold"
                     android:fontFamily="@font/neo_sans" />
 
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnVerificarCurriculo"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_input_glass"
+                    android:text="GERAR CURRÍCULO PROFISSIONAL"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/neo_sans" />
+
             </LinearLayout>
         </ScrollView>
     </androidx.constraintlayout.widget.ConstraintLayout>
