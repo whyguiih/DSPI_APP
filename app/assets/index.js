@@ -336,6 +336,98 @@ export default {
 
       }
 
+      if (path === "/detalhes-equipe") {
+        const url = new URL(request.url);
+        const equipeParam = url.searchParams.get("equipe") || url.searchParams.get("usuario");
+
+        if (!equipeParam) {
+          return new Response(JSON.stringify({ success: false, error: "Nome da equipe ou usuário não informado." }), { status: 400, headers: corsHeaders });
+        }
+
+        try {
+          const equipeRecord = await env.DB.prepare("SELECT * FROM tb_equipe WHERE nome_equipe = ? OR usuario = ? OR email = ?").bind(equipeParam, equipeParam, equipeParam).first();
+          const nomeEquipe = equipeRecord ? equipeRecord.nome_equipe : equipeParam;
+          const idUsuario = equipeRecord ? equipeRecord.usuario : equipeParam;
+
+          const [canva, pitch, cronograma, ia, recursos] = await Promise.all([
+            env.DB.prepare("SELECT * FROM tb_canva WHERE usuario = ? OR usuario = ?").bind(nomeEquipe, idUsuario).first(),
+            env.DB.prepare("SELECT * FROM tb_pitch WHERE usuario = ? OR usuario = ?").bind(nomeEquipe, idUsuario).first(),
+            env.DB.prepare("SELECT * FROM tb_cronograma WHERE responsavel = ? OR usuario = ? OR usuario = ?").bind(nomeEquipe, nomeEquipe, idUsuario).all(),
+            env.DB.prepare("SELECT * FROM tb_uso_ia WHERE usuario = ? OR usuario = ?").bind(nomeEquipe, idUsuario).all(),
+            env.DB.prepare("SELECT * FROM tb_recursos_aplicados WHERE usuario = ? OR usuario = ?").bind(nomeEquipe, idUsuario).all()
+          ]);
+
+          return new Response(JSON.stringify({
+            success: true,
+            data: {
+              equipe: equipeRecord || null,
+              canva: canva || null,
+              pitch: pitch || null,
+              cronograma: cronograma.results || [],
+              ia: ia.results || [],
+              recursos: recursos.results || []
+            }
+          }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        } catch (erro) {
+          return new Response(JSON.stringify({ success: false, error: erro.message }), { status: 500, headers: corsHeaders });
+        }
+      }
+
+      // ===============================================================
+      // ROTA GET: BUSCAR DADOS DO CURRÍCULO (Para gerar o PDF ou tela)
+      // ===============================================================
+      if (path === "/buscar-curriculo") {
+        const email = url.searchParams.get("email");
+        const cpf = url.searchParams.get("cpf");
+        const nome = url.searchParams.get("nome");
+
+        if (!email && !cpf && !nome) {
+          return new Response(JSON.stringify({ success: false, error: "Informe email, cpf ou nome na URL." }), { status: 400, headers: corsHeaders });
+        }
+
+        try {
+          // Busca o currículo por qualquer um dos identificadores
+          const curriculo = await env.DB.prepare(
+            "SELECT * FROM tb_curriculo_alunos WHERE email = ? OR cpf = ? OR nome = ?"
+          ).bind(email || "", cpf || "", nome || "").first();
+
+          if (!curriculo) {
+            return new Response(JSON.stringify({ success: false, message: "Currículo não encontrado." }), { status: 404, headers: corsHeaders });
+          }
+
+          // Formatando a resposta exatamente para os campos do seu PDF PDF
+          const dadosPDF = {
+            dados_pessoais: {
+              nome: curriculo.nome,
+              data_nascimento: curriculo.data_nacimento || "Não informada",
+              telefone: curriculo.telefone || "Não informado",
+              email: curriculo.email,
+              cidade: curriculo.cidade || "Não informada"
+            },
+            vinculo_senai: {
+              projeto: curriculo.projeto || "Nenhum projeto vinculado",
+              empresa: curriculo.empresa_vinculado || "Nenhuma empresa vinculada",
+              motivacao_projeto: curriculo.motivo_projeto || "Não informada"
+            },
+            competencias: {
+              habilidades: curriculo.habilidades || "Não preenchido",
+              experiencia_projetos: curriculo.fez_projeto || "Não preenchido",
+              o_que_desenvolvi: curriculo.tarefas_feitas || "Nenhuma tarefa concluída no sistema"
+            },
+            perfil_aprendizagem_trabalho: {
+              como_aprendo_mais: curriculo.aprendo_mais || "Não informado",
+              como_prefiro_trabalhar: curriculo.prefiro_trabalhar || "Não informado"
+            }
+          };
+
+          return new Response(JSON.stringify({ success: true, data: dadosPDF, raw: curriculo }), {
+            status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        } catch (erro) {
+          return new Response(JSON.stringify({ success: false, error: erro.message }), { status: 500, headers: corsHeaders });
+        }
+      }
+
     }
 
 
@@ -859,24 +951,19 @@ export default {
     }
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
-  if (tipo === "cronograma") {
-
+  if (tipo === "cronograma" || tipo === "cronograma_especifico") {
   try {
-
     const { results } = await env.DB.prepare(`
       SELECT id_cronograma
       FROM tb_cronograma
-      WHERE usuario = ?
+      WHERE usuario = ? AND processo = ?
     `)
-    .bind(usuario)
+    .bind(usuario, body.processo || body.processos)
     .all();
-
 
     const existe = results && results.length > 0;
 
-
     if (existe) {
-
       await env.DB.prepare(`
         UPDATE tb_cronograma SET
           processo = ?,
@@ -885,37 +972,28 @@ export default {
           data_inicio = ?,
           data_final = ?,
           observacoes = ?
-        WHERE usuario = ?
+        WHERE usuario = ? AND processo = ?
       `)
       .bind(
-        body.processo,
+        body.processo || body.processos,
         body.etapas,
         body.responsavel,
         body.data_inicio || null,
         body.data_final || null,
         body.observacoes,
-        usuario
+        usuario,
+        body.processo || body.processos
       )
       .run();
-
-
     } else {
-
-
       await env.DB.prepare(`
         INSERT INTO tb_cronograma (
-          processo,
-          etapas,
-          responsavel,
-          data_inicio,
-          data_final,
-          observacoes,
-          usuario
+          processo, etapas, responsavel, data_inicio, data_final, observacoes, usuario
         )
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `)
       .bind(
-        body.processo,
+        body.processo || body.processos,
         body.etapas,
         body.responsavel,
         body.data_inicio || null,
@@ -924,43 +1002,12 @@ export default {
         usuario
       )
       .run();
-
     }
 
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Cronograma salvo com sucesso"
-      }),
-      {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-
-
+    return new Response(JSON.stringify({ success: true, message: "Cronograma salvo com sucesso" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
-
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message
-      }),
-      {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-
+    return new Response(JSON.stringify({ success: false, error: error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
-
 } else {
     // Lógica genérica para outras tabelas
     const tabelas = {
@@ -971,27 +1018,30 @@ export default {
       "empresas": "tb_empresas",
       "pitch": "tb_pitch",
       "uso_ia": "tb_uso_ia",
+      "acompanhamento_projeto": "tb_acompanhamento_projeto",
+      "planilha": "tb_acompanhamento_projeto",
       "informacoes_complementares": "tb_informacoes_complementares",
       "informacoes_completude": "tb_informacoes_completude",
       "participantes": "tb_participantes",
-      "relatorio": "tb_relatorio"
+      "relatorio": "tb_relatorio",
+      "necessidades": "tb_necessidades_empresas"
     };
 
     const tabela = tabelas[tipo];
     if (tabela) {
-      const usaEquipe = ["canva", "pitch", "curriculo", "recursos", "conhecimentos"];
+      const usaEquipe = ["canva", "pitch", "curriculo", "recursos", "conhecimentos", "informacoes_complementares", "informacoes_completude", "acompanhamento_projeto", "planilha"];
       let idFinal = usuario;
 
       if (usaEquipe.includes(tipo)) {
-        // Busca também pelo nome_equipe caso o identificador tenha vindo diferente
         const equipeRecord = await env.DB.prepare(
           "SELECT nome_equipe FROM tb_equipe WHERE usuario = ? OR email = ? OR nome_equipe = ?"
         ).bind(usuario, usuario, usuario).first();
         if (equipeRecord) idFinal = equipeRecord.nome_equipe;
       }
 
-      // 3. Removemos 'nome_equipe' do array de campos para evitar erro de coluna inexistente no SQL genérico
-      const campos = Object.keys(body).filter(k => k !== "usuario" && k !== "tipo" && k !== "nome_equipe");
+      // 3. Removemos campos de controle do array de campos
+      const campos = Object.keys(body).filter(k => k !== "usuario" && k !== "tipo" && k !== "nome_equipe" && !k.startsWith("enai_cax") && !k.startsWith("email") && !k.startsWith("camiseta") && !k.startsWith("rg") && !k.startsWith("cpf") && !k.startsWith("data_nascimento") && !k.startsWith("idade") && !k.startsWith("telefone") && !k.startsWith("matricula"));
+
       const exists = await env.DB.prepare(`SELECT 1 FROM ${tabela} WHERE usuario = ?`).bind(idFinal).first();
 
       if (exists) {
@@ -1004,6 +1054,29 @@ export default {
         const values = [idFinal, ...campos.map(c => body[c])];
         await env.DB.prepare(`INSERT INTO ${tabela} (${columns}) VALUES (${placeholders})`).bind(...values).run();
       }
+
+      // Lógica especial para Participantes quando salvando Informações Complementares
+      if (tipo === "informacoes_complementares") {
+          const infoComp = await env.DB.prepare("SELECT id_informacoes_complementares FROM tb_informacoes_complementares WHERE usuario = ?").bind(idFinal).first();
+          if (infoComp) {
+              const idIC = infoComp.id_informacoes_complementares;
+              await env.DB.prepare("DELETE FROM tb_participantes WHERE id_informacoes_complementares = ?").bind(idIC).run();
+
+              for (let i = 1; i <= 7; i++) {
+                  const nome = body[`enai_cax${i}`];
+                  const emailP = body[`email${i}`];
+                  if (nome && nome.trim() !== "") {
+                      await env.DB.prepare(`
+                          INSERT INTO tb_participantes (id_informacoes_complementares, nome_enai_cax, email, tamanho_camiseta, rg, cpf, data_nascimento, telefone, matricula)
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                      `).bind(
+                          idIC, nome, emailP, body[`camiseta${i}`] || "", body[`rg${i}`] || "", body[`cpf${i}`] || "", body[`data_nascimento${i}`] || "", body[`telefone${i}`] || "", body[`matricula${i}`] || ""
+                      ).run();
+                  }
+              }
+          }
+      }
+
       return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   }
@@ -1347,206 +1420,81 @@ if (path === "/gerar-canva") {
 
 
       if (path === "/buscar-dados") {
-
         const { usuario, tipo } = body;
 
-
-
         if (!usuario || !tipo) {
-
           return new Response(JSON.stringify({ success: false, error: "Campos obrigatórios." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
         }
-
-
 
         const tabelasValidas = {
-
           "equipe": "tb_equipe", "conhecimentos": "tb_conhecimentos", "recursos": "tb_recursos_aplicados",
-
           "cronograma": "tb_cronograma", "canva": "tb_canva", "curriculo": "tb_curriculo_alunos",
-
           "empresas": "tb_empresas", "pitch": "tb_pitch", "uso_ia": "tb_uso_ia",
-
-          "acompanhamento_projeto": "tb_acompanhamento_projeto",
-
+          "acompanhamento_projeto": "tb_acompanhamento_projeto", "planilha": "tb_acompanhamento_projeto",
           "informacoes_complementares": "tb_informacoes_complementares", "informacoes_completude": "tb_informacoes_completude",
-
           "participantes": "tb_participantes", "relatorio": "tb_relatorio"
-
         };
 
-
-
         try {
-
           const userRecord = await env.DB.prepare("SELECT nome_usuarios, email FROM tb_cadastros WHERE email = ? OR nome_usuarios = ?").bind(usuario, usuario).first();
-
           const nomeReal = userRecord ? userRecord.nome_usuarios : usuario;
-
           const emailReal = (userRecord && userRecord.email) ? userRecord.email : usuario;
-
           const equipeRecord = await env.DB.prepare("SELECT nome_equipe FROM tb_equipe WHERE usuario = ? OR email = ?").bind(usuario, usuario).first();
-
           const nomeEquipe = equipeRecord ? equipeRecord.nome_equipe : usuario;
 
-
-
-          if (tipo === "cronograma") {
-
+          if (tipo === "cronograma" || tipo === "cronograma_especifico") {
             const { results } = await env.DB.prepare("SELECT * FROM tb_cronograma WHERE responsavel = ? OR responsavel = ? OR usuario = ?").bind(nomeReal, emailReal, nomeEquipe).all();
-
             return new Response(JSON.stringify({ success: true, existe: results.length > 0, data: results }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-
-
           } else if (tipo === "empresas") {
-
-            const dadosForm = await env.DB.prepare("SELECT * FROM tb_empresas WHERE email_contato = ? OR nome_empresa = ?").bind(emailReal, nomeReal).first();
-
+            const dadosForm = await env.DB.prepare("SELECT * FROM tb_empresas WHERE email_contato = ? OR nome_empresa = ? OR usuario = ?").bind(emailReal, nomeReal, usuario).first();
             return new Response(JSON.stringify({ success: true, existe: dadosForm !== null, data: dadosForm }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-
-
-          } else if (tabelasValidas[tipo]) {
-
-            const query = `SELECT * FROM ${tabelasValidas[tipo]} WHERE usuario = ? OR usuario = ? OR usuario = ?`;
-
-            const dadosForm = await env.DB.prepare(query).bind(nomeReal, emailReal, nomeEquipe).first();
-
-
-
-            return new Response(JSON.stringify({ success: true, existe: dadosForm !== null, data: dadosForm }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-
+          } else if (tipo === "informacoes_complementares") {
+              const dadosForm = await env.DB.prepare("SELECT * FROM tb_informacoes_complementares WHERE usuario = ? OR usuario = ? OR usuario = ?").bind(nomeReal, emailReal, nomeEquipe).first();
+              if (dadosForm) {
+                  const { results: participantes } = await env.DB.prepare("SELECT * FROM tb_participantes WHERE id_informacoes_complementares = ?").bind(dadosForm.id_informacoes_complementares).all();
+                  participantes.forEach((p, index) => {
+                      const i = index + 1;
+                      dadosForm[`enai_cax${i}`] = p.nome_enai_cax;
+                      dadosForm[`email${i}`] = p.email;
+                      dadosForm[`camiseta${i}`] = p.tamanho_camiseta;
+                      dadosForm[`rg${i}`] = p.rg;
+                      dadosForm[`cpf${i}`] = p.cpf;
+                      dadosForm[`data_nascimento${i}`] = p.data_nascimento;
+                      dadosForm[`telefone${i}`] = p.telefone;
+                      dadosForm[`matricula${i}`] = p.matricula;
+                  });
+              }
+              return new Response(JSON.stringify({ success: true, existe: dadosForm !== null, data: dadosForm }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
           } else if (tipo === "participantes") {
+              // Busca participantes baseada na equipe do usuário
+              const query = `
+                SELECT p.* FROM tb_participantes p
+                JOIN tb_informacoes_complementares ic ON p.id_informacoes_complementares = ic.id_informacoes_complementares
+                WHERE ic.usuario = ? OR ic.usuario = ? OR ic.usuario = ?
+              `;
+              const dadosForm = await env.DB.prepare(query).bind(nomeReal, emailReal, nomeEquipe).first();
+              return new Response(JSON.stringify({ success: true, existe: dadosForm !== null, data: dadosForm }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-            return new Response(JSON.stringify({ success: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          } else if (tabelasValidas[tipo]) {
+            const query = `SELECT * FROM ${tabelasValidas[tipo]} WHERE usuario = ? OR usuario = ? OR usuario = ?`;
+            const dadosForm = await env.DB.prepare(query).bind(nomeReal, emailReal, nomeEquipe).first();
+
+            return new Response(JSON.stringify({ success: true, existe: dadosForm !== null, data: dadosForm }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
           }
-
-
 
         } catch (e) {
-
           return new Response(JSON.stringify({ success: false, error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
         }
-
       }
 
 
 
 
 
-        // ===============================================================
-
-      // ROTA GET: BUSCAR DADOS DO CURRÍCULO (Para gerar o PDF ou tela)
-
-      // ===============================================================
-
-      if (method === "GET" && path === "/buscar-curriculo") {
-
-        const email = url.searchParams.get("email");
-
-        const cpf = url.searchParams.get("cpf");
-
-        const nome = url.searchParams.get("nome");
-
-
-
-        if (!email && !cpf && !nome) {
-
-          return new Response(JSON.stringify({ success: false, error: "Informe email, cpf ou nome na URL." }), { status: 400, headers: corsHeaders });
-
-        }
-
-
-
-        try {
-
-          // Busca o currículo por qualquer um dos identificadores
-
-          const curriculo = await env.DB.prepare(
-
-            "SELECT * FROM tb_curriculo_alunos WHERE email = ? OR cpf = ? OR nome = ?"
-
-          ).bind(email || "", cpf || "", nome || "").first();
-
-
-
-          if (!curriculo) {
-
-            return new Response(JSON.stringify({ success: false, message: "Currículo não encontrado." }), { status: 404, headers: corsHeaders });
-
-          }
-
-
-
-          // Formatando a resposta exatamente para os campos do seu PDF PDF
-
-          const dadosPDF = {
-
-            dados_pessoais: {
-
-              nome: curriculo.nome,
-
-              data_nascimento: curriculo.data_nacimento || "Não informada",
-
-              telefone: curriculo.telefone || "Não informado",
-
-              email: curriculo.email,
-
-              cidade: curriculo.cidade || "Não informada"
-
-            },
-
-            vinculo_senai: {
-
-              projeto: curriculo.projeto || "Nenhum projeto vinculado",
-
-              empresa: curriculo.empresa_vinculado || "Nenhuma empresa vinculada",
-
-              motivacao_projeto: curriculo.motivo_projeto || "Não informada"
-
-            },
-
-            competencias: {
-
-              habilidades: curriculo.habilidades || "Não preenchido",
-
-              experiencia_projetos: curriculo.fez_projeto || "Não preenchido",
-
-              o_que_desenvolvi: curriculo.tarefas_feitas || "Nenhuma tarefa concluída no sistema"
-
-            },
-
-            perfil_aprendizagem_trabalho: {
-
-              como_aprendo_mais: curriculo.aprendo_mais || "Não informado",
-
-              como_prefiro_trabalhar: curriculo.prefiro_trabalhar || "Não informado"
-
-            }
-
-          };
-
-
-
-          return new Response(JSON.stringify({ success: true, data: dadosPDF, raw: curriculo }), {
-
-            status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
-
-          });
-
-        } catch (erro) {
-
-          return new Response(JSON.stringify({ success: false, error: erro.message }), { status: 500, headers: corsHeaders });
-
-        }
-
-      }
 
 
 

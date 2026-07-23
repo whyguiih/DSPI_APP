@@ -177,6 +177,14 @@ public class FormularioActivity extends AppCompatActivity {
         // ===== BOTÃO GERAR RELATÓRIO =====
         btnGerarRelatorio.setOnClickListener(v -> gerarRelatorioPDF());
 
+        btnVisualizarRelatorio.setOnClickListener(v -> {
+            if (urlRelatorioPdf != null && !urlRelatorioPdf.isEmpty()) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(urlRelatorioPdf));
+                startActivity(intent);
+            }
+        });
+
         // ===== BOTÃO CANVA =====
         btnAcaoCanva.setOnClickListener(v -> gerarCanvaPDF());
 
@@ -745,32 +753,34 @@ public class FormularioActivity extends AppCompatActivity {
                         etRecursosPrecoTotal.setText(precoTot > 0 ? String.valueOf(precoTot) : "");
                     }
                 }
-                else if (tipo.equals("cronograma")) {
-                    JSONObject dadosCronograma = dados;
-                    if (dados.has("data") && !dados.isNull("data")) {
-                        dadosCronograma = dados.optJSONObject("data");
+                else if (tipo.equals("cronograma") || tipo.equals("cronograma_especifico")) {
+                    JSONObject item = null;
+                    if (dados.has("data")) {
+                        Object data = dados.get("data");
+                        if (data instanceof org.json.JSONArray) {
+                            org.json.JSONArray array = (org.json.JSONArray) data;
+                            if (array.length() > 0) item = array.getJSONObject(0);
+                        } else if (data instanceof JSONObject) {
+                            item = (JSONObject) data;
+                        }
                     }
-                    if (dadosCronograma != null) {
-                        etCronogramaProcesso.setText(dadosCronograma.optString("processo", ""));
-                        etCronogramaEtapas.setText(dadosCronograma.optString("etapas", ""));
-                        etCronogramaResponsavel.setText(dadosCronograma.optString("responsavel", ""));
-                        etCronogramaDataInicio.setText(dadosCronograma.optString("data_inicio", ""));
-                        etCronogramaDataFinal.setText(dadosCronograma.optString("data_final", ""));
-                        etCronogramaObservacoes.setText(dadosCronograma.optString("observacoes", ""));
-                    }
-                }
-                else if (tipo.equals("cronograma_especifico")) {
-                    JSONObject dadosCronoEsp = dados;
-                    if (dados.has("data") && !dados.isNull("data")) {
-                        dadosCronoEsp = dados.optJSONObject("data");
-                    }
-                    if (dadosCronoEsp != null) {
-                        etCronoEspProcessos.setText(dadosCronoEsp.optString("processos", ""));
-                        etCronoEspEtapas.setText(dadosCronoEsp.optString("etapas", ""));
-                        etCronoEspResponsavel.setText(dadosCronoEsp.optString("responsavel", ""));
-                        etCronoEspDataInicio.setText(dadosCronoEsp.optString("data_inicio", ""));
-                        etCronoEspDataFinal.setText(dadosCronoEsp.optString("data_final", ""));
-                        etCronoEspObservacoes.setText(dadosCronoEsp.optString("observacoes", ""));
+
+                    if (item != null) {
+                        if (tipo.equals("cronograma")) {
+                            etCronogramaProcesso.setText(item.optString("processo", ""));
+                            etCronogramaEtapas.setText(item.optString("etapas", ""));
+                            etCronogramaResponsavel.setText(item.optString("responsavel", ""));
+                            etCronogramaDataInicio.setText(item.optString("data_inicio", ""));
+                            etCronogramaDataFinal.setText(item.optString("data_final", ""));
+                            etCronogramaObservacoes.setText(item.optString("observacoes", ""));
+                        } else {
+                            etCronoEspProcessos.setText(item.optString("processo", ""));
+                            etCronoEspEtapas.setText(item.optString("etapas", ""));
+                            etCronoEspResponsavel.setText(item.optString("responsavel", ""));
+                            etCronoEspDataInicio.setText(item.optString("data_inicio", ""));
+                            etCronoEspDataFinal.setText(item.optString("data_final", ""));
+                            etCronoEspObservacoes.setText(item.optString("observacoes", ""));
+                        }
                     }
                 }
                 else if (tipo.equals("canva")) {
@@ -864,17 +874,17 @@ public class FormularioActivity extends AppCompatActivity {
                     if (dadosPlanilha != null) {
                         etPlanilhaTarefas.setText(dadosPlanilha.optString("tarefas", ""));
                         etPlanilhaAlunoResponsavel.setText(dadosPlanilha.optString("aluno_responsavel", ""));
-                        etPlanilhaProfessorArea.setText(dadosPlanilha.optString("professor_area", ""));
+                        etPlanilhaProfessorArea.setText(dadosPlanilha.optString("professor_da_area", ""));
                         etPlanilhaInicioPrevisto.setText(dadosPlanilha.optString("inicio_previsto", ""));
                         etPlanilhaFimPrevisto.setText(dadosPlanilha.optString("fim_previsto", ""));
                         etPlanilhaInicioRealizado.setText(dadosPlanilha.optString("inicio_realizado", ""));
                         etPlanilhaFimRealizado.setText(dadosPlanilha.optString("fim_realizado", ""));
-                        int duracaoDias = dadosPlanilha.optInt("duracao_dias", 0);
+                        int duracaoDias = dadosPlanilha.optInt("duracao", 0);
                         etPlanilhaDuracaoDias.setText(duracaoDias > 0 ? String.valueOf(duracaoDias) : "");
                         etPlanilhaStatus.setText(dadosPlanilha.optString("status", ""));
-                        etPlanilhaDescricao.setText(dadosPlanilha.optString("descricao_tarefa", ""));
+                        etPlanilhaDescricao.setText(dadosPlanilha.optString("descricao_da_tarefa", ""));
                         etPlanilhaDificuldades.setText(dadosPlanilha.optString("dificuldades_enxergadas", ""));
-                        etPlanilhaImpacto.setText(dadosPlanilha.optString("impacto_outras_tarefas", ""));
+                        etPlanilhaImpacto.setText(dadosPlanilha.optString("impacto_nas_outras", ""));
                     }
                 }
                 else if (tipo.equals("informacoes_complementares")) {
@@ -1184,18 +1194,18 @@ public class FormularioActivity extends AppCompatActivity {
             else if (tipo.equals("planilha")) {
                 jsonCampos.put("tarefas", etPlanilhaTarefas.getText().toString().trim());
                 jsonCampos.put("aluno_responsavel", etPlanilhaAlunoResponsavel.getText().toString().trim());
-                jsonCampos.put("professor_area", etPlanilhaProfessorArea.getText().toString().trim());
+                jsonCampos.put("professor_da_area", etPlanilhaProfessorArea.getText().toString().trim());
                 jsonCampos.put("inicio_previsto", etPlanilhaInicioPrevisto.getText().toString().trim());
                 jsonCampos.put("fim_previsto", etPlanilhaFimPrevisto.getText().toString().trim());
                 jsonCampos.put("inicio_realizado", etPlanilhaInicioRealizado.getText().toString().trim());
                 jsonCampos.put("fim_realizado", etPlanilhaFimRealizado.getText().toString().trim());
                 String duracaoStr = etPlanilhaDuracaoDias.getText().toString().trim();
                 int duracao = duracaoStr.isEmpty() ? 0 : Integer.parseInt(duracaoStr);
-                jsonCampos.put("duracao_dias", duracao);
+                jsonCampos.put("duracao", duracao);
                 jsonCampos.put("status", etPlanilhaStatus.getText().toString().trim());
-                jsonCampos.put("descricao_tarefa", etPlanilhaDescricao.getText().toString().trim());
+                jsonCampos.put("descricao_da_tarefa", etPlanilhaDescricao.getText().toString().trim());
                 jsonCampos.put("dificuldades_enxergadas", etPlanilhaDificuldades.getText().toString().trim());
-                jsonCampos.put("impacto_outras_tarefas", etPlanilhaImpacto.getText().toString().trim());
+                jsonCampos.put("impacto_nas_outras", etPlanilhaImpacto.getText().toString().trim());
             }
             else if (tipo.equals("informacoes_complementares")) {
                 jsonCampos.put("unidade_nome_comercial", etComplUnidade.getText().toString().trim());
