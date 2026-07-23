@@ -225,6 +225,9 @@ public class FormularioActivity extends AppCompatActivity {
     // MÉTODOS DE RELATÓRIO E CANVA
     // =========================================================================
 
+    // =========================================================================
+    // MÉTODOS EM TEMPO REAL: GERAÇÃO INSTANTNEA NA RAM
+    // =========================================================================
     private void gerarRelatorioPDF() {
         String nomeEquipeParaArquivo = etNomeEquipe.getText().toString().trim();
         if (nomeEquipeParaArquivo.isEmpty()) {
@@ -232,101 +235,51 @@ public class FormularioActivity extends AppCompatActivity {
             return;
         }
 
-        String identificadorBusca = nomeEquipeParaArquivo;
-        Toast.makeText(this, "Solicitando geração na nuvem...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Agrupando dados na nuvem...", Toast.LENGTH_SHORT).show();
 
-        String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-relatorio?usuario=" + Uri.encode(identificadorBusca);
-        JSONObject jsonBody = new JSONObject();
-        try { jsonBody.put("usuario", identificadorBusca); } catch (JSONException ignored) {}
+        // 1. O Cloudflare Worker agrega as informações de todas as abas e insere na tb_relatorio
+        String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-relatorio?usuario=" + Uri.encode(nomeEquipeParaArquivo);[cite: 9]
+        JSONObject jsonBody = new JSONObject();[cite: 9]
+        try { jsonBody.put("usuario", nomeEquipeParaArquivo); } catch (JSONException ignored) {}[cite: 9]
 
-        com.android.volley.toolbox.JsonObjectRequest request = new com.android.volley.toolbox.JsonObjectRequest(
-                com.android.volley.Request.Method.POST,
-                urlNode,
-                jsonBody,
-                response -> {
-                    try {
-                        // SÓ AVANÇA PARA O DOWNLOAD SE A API CONFIRMAR QUE DEU CERTO
-                        if (response.getBoolean("success")) {
-                            Toast.makeText(this, "PDF liberado! Baixando...", Toast.LENGTH_SHORT).show();
-                            baixarArquivoNoAndroid(nomeEquipeParaArquivo, "download-relatorio", "Relatorio");
-                        } else {
-                            mostrarErroGrande("Aviso do Servidor", response.optString("message", "Nenhum dado novo para gerar."));
-                        }
-                    } catch (JSONException e) {
-                        mostrarErroGrande("Erro", "Falha ao ler resposta da API.");
-                    }
-                },
+        com.android.volley.toolbox.JsonObjectRequest request = new com.android.volley.toolbox.JsonObjectRequest([cite: 9]
+        com.android.volley.Request.Method.POST,[cite: 9]
+        urlNode,[cite: 9]
+        jsonBody,[cite: 9]
+        response -> {
+            try {
+                // 2. Assim que o banco confirma os dados, chamamos o Python para desenhar na RAM e baixar
+                if (response.getBoolean("success")) {[cite: 9]
+                    Toast.makeText(this, "Gerando PDF na hora e baixando...", Toast.LENGTH_SHORT).show();
+                    baixarArquivoNoAndroid(nomeEquipeParaArquivo, "download-relatorio", "Relatorio");[cite: 9]
+                } else {
+                    mostrarErroGrande("Aviso do Servidor", response.optString("message", "Nenhum dado encontrado. Verifique se você salvou o projeto."));[cite: 9]
+                }
+            } catch (JSONException e) {
+                mostrarErroGrande("Erro", "Falha ao ler a resposta da nuvem.");[cite: 9]
+            }
+        },
                 error -> {
-                    // NÃO CHAMA O DOWNLOAD SE DER ERRO NA API
-                    mostrarErroGrande("Falha na Comunicação", "Não foi possível preparar o relatório no servidor. Tente salvar os dados novamente.");
+                    mostrarErroGrande("Falha na Comunicação", "Não foi possível organizar o relatório no servidor. Clique em Salvar Alterações e tente novamente.");[cite: 9]
                 }
         );
 
-        request.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(30000, 0, com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        com.android.volley.toolbox.Volley.newRequestQueue(this).add(request);
+        request.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(30000, 0, com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));[cite: 9]
+        com.android.volley.toolbox.Volley.newRequestQueue(this).add(request);[cite: 9]
     }
 
     private void gerarCanvaPDF() {
         String nomeEquipeParaArquivo = etNomeEquipe.getText().toString().trim();
         if (nomeEquipeParaArquivo.isEmpty()) {
-            Toast.makeText(this, "Por favor, preencha o Nome da Equipe na aba Equipe antes de gerar.", Toast.LENGTH_LONG).show();
-            alternarFormulario(formEquipe, tabEquipe);
+            Toast.makeText(this, "Por favor, preencha o Nome da Equipe na aba Equipe antes de gerar.", Toast.LENGTH_LONG).show();[cite: 9]
+            alternarFormulario(formEquipe, tabEquipe);[cite: 9]
             return;
         }
 
-        String usuarioAutenticado = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
-        Toast.makeText(this, "Processando Canva...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Desenhando Canva na hora...", Toast.LENGTH_SHORT).show();
 
-        // 1. O Python agora faz TUDO: Busca dados no D1, gera o PDF e retorna o arquivo
-        // A rota no Python é /download-canva/<nome_equipe>
-        String urlPython = "http://10.0.0.192:5000/download-canva/" + Uri.encode(nomeEquipeParaArquivo);
-        
-        android.util.Log.d("CANVA_DEBUG", "Chamando Python: " + urlPython);
-
-        // Validar se o Python está online e se consegue gerar o PDF
-        com.android.volley.toolbox.StringRequest request = new com.android.volley.toolbox.StringRequest(
-                com.android.volley.Request.Method.GET,
-                urlPython,
-                response -> {
-                    // Se o Python respondeu (mesmo que seja o binário do PDF), o link está ok
-                    Toast.makeText(this, "Canva pronto! Iniciando download...", Toast.LENGTH_SHORT).show();
-                    
-                    DownloadManager.Request downloadRequest = new DownloadManager.Request(Uri.parse(urlPython));
-                    downloadRequest.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
-                    downloadRequest.setAllowedOverRoaming(true);
-                    downloadRequest.setTitle("Canva " + nomeEquipeParaArquivo);
-                    downloadRequest.setDescription("Baixando Canva PDF...");
-                    downloadRequest.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-
-                    String nomeArquivoSeguro = nomeEquipeParaArquivo.replaceAll("[^a-zA-Z0-9]", "_");
-                    downloadRequest.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Canva_" + nomeArquivoSeguro + ".pdf");
-
-                    DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-                    if (manager != null) {
-                        manager.enqueue(downloadRequest);
-                    }
-                },
-                error -> {
-                    String detalhes = "Servidor Python offline ou erro na geração.";
-                    if (error.networkResponse != null) {
-                        detalhes = "Erro no Servidor.\nCódigo HTTP: " + error.networkResponse.statusCode;
-                        try {
-                            String body = new String(error.networkResponse.data, "UTF-8");
-                            JSONObject jsonError = new JSONObject(body);
-                            detalhes += "\nMotivo: " + jsonError.optString("error");
-                        } catch (Exception ignored) {}
-                    }
-                    mostrarErroGrande("Falha na Geração do Canva",
-                            "O servidor local não conseguiu criar o seu Canva.\n\nVerifique se o Python está rodando e se o nome '" + nomeEquipeParaArquivo + "' existe no banco.\n\nDetalhes: " + detalhes);
-                }
-        );
-
-        request.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(
-                45000, // 45 segundos para geração de PDF
-                0,
-                com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-        com.android.volley.toolbox.Volley.newRequestQueue(this).add(request);
+        // O Python agora vai direto no banco D1, desenha os 9 blocos na RAM e entrega o arquivo!
+        baixarArquivoNoAndroid(nomeEquipeParaArquivo, "download-canva", "Canva");[cite: 9]
     }
 
     private void baixarArquivoNoAndroid(String identificador, String rotaPython, String prefixoArquivo) {
