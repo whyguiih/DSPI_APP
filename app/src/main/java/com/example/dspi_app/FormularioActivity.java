@@ -238,48 +238,48 @@ public class FormularioActivity extends AppCompatActivity {
         Toast.makeText(this, "Agrupando dados na nuvem...", Toast.LENGTH_SHORT).show();
 
         // 1. O Cloudflare Worker agrega as informações de todas as abas e insere na tb_relatorio
-        String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-relatorio?usuario=" + Uri.encode(nomeEquipeParaArquivo);[cite: 9]
-        JSONObject jsonBody = new JSONObject();[cite: 9]
-        try { jsonBody.put("usuario", nomeEquipeParaArquivo); } catch (JSONException ignored) {}[cite: 9]
+        String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-relatorio?usuario=" + Uri.encode(nomeEquipeParaArquivo);
+        JSONObject jsonBody = new JSONObject();
+        try { jsonBody.put("usuario", nomeEquipeParaArquivo); } catch (JSONException ignored) {}
 
-        com.android.volley.toolbox.JsonObjectRequest request = new com.android.volley.toolbox.JsonObjectRequest([cite: 9]
-        com.android.volley.Request.Method.POST,[cite: 9]
-        urlNode,[cite: 9]
-        jsonBody,[cite: 9]
+        com.android.volley.toolbox.JsonObjectRequest request = new com.android.volley.toolbox.JsonObjectRequest(
+        com.android.volley.Request.Method.POST,
+        urlNode,
+        jsonBody,
         response -> {
             try {
                 // 2. Assim que o banco confirma os dados, chamamos o Python para desenhar na RAM e baixar
-                if (response.getBoolean("success")) {[cite: 9]
+                if (response.getBoolean("success")) {
                     Toast.makeText(this, "Gerando PDF na hora e baixando...", Toast.LENGTH_SHORT).show();
-                    baixarArquivoNoAndroid(nomeEquipeParaArquivo, "download-relatorio", "Relatorio");[cite: 9]
+                    baixarArquivoNoAndroid(nomeEquipeParaArquivo, "download-relatorio", "Relatorio");
                 } else {
-                    mostrarErroGrande("Aviso do Servidor", response.optString("message", "Nenhum dado encontrado. Verifique se você salvou o projeto."));[cite: 9]
+                    mostrarErroGrande("Aviso do Servidor", response.optString("message", "Nenhum dado encontrado. Verifique se você salvou o projeto."));
                 }
             } catch (JSONException e) {
-                mostrarErroGrande("Erro", "Falha ao ler a resposta da nuvem.");[cite: 9]
+                mostrarErroGrande("Erro", "Falha ao ler a resposta da nuvem.");
             }
         },
                 error -> {
-                    mostrarErroGrande("Falha na Comunicação", "Não foi possível organizar o relatório no servidor. Clique em Salvar Alterações e tente novamente.");[cite: 9]
+                    mostrarErroGrande("Falha na Comunicação", "Não foi possível organizar o relatório no servidor. Clique em Salvar Alterações e tente novamente.");
                 }
         );
 
-        request.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(30000, 0, com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));[cite: 9]
-        com.android.volley.toolbox.Volley.newRequestQueue(this).add(request);[cite: 9]
+        request.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(30000, 0, com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        com.android.volley.toolbox.Volley.newRequestQueue(this).add(request);
     }
 
     private void gerarCanvaPDF() {
         String nomeEquipeParaArquivo = etNomeEquipe.getText().toString().trim();
         if (nomeEquipeParaArquivo.isEmpty()) {
-            Toast.makeText(this, "Por favor, preencha o Nome da Equipe na aba Equipe antes de gerar.", Toast.LENGTH_LONG).show();[cite: 9]
-            alternarFormulario(formEquipe, tabEquipe);[cite: 9]
+            Toast.makeText(this, "Por favor, preencha o Nome da Equipe na aba Equipe antes de gerar.", Toast.LENGTH_LONG).show();
+            alternarFormulario(formEquipe, tabEquipe);
             return;
         }
 
         Toast.makeText(this, "Desenhando Canva na hora...", Toast.LENGTH_SHORT).show();
 
         // O Python agora vai direto no banco D1, desenha os 9 blocos na RAM e entrega o arquivo!
-        baixarArquivoNoAndroid(nomeEquipeParaArquivo, "download-canva", "Canva");[cite: 9]
+        baixarArquivoNoAndroid(nomeEquipeParaArquivo, "download-canva", "Canva");
     }
 
     private void baixarArquivoNoAndroid(String identificador, String rotaPython, String prefixoArquivo) {
