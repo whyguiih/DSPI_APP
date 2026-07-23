@@ -228,19 +228,16 @@ public class FormularioActivity extends AppCompatActivity {
     private void gerarRelatorioPDF() {
         String nomeEquipeParaArquivo = etNomeEquipe.getText().toString().trim();
         if (nomeEquipeParaArquivo.isEmpty()) {
-            Toast.makeText(this, "Por favor, preencha o Nome da Equipe na aba Equipe antes de gerar.", Toast.LENGTH_LONG).show();
-            alternarFormulario(formEquipe, tabEquipe);
+            Toast.makeText(this, "Preencha o Nome da Equipe antes.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Toast.makeText(this, "Processando dados na nuvem...", Toast.LENGTH_SHORT).show();
+        String identificadorBusca = nomeEquipeParaArquivo;
+        Toast.makeText(this, "Solicitando geração na nuvem...", Toast.LENGTH_SHORT).show();
 
-        // USANDO O NOME DA EQUIPE NA URL PARA O WORKER
-        String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-relatorio?usuario=" + Uri.encode(nomeEquipeParaArquivo);
-
-        // Enviando um JSON body para o Worker
+        String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-relatorio?usuario=" + Uri.encode(identificadorBusca);
         JSONObject jsonBody = new JSONObject();
-        try { jsonBody.put("usuario", nomeEquipeParaArquivo); } catch (JSONException e) { e.printStackTrace(); }
+        try { jsonBody.put("usuario", identificadorBusca); } catch (JSONException ignored) {}
 
         com.android.volley.toolbox.JsonObjectRequest request = new com.android.volley.toolbox.JsonObjectRequest(
                 com.android.volley.Request.Method.POST,
@@ -248,31 +245,24 @@ public class FormularioActivity extends AppCompatActivity {
                 jsonBody,
                 response -> {
                     try {
+                        // SÓ AVANÇA PARA O DOWNLOAD SE A API CONFIRMAR QUE DEU CERTO
                         if (response.getBoolean("success")) {
-                            Toast.makeText(this, "Relatório pronto! Iniciando download...", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "PDF liberado! Baixando...", Toast.LENGTH_SHORT).show();
                             baixarArquivoNoAndroid(nomeEquipeParaArquivo, "download-relatorio", "Relatorio");
                         } else {
-                            mostrarErroGrande("Aviso do Servidor", response.optString("message"));
+                            mostrarErroGrande("Aviso do Servidor", response.optString("message", "Nenhum dado novo para gerar."));
                         }
                     } catch (JSONException e) {
-                        mostrarErroGrande("Erro de Processamento", "Falha ao ler resposta: " + e.getMessage());
+                        mostrarErroGrande("Erro", "Falha ao ler resposta da API.");
                     }
                 },
                 error -> {
-                    String detalhes = "Falha técnica de rede.";
-                    if (error.networkResponse != null) {
-                        detalhes = "Código HTTP: " + error.networkResponse.statusCode + "\n";
-                        try {
-                            String body = new String(error.networkResponse.data, "UTF-8");
-                            detalhes += "Resposta: " + body;
-                        } catch (Exception ignored) {}
-                    } else if (error.getMessage() != null) {
-                        detalhes = error.getMessage();
-                    }
-                    mostrarErroGrande("Erro de Conexão (Relatório)",
-                            "Não foi possível iniciar a geração na nuvem.\n\nDetalhes: " + detalhes);
+                    // NÃO CHAMA O DOWNLOAD SE DER ERRO NA API
+                    mostrarErroGrande("Falha na Comunicação", "Não foi possível preparar o relatório no servidor. Tente salvar os dados novamente.");
                 }
         );
+
+        request.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(30000, 0, com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         com.android.volley.toolbox.Volley.newRequestQueue(this).add(request);
     }
 
@@ -1056,7 +1046,10 @@ public class FormularioActivity extends AppCompatActivity {
                         }
                         if (dadosRel != null) {
                             etRelNomeEmpresa.setText(dadosRel.optString("nome_empresa", ""));
-                            etRelEmailEmpresa.setText(dadosRel.optString("email_empresa", ""));
+
+                            // CORRIGIDO: lendo "e_mail_empresa"
+                            etRelEmailEmpresa.setText(dadosRel.optString("e_mail_empresa", ""));
+
                             etRelSetorEmpresa.setText(dadosRel.optString("setor_empresa", ""));
                             etRelDescricao.setText(dadosRel.optString("descricao", ""));
                             etRelRoteiroPitch.setText(dadosRel.optString("roteiro_pitch", ""));
@@ -1076,18 +1069,30 @@ public class FormularioActivity extends AppCompatActivity {
                             etRelFerramentaIA.setText(dadosRel.optString("ferramenta_ia", ""));
                             etRelLinkAcesso.setText(dadosRel.optString("link_acesso", ""));
                             etRelLicenca.setText(dadosRel.optString("licenca", ""));
-                            etRelEtapaUso.setText(dadosRel.optString("etapa_uso", ""));
+
+                            // CORRIGIDO: lendo "etapa_de_usu"
+                            etRelEtapaUso.setText(dadosRel.optString("etapa_de_usu", ""));
+
                             etRelPrompt.setText(dadosRel.optString("prompt", ""));
-                            etRelMotivoUso.setText(dadosRel.optString("motivo_uso", ""));
+
+                            // CORRIGIDO: lendo "motivo_usu"
+                            etRelMotivoUso.setText(dadosRel.optString("motivo_usu", ""));
+
                             etRelFerramentasProj.setText(dadosRel.optString("ferramentas_projeto", ""));
                             etRelEquipamentosProj.setText(dadosRel.optString("equipamentos_projeto", ""));
-                            etRelQuantCompra.setText(dadosRel.optString("quantidade_compra", ""));
-                            etRelQuantUtilizada.setText(dadosRel.optString("quantidade_utilizada", ""));
+
+                            // CORRIGIDO: lendo "quant_compra" e "quant_utilizada"
+                            etRelQuantCompra.setText(dadosRel.optString("quant_compra", ""));
+                            etRelQuantUtilizada.setText(dadosRel.optString("quant_utilizada", ""));
+
                             etRelPreco.setText(dadosRel.optString("preco", ""));
                             etRelFornecedor.setText(dadosRel.optString("fornecedor", ""));
                             etRelModoObtencao.setText(dadosRel.optString("modo_obtencao", ""));
                             etRelProcessamento.setText(dadosRel.optString("processamento", ""));
-                            etRelAlternativaUso.setText(dadosRel.optString("alternativa_uso", ""));
+
+                            // CORRIGIDO: lendo "alternativa_de_uso"
+                            etRelAlternativaUso.setText(dadosRel.optString("alternativa_de_uso", ""));
+
                             etRelQuantUtilizada2.setText(dadosRel.optString("quantidade_utilizada2", ""));
                             etRelFormaPagamento.setText(dadosRel.optString("forma_pagamento", ""));
                             etRelPrecoTotal.setText(dadosRel.optString("preco_total", ""));
@@ -1335,7 +1340,10 @@ public class FormularioActivity extends AppCompatActivity {
             }
             else if (tipo.equals("relatorio")) {
                 jsonCampos.put("nome_empresa", etRelNomeEmpresa.getText().toString().trim());
-                jsonCampos.put("email_empresa", etRelEmailEmpresa.getText().toString().trim());
+
+                // CORRIGIDO: de "email_empresa" para "e_mail_empresa"
+                jsonCampos.put("e_mail_empresa", etRelEmailEmpresa.getText().toString().trim());
+
                 jsonCampos.put("setor_empresa", etRelSetorEmpresa.getText().toString().trim());
                 jsonCampos.put("descricao", etRelDescricao.getText().toString().trim());
                 jsonCampos.put("roteiro_pitch", etRelRoteiroPitch.getText().toString().trim());
@@ -1355,21 +1363,30 @@ public class FormularioActivity extends AppCompatActivity {
                 jsonCampos.put("ferramenta_ia", etRelFerramentaIA.getText().toString().trim());
                 jsonCampos.put("link_acesso", etRelLinkAcesso.getText().toString().trim());
                 jsonCampos.put("licenca", etRelLicenca.getText().toString().trim());
-                jsonCampos.put("etapa_uso", etRelEtapaUso.getText().toString().trim());
+
+                // CORRIGIDO: de "etapa_uso" para "etapa_de_usu"
+                jsonCampos.put("etapa_de_usu", etRelEtapaUso.getText().toString().trim());
+
                 jsonCampos.put("prompt", etRelPrompt.getText().toString().trim());
-                jsonCampos.put("motivo_uso", etRelMotivoUso.getText().toString().trim());
+
+                // CORRIGIDO: de "motivo_uso" para "motivo_usu"
+                jsonCampos.put("motivo_usu", etRelMotivoUso.getText().toString().trim());
+
                 jsonCampos.put("ferramentas_projeto", etRelFerramentasProj.getText().toString().trim());
                 jsonCampos.put("equipamentos_projeto", etRelEquipamentosProj.getText().toString().trim());
-                jsonCampos.put("quantidade_compra", etRelQuantCompra.getText().toString().trim());
-                jsonCampos.put("quantidade_utilizada", etRelQuantUtilizada.getText().toString().trim());
-                jsonCampos.put("preco", etRelPreco.getText().toString().trim());
+
+                // CORRIGIDO: de "quantidade_compra" para "quant_compra"
+                jsonCampos.put("quant_compra", etRelQuantCompra.getText().toString().trim());
+
+                // CORRIGIDO: de "quantidade_utilizada" para "quant_utilizada"
+                jsonCampos.put("quant_utilizada", etRelQuantUtilizada.getText().toString().trim());
+
+                jsonCampos.put("preco_total", etRelPrecoTotal.getText().toString().trim());
                 jsonCampos.put("fornecedor", etRelFornecedor.getText().toString().trim());
                 jsonCampos.put("modo_obtencao", etRelModoObtencao.getText().toString().trim());
-                jsonCampos.put("processamento", etRelProcessamento.getText().toString().trim());
-                jsonCampos.put("alternativa_uso", etRelAlternativaUso.getText().toString().trim());
-                jsonCampos.put("quantidade_utilizada2", etRelQuantUtilizada2.getText().toString().trim());
-                jsonCampos.put("forma_pagamento", etRelFormaPagamento.getText().toString().trim());
-                jsonCampos.put("preco_total", etRelPrecoTotal.getText().toString().trim());
+
+                // CORRIGIDO: de "alternativa_uso" para "alternativa_de_uso"
+                jsonCampos.put("alternativa_de_uso", etRelAlternativaUso.getText().toString().trim());
             }
             repository.salvarDados(tipo, jsonCampos, listener);
         } catch (JSONException e) {
