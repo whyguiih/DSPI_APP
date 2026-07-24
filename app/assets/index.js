@@ -3301,7 +3301,6 @@ if (method === "POST") {
 }
 
 
-
     } catch (error) {
 
       return new Response(JSON.stringify({ success: false, error: "Erro no banco: " + error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
