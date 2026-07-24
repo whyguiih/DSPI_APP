@@ -464,6 +464,71 @@ export default {
 
       const body = await request.json();
 
+      if (path === "/salvar-curriculo") {
+        try {
+          const {
+            nome, email, data_nascimento, telefone, cidade, habilidades,
+            fez_projeto, projeto, empresa_vinculado, motivo_projeto,
+            aprendo_mais, prefiro_trabalhar
+          } = body;
+
+          if (!email) {
+            return new Response(JSON.stringify({ success: false, message: 'O campo e-mail é obrigatório para identificar o aluno.' }), {
+              status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          // Prepara valores padrão para evitar erros de "undefined" no bind do D1
+          const val = (v) => (v === undefined || v === null) ? "" : String(v);
+
+          // Busca se já existe um registro para este email
+          const curriculoExistente = await env.DB.prepare(
+            "SELECT id_aluno FROM tb_curriculo_alunos WHERE email = ?"
+          ).bind(email).first();
+
+          if (curriculoExistente) {
+            // 1. ATUALIZA
+            await env.DB.prepare(`
+              UPDATE tb_curriculo_alunos SET
+                nome = ?, data_nacimento = ?, telefone = ?, cidade = ?, habilidades = ?,
+                fez_projeto = ?, projeto = ?, empresa_vinculado = ?, motivo_projeto = ?,
+                aprendo_mais = ?, prefiro_trabalhar = ?
+              WHERE email = ?
+            `).bind(
+              val(nome), val(data_nascimento), val(telefone), val(cidade), val(habilidades),
+              val(fez_projeto), val(projeto), val(empresa_vinculado), val(motivo_projeto),
+              val(aprendo_mais), val(prefiro_trabalhar), email
+            ).run();
+
+            return new Response(JSON.stringify({ success: true, message: 'Currículo atualizado com sucesso!' }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+
+          } else {
+            // 2. INSERE (Note que 'cpf' é obrigatório no seu banco, então enviamos vazio se não houver)
+            await env.DB.prepare(`
+              INSERT INTO tb_curriculo_alunos (
+                nome, email, data_nacimento, telefone, cidade, habilidades,
+                fez_projeto, projeto, empresa_vinculado, motivo_projeto,
+                aprendo_mais, prefiro_trabalhar, cpf
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).bind(
+              val(nome), email, val(data_nascimento), val(telefone), val(cidade), val(habilidades),
+              val(fez_projeto), val(projeto), val(empresa_vinculado), val(motivo_projeto),
+              val(aprendo_mais), val(prefiro_trabalhar), ""
+            ).run();
+
+            return new Response(JSON.stringify({ success: true, message: 'Currículo cadastrado com sucesso!' }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+        } catch (error) {
+          return new Response(JSON.stringify({ success: false, message: 'Erro no Banco de Dados: ' + error.message }), {
+            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
 
 
       if (path === "/atualizar-perfil") {
