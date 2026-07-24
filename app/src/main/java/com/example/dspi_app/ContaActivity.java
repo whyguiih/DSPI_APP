@@ -68,6 +68,11 @@ public class ContaActivity extends AppCompatActivity {
             btnMeusProjetos.setVisibility(View.GONE);
         }
 
+        // Esconder o botão "Meu Currículo" se não for nível 5
+        if (!"5".equals(nivel)) {
+            btnMeuCurriculo.setVisibility(View.GONE);
+        }
+
         // Configuração dos botões e subpáginas
 
         // 1. Botão Editar Perfil -> Leva ao PerfilActivity para alterar dados pessoais

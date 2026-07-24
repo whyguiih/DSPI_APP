@@ -62,8 +62,8 @@ public class CadastroActivity extends AppCompatActivity {
         inputNivelAcesso = findViewById(R.id.inputNivelAcesso);
 
         String[] niveis = {
-                "Adm",
-                "DH",
+                "Avaliador",
+                "Dr/dh",
                 "Professor",
                 "Empresa",
                 "Aluno",
