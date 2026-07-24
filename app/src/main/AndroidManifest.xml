@@ -65,6 +65,12 @@
             android:exported="false" />
         <activity android:name=".CarregamentoCurriculoActivity"
             android:exported="false" />
+        <activity
+            android:name=".CadastroNecessidadesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ListagemNecessidadesActivity"
+            android:exported="false"/>
     </application>
 
 </manifest>

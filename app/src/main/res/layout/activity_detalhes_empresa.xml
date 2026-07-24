@@ -20,8 +20,8 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/headerLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="381dp"
+            android:layout_height="74dp"
             app:layout_constraintTop_toTopOf="parent">
 
             <ImageButton
@@ -31,25 +31,25 @@
                 android:layout_margin="12dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_menu_revert"
-                app:tint="#FFFFFF"
-                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"/>
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="#FFFFFF" />
 
             <TextView
                 android:id="@+id/txtTituloEmpresa"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="48dp"
+                android:fontFamily="@font/neo_sans"
+                android:gravity="center"
                 android:text="Detalhes da Empresa"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                android:fontFamily="@font/neo_sans"
-                android:gravity="center"
-                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/btnVoltar"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginEnd="48dp"/>
+                app:layout_constraintStart_toEndOf="@id/btnVoltar"
+                app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <ScrollView
@@ -163,6 +163,11 @@
                         android:textColor="#B3FFFFFF"
                         android:textSize="13sp"
                         android:fontFamily="@font/neo_sans"/>
+                </LinearLayout>
+                <Space android:layout_width="match_parent" android:layout_height="15dp" />
+                <LinearLayout android:id="@+id/btnVerNecessidades" style="@style/ListGlassButtonStyle">
+                    <ImageView style="@style/ListGlassIcon" android:src="@drawable/ic_necessidades" app:tint="#FFFFFF"/>
+                    <TextView style="@style/ListGlassText" android:text="Necessidades"/>
                 </LinearLayout>
 
                 <TextView

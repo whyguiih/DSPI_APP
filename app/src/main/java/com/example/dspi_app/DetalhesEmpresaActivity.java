@@ -108,6 +108,18 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         TextView txtSobreEmpresa = findViewById(R.id.txtSobreEmpresa);
         ImageView imgEmpresaLogo = findViewById(R.id.imgEmpresaLogo);
         RecyclerView recyclerProjetosAfiliados = findViewById(R.id.recycler_projetos_afiliados);
+        LinearLayout btnVerNecessidades = findViewById(R.id.btnVerNecessidades);
+
+        if (btnVerNecessidades != null) {
+            btnVerNecessidades.setOnClickListener(v -> {
+                Intent intentListagem = new Intent(DetalhesEmpresaActivity.this, ListagemNecessidadesActivity.class);
+
+                // Passa o e-mail da empresa que está na tela para a próxima página
+                intentListagem.putExtra("email_empresa_alvo", email);
+
+                startActivity(intentListagem);
+            });
+        }
 
         // Preenchimentos básicos de texto
         if (tvNomeEmpresa != null) tvNomeEmpresa.setText(nome != null ? nome : "Empresa");

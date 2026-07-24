@@ -97,20 +97,22 @@ public class LoginActivity extends AppCompatActivity {
                             // Puxa o e-mail e a foto vindos do banco
                             String email = response.optString("email", emailDigitado);
                             String foto = response.optString("foto_perfil", "");
-
-                            // AQUI: Puxa O NOME ESTRITAMENTE DO BANCO DE DADOS ("nome_usuario")
-                            // Se a API não mandar nada, ele deixa vazio (""), nunca mais vai exibir o e-mail no lugar do nome!
                             String nomeExibicao = response.optString("nome_usuario", "");
+                            int idUsuario = response.optInt("id", -1);
+
+                            boolean empresa = nivel.equals("4");
 
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                             intent.putExtra("nivel_de_acesso", nivel);
                             intent.putExtra("email_usuario", email);
 
                             getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit()
+                                    .putInt("id_usuario", idUsuario)
                                     .putString("email_logado", email)
                                     .putString("nome_usuario", nomeExibicao) // Salva o nome real que veio do banco
                                     .putString("foto_usuario", foto)
                                     .putString("nivel_de_acesso", nivel)
+                                    .putBoolean("empresa_verificador", empresa)
                                     .apply();
 
                             startActivity(intent);

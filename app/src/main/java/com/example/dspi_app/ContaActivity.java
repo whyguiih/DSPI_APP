@@ -51,6 +51,8 @@ public class ContaActivity extends AppCompatActivity {
             nivel = prefs.getString("nivel_de_acesso", "5");
         }
 
+        boolean usuarioEmpresa = prefs.getBoolean("empresa_verificador", false);
+
         emailLogado = prefs.getString("email_logado", "usuario@email.com");
 
         // Configurar o menu inferior
@@ -59,9 +61,25 @@ public class ContaActivity extends AppCompatActivity {
         // Vincular componentes da tela
         LinearLayout btnEditarPerfil = findViewById(R.id.btnEditarPerfil);
         LinearLayout btnMeusProjetos = findViewById(R.id.btnMeusProjetos);
-        LinearLayout btnMeuCurriculo = findViewById(R.id.btnMeuCurriculo); // Confira se o ID está certo!
-
+        LinearLayout btnMeuCurriculo = findViewById(R.id.btnMeuCurriculo);
         LinearLayout btnSair = findViewById(R.id.btnSair);
+        LinearLayout btnNecessidades = findViewById(R.id.btnNecessidades);
+
+        if (usuarioEmpresa) {
+            // Se for empresa, mostra o botão
+            btnNecessidades.setVisibility(View.VISIBLE);
+
+            // 3. Já deixamos o clique preparado para a Parte 2.0 (abrir a subpágina)
+            btnNecessidades.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(ContaActivity.this, CadastroNecessidadesActivity.class);
+                    startActivity(intent);
+                }
+            });
+        } else {
+            btnNecessidades.setVisibility(View.GONE);
+        }
 
         // Esconder o botão "Meus Projetos" para usuários de nível 6
         if ("6".equals(nivel) || "2".equals(nivel) || "1".equals(nivel) ) {
