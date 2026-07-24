@@ -336,98 +336,6 @@ export default {
 
       }
 
-      if (path === "/detalhes-equipe") {
-        const url = new URL(request.url);
-        const equipeParam = url.searchParams.get("equipe") || url.searchParams.get("usuario");
-
-        if (!equipeParam) {
-          return new Response(JSON.stringify({ success: false, error: "Nome da equipe ou usuário não informado." }), { status: 400, headers: corsHeaders });
-        }
-
-        try {
-          const equipeRecord = await env.DB.prepare("SELECT * FROM tb_equipe WHERE nome_equipe = ? OR usuario = ? OR email = ?").bind(equipeParam, equipeParam, equipeParam).first();
-          const nomeEquipe = equipeRecord ? equipeRecord.nome_equipe : equipeParam;
-          const idUsuario = equipeRecord ? equipeRecord.usuario : equipeParam;
-
-          const [canva, pitch, cronograma, ia, recursos] = await Promise.all([
-            env.DB.prepare("SELECT * FROM tb_canva WHERE usuario = ? OR usuario = ?").bind(nomeEquipe, idUsuario).first(),
-            env.DB.prepare("SELECT * FROM tb_pitch WHERE usuario = ? OR usuario = ?").bind(nomeEquipe, idUsuario).first(),
-            env.DB.prepare("SELECT * FROM tb_cronograma WHERE responsavel = ? OR usuario = ? OR usuario = ?").bind(nomeEquipe, nomeEquipe, idUsuario).all(),
-            env.DB.prepare("SELECT * FROM tb_uso_ia WHERE usuario = ? OR usuario = ?").bind(nomeEquipe, idUsuario).all(),
-            env.DB.prepare("SELECT * FROM tb_recursos_aplicados WHERE usuario = ? OR usuario = ?").bind(nomeEquipe, idUsuario).all()
-          ]);
-
-          return new Response(JSON.stringify({
-            success: true,
-            data: {
-              equipe: equipeRecord || null,
-              canva: canva || null,
-              pitch: pitch || null,
-              cronograma: cronograma.results || [],
-              ia: ia.results || [],
-              recursos: recursos.results || []
-            }
-          }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        } catch (erro) {
-          return new Response(JSON.stringify({ success: false, error: erro.message }), { status: 500, headers: corsHeaders });
-        }
-      }
-
-      // ===============================================================
-      // ROTA GET: BUSCAR DADOS DO CURRÍCULO (Para gerar o PDF ou tela)
-      // ===============================================================
-      if (path === "/buscar-curriculo") {
-        const email = url.searchParams.get("email");
-        const cpf = url.searchParams.get("cpf");
-        const nome = url.searchParams.get("nome");
-
-        if (!email && !cpf && !nome) {
-          return new Response(JSON.stringify({ success: false, error: "Informe email, cpf ou nome na URL." }), { status: 400, headers: corsHeaders });
-        }
-
-        try {
-          // Busca o currículo por qualquer um dos identificadores
-          const curriculo = await env.DB.prepare(
-            "SELECT * FROM tb_curriculo_alunos WHERE email = ? OR cpf = ? OR nome = ?"
-          ).bind(email || "", cpf || "", nome || "").first();
-
-          if (!curriculo) {
-            return new Response(JSON.stringify({ success: false, message: "Currículo não encontrado." }), { status: 404, headers: corsHeaders });
-          }
-
-          // Formatando a resposta exatamente para os campos do seu PDF PDF
-          const dadosPDF = {
-            dados_pessoais: {
-              nome: curriculo.nome,
-              data_nascimento: curriculo.data_nacimento || "Não informada",
-              telefone: curriculo.telefone || "Não informado",
-              email: curriculo.email,
-              cidade: curriculo.cidade || "Não informada"
-            },
-            vinculo_senai: {
-              projeto: curriculo.projeto || "Nenhum projeto vinculado",
-              empresa: curriculo.empresa_vinculado || "Nenhuma empresa vinculada",
-              motivacao_projeto: curriculo.motivo_projeto || "Não informada"
-            },
-            competencias: {
-              habilidades: curriculo.habilidades || "Não preenchido",
-              experiencia_projetos: curriculo.fez_projeto || "Não preenchido",
-              o_que_desenvolvi: curriculo.tarefas_feitas || "Nenhuma tarefa concluída no sistema"
-            },
-            perfil_aprendizagem_trabalho: {
-              como_aprendo_mais: curriculo.aprendo_mais || "Não informado",
-              como_prefiro_trabalhar: curriculo.prefiro_trabalhar || "Não informado"
-            }
-          };
-
-          return new Response(JSON.stringify({ success: true, data: dadosPDF, raw: curriculo }), {
-            status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
-          });
-        } catch (erro) {
-          return new Response(JSON.stringify({ success: false, error: erro.message }), { status: 500, headers: corsHeaders });
-        }
-      }
-
     }
 
 
@@ -463,7 +371,2194 @@ export default {
     try {
 
       const body = await request.json();
+      const { tipo, usuario, campos } = body;
 
+      //============SALVAR DADOS FORMULARIO==================
+      if (path === "/salvar-dados") {
+
+        if (!usuario || !tipo) {
+          return new Response(JSON.stringify({
+            success: false,
+            error: "Dados inválidos."
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
+        //===============TB_EQUIPE===============
+        if (tipo === "equipe") {
+
+          const {
+            nome_equipe,
+            nome_projeto,
+            email,
+            area_atuacao_curso,
+            area_atuacao_projeto,
+            nome_orientador,
+            nome_coorientador,
+            nome_integrante,
+            nome_integrante2,
+            nome_integrante3,
+            nome_integrante4,
+            nome_integrante5
+          } = campos;
+
+          const equipe = await env.DB.prepare(`
+        SELECT id_equipe
+        FROM tb_equipe
+        WHERE usuario = ?
+    `).bind(usuario).first();
+
+          if (equipe) {
+
+            await env.DB.prepare(`
+            UPDATE tb_equipe
+            SET
+                nome_equipe = ?,
+                nome_projeto = ?,
+                email = ?,
+                area_atuacao_curso = ?,
+                area_atuacao_projeto = ?,
+                nome_orientador = ?,
+                nome_coorientador = ?,
+                nome_integrante = ?,
+                nome_integrante2 = ?,
+                nome_integrante3 = ?,
+                nome_integrante4 = ?,
+                nome_integrante5 = ?
+            WHERE usuario = ?
+        `).bind(
+              nome_equipe,
+              nome_projeto,
+              email,
+              area_atuacao_curso,
+              area_atuacao_projeto,
+              nome_orientador,
+              nome_coorientador,
+              nome_integrante,
+              nome_integrante2,
+              nome_integrante3,
+              nome_integrante4,
+              nome_integrante5,
+              usuario
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+            INSERT INTO tb_equipe
+            (
+                nome_equipe,
+                nome_projeto,
+                email,
+                area_atuacao_curso,
+                area_atuacao_projeto,
+                nome_orientador,
+                nome_coorientador,
+                nome_integrante,
+                nome_integrante2,
+                nome_integrante3,
+                nome_integrante4,
+                nome_integrante5,
+                usuario
+            )
+            VALUES
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+              nome_equipe,
+              nome_projeto,
+              email,
+              area_atuacao_curso,
+              area_atuacao_projeto,
+              nome_orientador,
+              nome_coorientador,
+              nome_integrante,
+              nome_integrante2,
+              nome_integrante3,
+              nome_integrante4,
+              nome_integrante5,
+              usuario
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+        //===============TB_CONHECIMENTOS===============
+        if (tipo === "conhecimentos") {
+
+          const {
+            plano_curso,
+            conhecimentos_aplicados,
+            capacidades_aplicadas
+          } = campos;
+
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+`).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada. Salve os dados da equipe primeiro."
+            }), {
+              status: 400,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const usuarioEquipe = equipe.nome_equipe;
+
+          const conhecimento = await env.DB.prepare(`
+    SELECT id_conhecimentos
+    FROM tb_conhecimentos
+    WHERE usuario = ?
+`).bind(usuarioEquipe).first();
+
+          if (conhecimento) {
+
+            await env.DB.prepare(`
+            UPDATE tb_conhecimentos
+            SET
+                plano_curso = ?,
+                conhecimentos_aplicados = ?,
+                capacidades_aplicadas = ?
+            WHERE usuario = ?
+        `).bind(
+              plano_curso,
+              conhecimentos_aplicados,
+              capacidades_aplicadas,
+              usuarioEquipe
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+            INSERT INTO tb_conhecimentos
+            (
+                plano_curso,
+                conhecimentos_aplicados,
+                capacidades_aplicadas,
+                usuario
+            )
+            VALUES
+            (?, ?, ?, ?)
+        `).bind(
+              plano_curso,
+              conhecimentos_aplicados,
+              capacidades_aplicadas,
+              usuarioEquipe
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+
+        //===============TB_RECURSOS_APLICADOS===============
+        if (tipo === "recursos") {
+
+          const {
+            ferramentas,
+            equipamentos,
+            descricao_produto,
+            quant_comprada,
+            quant_utilizada,
+            preco_estimado,
+            uni_medida,
+            fornecedor_principal,
+            modo_obtencao,
+            disponibilidade,
+            pagamento,
+            alternativas_consideradas,
+            preco_total
+          } = campos;
+
+          // Buscar id_equipe e nome_equipe usando o e-mail do usuário
+          const equipe = await env.DB.prepare(`
+        SELECT id_equipe, nome_equipe
+        FROM tb_equipe
+        WHERE usuario = ?
+    `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          // Verifica se já existe registro
+          const recursos = await env.DB.prepare(`
+        SELECT id_recursos
+        FROM tb_recursos_aplicados
+        WHERE usuario = ?
+    `).bind(equipe.nome_equipe).first();
+
+          if (recursos) {
+
+            await env.DB.prepare(`
+            UPDATE tb_recursos_aplicados
+            SET
+                ferramentas = ?,
+                equipamentos = ?,
+                descricao_produto = ?,
+                quant_comprada = ?,
+                quant_utilizada = ?,
+                preco_estimado = ?,
+                uni_medida = ?,
+                fornecedor_principal = ?,
+                modo_obtencao = ?,
+                disponibilidade = ?,
+                pagamento = ?,
+                alternativas_consideradas = ?,
+                preco_total = ?
+            WHERE usuario = ?
+        `).bind(
+              ferramentas,
+              equipamentos,
+              descricao_produto,
+              quant_comprada,
+              quant_utilizada,
+              preco_estimado,
+              uni_medida,
+              fornecedor_principal,
+              modo_obtencao,
+              disponibilidade,
+              pagamento,
+              alternativas_consideradas,
+              preco_total,
+              equipe.nome_equipe
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+            INSERT INTO tb_recursos_aplicados
+            (
+                id_recursos,
+                ferramentas,
+                equipamentos,
+                descricao_produto,
+                quant_comprada,
+                quant_utilizada,
+                preco_estimado,
+                uni_medida,
+                fornecedor_principal,
+                modo_obtencao,
+                disponibilidade,
+                pagamento,
+                alternativas_consideradas,
+                preco_total,
+                usuario
+            )
+            VALUES
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+              equipe.id_equipe,
+              ferramentas,
+              equipamentos,
+              descricao_produto,
+              quant_comprada,
+              quant_utilizada,
+              preco_estimado,
+              uni_medida,
+              fornecedor_principal,
+              modo_obtencao,
+              disponibilidade,
+              pagamento,
+              alternativas_consideradas,
+              preco_total,
+              equipe.nome_equipe
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+
+        //===============TB_CRONOGRAMA===============
+        if (tipo === "cronograma") {
+
+          const {
+            processo,
+            etapas,
+            responsavel,
+            data_inicio,
+            data_final,
+            observacoes
+          } = campos;
+
+          // Buscar id_equipe e nome_equipe pelo e-mail do usuário
+          const equipe = await env.DB.prepare(`
+    SELECT id_equipe, nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          // Verifica se já existe cronograma
+          const cronograma = await env.DB.prepare(`
+    SELECT id_cronograma
+    FROM tb_cronograma
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          if (cronograma) {
+
+            await env.DB.prepare(`
+      UPDATE tb_cronograma
+      SET
+        processo = ?,
+        etapas = ?,
+        responsavel = ?,
+        data_inicio = ?,
+        data_final = ?,
+        observacoes = ?
+      WHERE usuario = ?
+    `).bind(
+              processo,
+              etapas,
+              responsavel,
+              data_inicio,
+              data_final,
+              observacoes,
+              equipe.nome_equipe
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+      INSERT INTO tb_cronograma
+      (
+        id_cronograma,
+        processo,
+        etapas,
+        responsavel,
+        data_inicio,
+        data_final,
+        observacoes,
+        usuario
+      )
+      VALUES
+      (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+              equipe.id_equipe,
+              processo,
+              etapas,
+              responsavel,
+              data_inicio,
+              data_final,
+              observacoes,
+              equipe.nome_equipe
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_CANVA===============
+        if (tipo === "canva") {
+
+          const {
+            atividades_chaves,
+            proposta_chave,
+            relacionamentos_clientes,
+            segmentos_clientes,
+            recursos_chaves,
+            canais,
+            estrutura_custos,
+            fluxo_receita,
+            parceiros_chaves
+          } = campos;
+
+          // Buscar o nome da equipe pelo e-mail do usuário
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const canva = await env.DB.prepare(`
+    SELECT id_canva
+    FROM tb_canva
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          if (canva) {
+
+            await env.DB.prepare(`
+      UPDATE tb_canva
+      SET
+        atividades_chaves = ?,
+        proposta_chave = ?,
+        relacionamentos_clientes = ?,
+        segmentos_clientes = ?,
+        recursos_chaves = ?,
+        canais = ?,
+        estrutura_custos = ?,
+        fluxo_receita = ?,
+        parceiros_chaves = ?
+      WHERE usuario = ?
+    `).bind(
+              atividades_chaves,
+              proposta_chave,
+              relacionamentos_clientes,
+              segmentos_clientes,
+              recursos_chaves,
+              canais,
+              estrutura_custos,
+              fluxo_receita,
+              parceiros_chaves,
+              equipe.nome_equipe
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+      INSERT INTO tb_canva
+      (
+        atividades_chaves,
+        proposta_chave,
+        relacionamentos_clientes,
+        segmentos_clientes,
+        recursos_chaves,
+        canais,
+        estrutura_custos,
+        fluxo_receita,
+        parceiros_chaves,
+        usuario
+      )
+      VALUES
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+              atividades_chaves,
+              proposta_chave,
+              relacionamentos_clientes,
+              segmentos_clientes,
+              recursos_chaves,
+              canais,
+              estrutura_custos,
+              fluxo_receita,
+              parceiros_chaves,
+              equipe.nome_equipe
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_EMPRESAS_FORMULARIO===============
+        if (tipo === "empresa") {
+
+          const {
+            nome_empresa,
+            cnpj,
+            regiao,
+            telefone_contato,
+            email_contato,
+            objetivos,
+            problema_projeto
+          } = campos;
+
+          // Busca a equipe do usuário
+          const equipe = await env.DB.prepare(`
+    SELECT id_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          // Verifica se já existe
+          const empresa = await env.DB.prepare(`
+    SELECT id_empresa_formulario
+    FROM tb_empresas_formulario
+    WHERE id_empresa_formulario = ?
+  `).bind(equipe.id_equipe).first();
+
+          if (empresa) {
+
+            await env.DB.prepare(`
+      UPDATE tb_empresas_formulario
+      SET
+        nome_empresa = ?,
+        cnpj = ?,
+        regiao = ?,
+        telefone_contato = ?,
+        email_contato = ?,
+        objetivos = ?,
+        problema_projeto = ?
+      WHERE id_empresa_formulario = ?
+    `).bind(
+              nome_empresa,
+              cnpj,
+              regiao,
+              telefone_contato,
+              email_contato,
+              objetivos,
+              problema_projeto,
+              equipe.id_equipe
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+      INSERT INTO tb_empresas_formulario
+      (
+        id_empresa_formulario,
+        nome_empresa,
+        cnpj,
+        regiao,
+        telefone_contato,
+        email_contato,
+        objetivos,
+        problema_projeto
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+              equipe.id_equipe,
+              nome_empresa,
+              cnpj,
+              regiao,
+              telefone_contato,
+              email_contato,
+              objetivos,
+              problema_projeto
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_PITCH===============
+        if (tipo === "pitch") {
+
+          const {
+            roteiro
+          } = campos;
+
+          // Buscar dados da equipe
+          const equipe = await env.DB.prepare(`
+    SELECT id_equipe, nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const pitch = await env.DB.prepare(`
+    SELECT id_pitch
+    FROM tb_pitch
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          if (pitch) {
+
+            await env.DB.prepare(`
+      UPDATE tb_pitch
+      SET
+        roteiro = ?
+      WHERE usuario = ?
+    `).bind(
+              roteiro,
+              equipe.nome_equipe
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+      INSERT INTO tb_pitch
+      (
+        id_pitch,
+        roteiro,
+        usuario
+      )
+      VALUES
+      (?, ?, ?)
+    `).bind(
+              equipe.id_equipe,
+              roteiro,
+              equipe.nome_equipe
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_USO_IA===============
+        if (tipo === "ia") {
+
+          const {
+            nome_ferramenta,
+            link_acesso,
+            tipo_licenca,
+            etapa_uso,
+            criacao_prompt,
+            descricao_uso
+          } = campos;
+
+          // Busca o nome da equipe pelo e-mail
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const ia = await env.DB.prepare(`
+    SELECT id_uso_ia
+    FROM tb_uso_ia
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          if (ia) {
+
+            await env.DB.prepare(`
+      UPDATE tb_uso_ia
+      SET
+        nome_ferramenta = ?,
+        link_acesso = ?,
+        tipo_licenca = ?,
+        etapa_uso = ?,
+        criacao_prompt = ?,
+        descricao_uso = ?
+      WHERE usuario = ?
+    `).bind(
+              nome_ferramenta,
+              link_acesso,
+              tipo_licenca,
+              etapa_uso,
+              criacao_prompt,
+              descricao_uso,
+              equipe.nome_equipe
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+      INSERT INTO tb_uso_ia
+      (
+        usuario,
+        nome_ferramenta,
+        link_acesso,
+        tipo_licenca,
+        etapa_uso,
+        criacao_prompt,
+        descricao_uso
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+              equipe.nome_equipe,
+              nome_ferramenta,
+              link_acesso,
+              tipo_licenca,
+              etapa_uso,
+              criacao_prompt,
+              descricao_uso
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_ACOMPANHAMENTO_PROJETO===============
+        if (tipo === "planilha") {
+
+          const {
+            tarefas,
+            aluno_responsavel,
+            professor_da_area,
+            inicio_previsto,
+            fim_previsto,
+            inicio_realizado,
+            fim_realizado,
+            duracao,
+            status,
+            descricao_da_tarefa,
+            dificuldades_enxergadas,
+            impacto_nas_outras
+          } = campos;
+
+          // Buscar o nome da equipe
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const planilha = await env.DB.prepare(`
+    SELECT id_acompanhamento_projeto
+    FROM tb_acompanhamento_projeto
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          if (planilha) {
+
+            console.log({
+              tarefas,
+              aluno_responsavel,
+              professor_da_area,
+              inicio_previsto,
+              fim_previsto,
+              inicio_realizado,
+              fim_realizado,
+              duracao,
+              status,
+              descricao_da_tarefa,
+              dificuldades_enxergadas,
+              impacto_nas_outras
+            });
+
+            await env.DB.prepare(`
+      UPDATE tb_acompanhamento_projeto
+      SET
+        tarefas = ?,
+        aluno_responsavel = ?,
+        professor_da_area = ?,
+        inicio_previsto = ?,
+        fim_previsto = ?,
+        inicio_realizado = ?,
+        fim_realizado = ?,
+        duracao = ?,
+        status = ?,
+        descricao_da_tarefa = ?,
+        dificuldades_enxergadas = ?,
+        impacto_nas_outras = ?
+      WHERE usuario = ?
+    `).bind(
+              tarefas,
+              aluno_responsavel,
+              professor_da_area,
+              inicio_previsto,
+              fim_previsto,
+              inicio_realizado,
+              fim_realizado,
+              duracao,
+              status,
+              descricao_da_tarefa,
+              dificuldades_enxergadas,
+              impacto_nas_outras,
+              equipe.nome_equipe
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+      INSERT INTO tb_acompanhamento_projeto
+      (
+        tarefas,
+        aluno_responsavel,
+        professor_da_area,
+        inicio_previsto,
+        fim_previsto,
+        inicio_realizado,
+        fim_realizado,
+        duracao,
+        status,
+        descricao_da_tarefa,
+        dificuldades_enxergadas,
+        impacto_nas_outras,
+        usuario
+      )
+      VALUES
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+              tarefas,
+              aluno_responsavel,
+              professor_da_area,
+              inicio_previsto,
+              fim_previsto,
+              inicio_realizado,
+              fim_realizado,
+              duracao,
+              status,
+              descricao_da_tarefa,
+              dificuldades_enxergadas,
+              impacto_nas_outras,
+              equipe.nome_equipe
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_INFORMACOES_COMPLEMENTARES===============
+        if (tipo === "complementares") {
+
+          const {
+            unidade_nome_comercial,
+            coordenador_pedagogico,
+            gestor,
+            empresa,
+            projeto,
+            descricao
+          } = campos;
+
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const complemento = await env.DB.prepare(`
+    SELECT id_informacoes_complementares
+    FROM tb_informacoes_complementares
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          if (complemento) {
+
+            await env.DB.prepare(`
+      UPDATE tb_informacoes_complementares
+      SET
+        unidade_nome_comercial = ?,
+        coordenador_pedagogico = ?,
+        gestor = ?,
+        empresa = ?,
+        projeto = ?,
+        descricao = ?
+      WHERE usuario = ?
+    `).bind(
+              unidade_nome_comercial,
+              coordenador_pedagogico,
+              gestor,
+              empresa,
+              projeto,
+              descricao,
+              equipe.nome_equipe
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+      INSERT INTO tb_informacoes_complementares
+      (
+        unidade_nome_comercial,
+        coordenador_pedagogico,
+        gestor,
+        empresa,
+        projeto,
+        descricao,
+        usuario
+      )
+      VALUES
+      (?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+              unidade_nome_comercial,
+              coordenador_pedagogico,
+              gestor,
+              empresa,
+              projeto,
+              descricao,
+              equipe.nome_equipe
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_INFORMACOES_COMPLETUDE===============
+        if (tipo === "completude") {
+
+          const {
+            qtd,
+            equipe_unidade_empresa,
+            responsavel_preenchimento,
+            dados_equipe,
+            conhecimentos,
+            recursos_aplicados,
+            canvas_preencher,
+            pitch_escrito,
+            pitch_video,
+            cronograma,
+            foto_equipe,
+            fotos_etapa_projeto
+          } = campos;
+
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const completude = await env.DB.prepare(`
+    SELECT id_informacoes_completude
+    FROM tb_informacoes_completude
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          if (completude) {
+
+            await env.DB.prepare(`
+      UPDATE tb_informacoes_completude
+      SET
+        qtd = ?,
+        equipe_unidade_empresa = ?,
+        responsavel_preenchimento = ?,
+        dados_equipe = ?,
+        conhecimentos = ?,
+        recursos_aplicados = ?,
+        canvas_preencher = ?,
+        pitch_escrito = ?,
+        pitch_video = ?,
+        cronograma = ?,
+        foto_equipe = ?,
+        fotos_etapa_projeto = ?
+      WHERE usuario = ?
+    `).bind(
+              qtd || 0,
+              equipe_unidade_empresa,
+              responsavel_preenchimento,
+              dados_equipe,
+              conhecimentos,
+              recursos_aplicados,
+              canvas_preencher,
+              pitch_escrito,
+              pitch_video,
+              cronograma,
+              foto_equipe,
+              fotos_etapa_projeto,
+              equipe.nome_equipe
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+      INSERT INTO tb_informacoes_completude
+      (
+        qtd,
+        equipe_unidade_empresa,
+        responsavel_preenchimento,
+        dados_equipe,
+        conhecimentos,
+        recursos_aplicados,
+        canvas_preencher,
+        pitch_escrito,
+        pitch_video,
+        cronograma,
+        foto_equipe,
+        fotos_etapa_projeto,
+        usuario
+      )
+      VALUES
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+              qtd || 0,
+              equipe_unidade_empresa,
+              responsavel_preenchimento,
+              dados_equipe,
+              conhecimentos,
+              recursos_aplicados,
+              canvas_preencher,
+              pitch_escrito,
+              pitch_video,
+              cronograma,
+              foto_equipe,
+              fotos_etapa_projeto,
+              equipe.nome_equipe
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_RELATORIO===============
+        if (tipo === "relatorio") {
+
+          const {
+            nome_empresa,
+            e_mail_empresa,
+            setor_empresa,
+            descricao,
+            roteiro_pitch,
+            integrante1,
+            integrante2,
+            integrante3,
+            integrante4,
+            integrante5,
+            orientador,
+            coorientador,
+            nome_projeto,
+            nome_equipe,
+            area_atuacao_projeto,
+            area_atuacao_curso,
+            unidade_senai,
+            gestor,
+            ferramenta_ia,
+            link_acesso,
+            licenca,
+            etapa_de_usu,
+            prompt,
+            motivo_usu,
+            ferramentas_projeto,
+            equipamentos_projeto,
+            quant_compra,
+            quant_utilizada,
+            preco,
+            fornecedor,
+            modo_obtencao,
+            processamento,
+            alternativa_de_uso,
+            quant_utilizada_2,
+            forma_pagamento,
+            preco_total
+          } = campos;
+
+          const relatorio = await env.DB.prepare(`
+    SELECT id_relatorio
+    FROM tb_relatorio
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (relatorio) {
+
+            await env.DB.prepare(`
+      UPDATE tb_relatorio
+      SET
+        nome_empresa = ?,
+        e_mail_empresa = ?,
+        setor_empresa = ?,
+        descricao = ?,
+        roteiro_pitch = ?,
+        integrante1 = ?,
+        integrante2 = ?,
+        integrante3 = ?,
+        integrante4 = ?,
+        integrante5 = ?,
+        orientador = ?,
+        coorientador = ?,
+        nome_projeto = ?,
+        nome_equipe = ?,
+        area_atuacao_projeto = ?,
+        area_atuacao_curso = ?,
+        unidade_senai = ?,
+        gestor = ?,
+        ferramenta_ia = ?,
+        link_acesso = ?,
+        licenca = ?,
+        etapa_de_usu = ?,
+        prompt = ?,
+        motivo_usu = ?,
+        ferramentas_projeto = ?,
+        equipamentos_projeto = ?,
+        quant_compra = ?,
+        quant_utilizada = ?,
+        preco = ?,
+        fornecedor = ?,
+        modo_obtencao = ?,
+        processamento = ?,
+        alternativa_de_uso = ?,
+        quant_utilizada_2 = ?,
+        forma_pagamento = ?,
+        preco_total = ?
+      WHERE usuario = ?
+    `).bind(
+              nome_empresa,
+              e_mail_empresa,
+              setor_empresa,
+              descricao,
+              roteiro_pitch,
+              integrante1,
+              integrante2,
+              integrante3,
+              integrante4,
+              integrante5,
+              orientador,
+              coorientador,
+              nome_projeto,
+              nome_equipe,
+              area_atuacao_projeto,
+              area_atuacao_curso,
+              unidade_senai,
+              gestor,
+              ferramenta_ia,
+              link_acesso,
+              licenca,
+              etapa_de_usu,
+              prompt,
+              motivo_usu,
+              ferramentas_projeto,
+              equipamentos_projeto,
+              quant_compra,
+              quant_utilizada,
+              preco,
+              fornecedor,
+              modo_obtencao,
+              processamento,
+              alternativa_de_uso,
+              quant_utilizada_2,
+              forma_pagamento,
+              preco_total,
+              usuario
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+      INSERT INTO tb_relatorio
+      (
+        nome_empresa,
+        e_mail_empresa,
+        setor_empresa,
+        descricao,
+        roteiro_pitch,
+        integrante1,
+        integrante2,
+        integrante3,
+        integrante4,
+        integrante5,
+        orientador,
+        coorientador,
+        nome_projeto,
+        nome_equipe,
+        area_atuacao_projeto,
+        area_atuacao_curso,
+        unidade_senai,
+        gestor,
+        ferramenta_ia,
+        link_acesso,
+        licenca,
+        etapa_de_usu,
+        prompt,
+        motivo_usu,
+        ferramentas_projeto,
+        equipamentos_projeto,
+        quant_compra,
+        quant_utilizada,
+        preco,
+        fornecedor,
+        modo_obtencao,
+        processamento,
+        alternativa_de_uso,
+        quant_utilizada_2,
+        forma_pagamento,
+        preco_total,
+        usuario
+      )
+      VALUES
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+              nome_empresa,
+              e_mail_empresa,
+              setor_empresa,
+              descricao,
+              roteiro_pitch,
+              integrante1,
+              integrante2,
+              integrante3,
+              integrante4,
+              integrante5,
+              orientador,
+              coorientador,
+              nome_projeto,
+              nome_equipe,
+              area_atuacao_projeto,
+              area_atuacao_curso,
+              unidade_senai,
+              gestor,
+              ferramenta_ia,
+              link_acesso,
+              licenca,
+              etapa_de_usu,
+              prompt,
+              motivo_usu,
+              ferramentas_projeto,
+              equipamentos_projeto,
+              quant_compra,
+              quant_utilizada,
+              preco,
+              fornecedor,
+              modo_obtencao,
+              processamento,
+              alternativa_de_uso,
+              quant_utilizada_2,
+              forma_pagamento,
+              preco_total,
+              usuario
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        if (tipo === "curriculo") {
+
+          const { results } = await env.DB.prepare(`
+    SELECT id_aluno
+    FROM tb_curriculo_alunos
+    WHERE usuario = ?
+  `).bind(usuario).all();
+
+          const existe = results && results.length > 0;
+
+          if (existe) {
+
+            await env.DB.prepare(`
+      UPDATE tb_curriculo_alunos SET
+        nome = ?,
+        data_nascimento = ?,
+        empresa_vinculado = ?,
+        projeto = ?,
+        telefone = ?,
+        email = ?,
+        habilidades = ?,
+        fez_projeto = ?,
+        cidade = ?,
+        motivo_projeto = ?,
+        aprendo_mais = ?,
+        prefiro_trabalhar = ?
+      WHERE usuario = ?
+    `).bind(
+              campos.nome,
+              campos.data_nascimento,
+              campos.empresa_vinculado,
+              campos.projeto,
+              campos.telefone,
+              campos.email,
+              campos.habilidades,
+              campos.fez_projeto,
+              campos.cidade,
+              campos.motivo_projeto,
+              campos.aprendo_mais,
+              campos.prefiro_trabalhar,
+              usuario
+            ).run();
+
+          } else {
+
+            await env.DB.prepare(`
+      INSERT INTO tb_curriculo_alunos (
+        nome,
+        data_nascimento,
+        empresa_vinculado,
+        projeto,
+        telefone,
+        email,
+        habilidades,
+        fez_projeto,
+        cidade,
+        motivo_projeto,
+        aprendo_mais,
+        prefiro_trabalhar,
+        usuario
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+              campos.nome,
+              campos.data_nascimento,
+              campos.empresa_vinculado,
+              campos.projeto,
+              campos.telefone,
+              campos.email,
+              campos.habilidades,
+              campos.fez_projeto,
+              campos.cidade,
+              campos.motivo_projeto,
+              campos.aprendo_mais,
+              campos.prefiro_trabalhar,
+              usuario
+            ).run();
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true,
+            message: "Currículo salvo com sucesso."
+          }), {
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+
+      }
+
+      if (path === "/buscar-dados") {
+
+        if (!usuario || !tipo) {
+
+          return new Response(JSON.stringify({
+            success: false,
+            error: "Dados inválidos."
+          }), {
+            status: 400,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        // ================= TB_EQUIPE =================
+
+        if (tipo === "equipe") {
+
+          const equipe = await env.DB.prepare(`
+            SELECT
+                nome_equipe,
+                nome_projeto,
+                email,
+                area_atuacao_curso,
+                area_atuacao_projeto,
+                nome_orientador,
+                nome_coorientador,
+                nome_integrante,
+                nome_integrante2,
+                nome_integrante3,
+                nome_integrante4,
+                nome_integrante5
+            FROM tb_equipe
+            WHERE usuario = ?
+        `).bind(usuario).first();
+
+          if (!equipe) {
+
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Nenhum registro encontrado."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+
+          }
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: equipe
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+        //===============TB_CONHECIMENTOS===============
+        if (tipo === "conhecimentos") {
+
+          // Buscar o nome da equipe a partir do e-mail
+          const equipe = await env.DB.prepare(`
+        SELECT nome_equipe
+        FROM tb_equipe
+        WHERE usuario = ?
+    `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const usuarioEquipe = equipe.nome_equipe;
+
+          // Buscar os conhecimentos usando o nome da equipe
+          const conhecimento = await env.DB.prepare(`
+        SELECT
+            plano_curso,
+            conhecimentos_aplicados,
+            capacidades_aplicadas
+        FROM tb_conhecimentos
+        WHERE usuario = ?
+    `).bind(usuarioEquipe).first();
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: conhecimento || {}
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_RECURSOS_APLICADOS===============
+        if (tipo === "recursos") {
+
+          // Buscar o nome da equipe a partir do e-mail do usuário
+          const equipe = await env.DB.prepare(`
+        SELECT nome_equipe
+        FROM tb_equipe
+        WHERE usuario = ?
+    `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          // Buscar os recursos da equipe
+          const recursos = await env.DB.prepare(`
+        SELECT
+            ferramentas,
+            equipamentos,
+            descricao_produto,
+            quant_comprada,
+            quant_utilizada,
+            preco_estimado,
+            uni_medida,
+            fornecedor_principal,
+            modo_obtencao,
+            disponibilidade,
+            pagamento,
+            alternativas_consideradas,
+            preco_total
+        FROM tb_recursos_aplicados
+        WHERE usuario = ?
+    `).bind(equipe.nome_equipe).first();
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: recursos || {}
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+
+        //===============TB_CRONOGRAMA===============
+        if (tipo === "cronograma") {
+
+          // Buscar o nome da equipe pelo e-mail do usuário
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const cronograma = await env.DB.prepare(`
+    SELECT
+      processo,
+      etapas,
+      responsavel,
+      data_inicio,
+      data_final,
+      observacoes
+    FROM tb_cronograma
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: cronograma || {}
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_CANVA===============
+        if (tipo === "canva") {
+
+          // Buscar o nome da equipe pelo e-mail
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const canva = await env.DB.prepare(`
+    SELECT
+      atividades_chaves,
+      proposta_chave,
+      relacionamentos_clientes,
+      segmentos_clientes,
+      recursos_chaves,
+      canais,
+      estrutura_custos,
+      fluxo_receita,
+      parceiros_chaves
+    FROM tb_canva
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: canva || {}
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+
+        //===============TB_EMPRESAS_FORMULARIO===============
+        if (tipo === "empresa") {
+
+          // Busca o id da equipe
+          const equipe = await env.DB.prepare(`
+    SELECT id_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const empresa = await env.DB.prepare(`
+    SELECT
+      nome_empresa,
+      cnpj,
+      regiao,
+      telefone_contato,
+      email_contato,
+      objetivos,
+      problema_projeto
+    FROM tb_empresas_formulario
+    WHERE id_empresa_formulario = ?
+  `).bind(equipe.id_equipe).first();
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: empresa || {}
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_PITCH===============
+        if (tipo === "pitch") {
+
+          // Buscar o nome da equipe pelo e-mail
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const pitch = await env.DB.prepare(`
+    SELECT
+      roteiro
+    FROM tb_pitch
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: pitch || {}
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        } //===============TB_USO_IA===============
+        if (tipo === "ia") {
+
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const ia = await env.DB.prepare(`
+    SELECT
+      nome_ferramenta,
+      link_acesso,
+      tipo_licenca,
+      etapa_uso,
+      criacao_prompt,
+      descricao_uso
+    FROM tb_uso_ia
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: ia || {}
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_ACOMPANHAMENTO_PROJETO===============
+        if (tipo === "planilha") {
+
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const planilha = await env.DB.prepare(`
+    SELECT
+      tarefas,
+      aluno_responsavel,
+      professor_da_area,
+      inicio_previsto,
+      fim_previsto,
+      inicio_realizado,
+      fim_realizado,
+      duracao,
+      status,
+      descricao_da_tarefa,
+      dificuldades_enxergadas,
+      impacto_nas_outras
+    FROM tb_acompanhamento_projeto
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: planilha || {}
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        if (tipo === "complementares") {
+
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const dados = await env.DB.prepare(`
+    SELECT
+      unidade_nome_comercial,
+      coordenador_pedagogico,
+      gestor,
+      empresa,
+      projeto,
+      descricao
+    FROM tb_informacoes_complementares
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: dados || {}
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_INFORMACOES_COMPLETUDE===============
+        if (tipo === "completude") {
+
+          const equipe = await env.DB.prepare(`
+    SELECT nome_equipe
+    FROM tb_equipe
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          if (!equipe) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: "Equipe não encontrada."
+            }), {
+              status: 404,
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          const dados = await env.DB.prepare(`
+    SELECT
+      qtd,
+      equipe_unidade_empresa,
+      responsavel_preenchimento,
+      dados_equipe,
+      conhecimentos,
+      recursos_aplicados,
+      canvas_preencher,
+      pitch_escrito,
+      pitch_video,
+      cronograma,
+      foto_equipe,
+      fotos_etapa_projeto
+    FROM tb_informacoes_completude
+    WHERE usuario = ?
+  `).bind(equipe.nome_equipe).first();
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: dados || {}
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        //===============TB_RELATORIO===============
+        if (tipo === "relatorio") {
+
+          const relatorio = await env.DB.prepare(`
+    SELECT
+      nome_empresa,
+      e_mail_empresa,
+      setor_empresa,
+      descricao,
+      roteiro_pitch,
+      integrante1,
+      integrante2,
+      integrante3,
+      integrante4,
+      integrante5,
+      orientador,
+      coorientador,
+      nome_projeto,
+      nome_equipe,
+      area_atuacao_projeto,
+      area_atuacao_curso,
+      unidade_senai,
+      gestor,
+      ferramenta_ia,
+      link_acesso,
+      licenca,
+      etapa_de_usu,
+      prompt,
+      motivo_usu,
+      ferramentas_projeto,
+      equipamentos_projeto,
+      quant_compra,
+      quant_utilizada,
+      preco,
+      fornecedor,
+      modo_obtencao,
+      processamento,
+      alternativa_de_uso,
+      quant_utilizada_2,
+      forma_pagamento,
+      preco_total
+    FROM tb_relatorio
+    WHERE usuario = ?
+  `).bind(usuario).first();
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: relatorio || {}
+          }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+
+        }
+
+        if (tipo === "curriculo") {
+
+          const { results } = await env.DB.prepare(`
+    SELECT *
+    FROM tb_curriculo_alunos
+    WHERE usuario = ?
+    LIMIT 1
+  `).bind(usuario).all();
+
+          if (!results || results.length === 0) {
+            return new Response(JSON.stringify({
+              success: false,
+              message: "Currículo não encontrado."
+            }), {
+              headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json"
+              }
+            });
+          }
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: results[0]
+          }), {
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          });
+        }
+
+        return new Response(JSON.stringify({
+          success: false,
+          error: "Tipo de formulário inválido."
+        }), {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        });
+
+      }
 
 
       if (path === "/atualizar-perfil") {
@@ -852,241 +2947,9 @@ export default {
 
 
 
-     if (path === "/salvar-dados") {
-  const { tipo } = body;
-  // 1. Aceita tanto 'usuario' quanto 'nome_equipe' enviados no JSON
-  const usuario = body.usuario || body.nome_equipe;
-
-  if (!usuario || !tipo) {
-    return new Response(JSON.stringify({
-      success: false,
-      error: "Os campos 'usuario' (ou 'nome_equipe') e 'tipo' são obrigatórios."
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  }
-
-  if (tipo === "equipe") {
-    // Verifica existência por usuario ou por nome_equipe
-    const { results } = await env.DB.prepare(`
-      SELECT id_equipe FROM tb_equipe WHERE usuario = ? OR nome_equipe = ?
-    `).bind(usuario, usuario).all();
-
-    const existe = results && results.length > 0;
-
-    if (existe) {
-      await env.DB.prepare(`
-        UPDATE tb_equipe SET
-          nome_integrante=?, nome_equipe=?, nome_projeto=?, email=?,
-          area_atuacao_curso=?, area_atuacao_projeto=?, nome_integrante2=?,
-          nome_integrante3=?, nome_integrante4=?, nome_integrante5=?,
-          nome_orientador=?, nome_coorientador=?
-        WHERE usuario=? OR nome_equipe=?
-      `).bind(
-        body.nome_integrante, body.nome_equipe, body.nome_projeto, body.email,
-        body.area_atuacao_curso, body.area_atuacao_projeto, body.nome_integrante2,
-        body.nome_integrante3, body.nome_integrante4, body.nome_integrante5,
-        body.nome_orientador, body.nome_coorientador,
-        usuario, usuario
-      ).run();
-    } else {
-      await env.DB.prepare(`
-        INSERT INTO tb_equipe(
-          nome_integrante, nome_equipe, nome_projeto, email,
-          area_atuacao_curso, area_atuacao_projeto, nome_integrante2,
-          nome_integrante3, nome_integrante4, nome_integrante5,
-          nome_orientador, nome_coorientador, usuario
-        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
-      `).bind(
-        body.nome_integrante, body.nome_equipe || usuario, body.nome_projeto, body.email,
-        body.area_atuacao_curso, body.area_atuacao_projeto, body.nome_integrante2,
-        body.nome_integrante3, body.nome_integrante4, body.nome_integrante5,
-        body.nome_orientador, body.nome_coorientador, body.usuario || usuario
-      ).run();
-    }
-    return new Response(JSON.stringify({ success: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  }
-
-  if (tipo === "recursos") {
-    // 2. Resolve o nome_equipe buscando por usuario, email OU nome_equipe
-    const equipeRecord = await env.DB.prepare(
-      "SELECT nome_equipe FROM tb_equipe WHERE usuario = ? OR email = ? OR nome_equipe = ?"
-    ).bind(usuario, usuario, usuario).first();
-
-    const idFinal = equipeRecord ? equipeRecord.nome_equipe : usuario;
-
-    const { results } = await env.DB.prepare(
-      `SELECT id_recursos FROM tb_recursos_aplicados WHERE usuario = ?`
-    ).bind(idFinal).all();
-
-    const existe = results && results.length > 0;
-
-    if (existe) {
-      await env.DB.prepare(`
-        UPDATE tb_recursos_aplicados SET
-          ferramentas=?, equipamentos=?, descricao_produto=?, quant_comprada=?,
-          quant_utilizada=?, preco_estimado=?, uni_medida=?, fornecedor_principal=?,
-          modo_obtencao=?, disponibilidade=?, pagamento=?, alternativas_consideradas=?, preco_total=?
-        WHERE usuario=?
-      `).bind(
-        body.ferramentas, body.equipamentos, body.descricao_produto, body.quant_comprada,
-        body.quant_utilizada, body.preco_estimado, body.uni_medida, body.fornecedor_principal,
-        body.modo_obtencao, body.disponibilidade, body.pagamento, body.alternativas_consideradas,
-        body.preco_total, idFinal
-      ).run();
-    } else {
-      await env.DB.prepare(`
-        INSERT INTO tb_recursos_aplicados(
-          ferramentas, equipamentos, descricao_produto, quant_comprada, quant_utilizada,
-          preco_estimado, uni_medida, fornecedor_principal, modo_obtencao, disponibilidade,
-          pagamento, alternativas_consideradas, preco_total, usuario
-        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-      `).bind(
-        body.ferramentas, body.equipamentos, body.descricao_produto, body.quant_comprada,
-        body.quant_utilizada, body.preco_estimado, body.uni_medida, body.fornecedor_principal,
-        body.modo_obtencao, body.disponibilidade, body.pagamento, body.alternativas_consideradas,
-        body.preco_total, idFinal
-      ).run();
-    }
-    return new Response(JSON.stringify({ success: true }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  }
-  if (tipo === "cronograma" || tipo === "cronograma_especifico") {
-  try {
-    const { results } = await env.DB.prepare(`
-      SELECT id_cronograma
-      FROM tb_cronograma
-      WHERE usuario = ? AND processo = ?
-    `)
-    .bind(usuario, body.processo || body.processos)
-    .all();
-
-    const existe = results && results.length > 0;
-
-    if (existe) {
-      await env.DB.prepare(`
-        UPDATE tb_cronograma SET
-          processo = ?,
-          etapas = ?,
-          responsavel = ?,
-          data_inicio = ?,
-          data_final = ?,
-          observacoes = ?
-        WHERE usuario = ? AND processo = ?
-      `)
-      .bind(
-        body.processo || body.processos,
-        body.etapas,
-        body.responsavel,
-        body.data_inicio || null,
-        body.data_final || null,
-        body.observacoes,
-        usuario,
-        body.processo || body.processos
-      )
-      .run();
-    } else {
-      await env.DB.prepare(`
-        INSERT INTO tb_cronograma (
-          processo, etapas, responsavel, data_inicio, data_final, observacoes, usuario
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `)
-      .bind(
-        body.processo || body.processos,
-        body.etapas,
-        body.responsavel,
-        body.data_inicio || null,
-        body.data_final || null,
-        body.observacoes,
-        usuario
-      )
-      .run();
-    }
-
-    return new Response(JSON.stringify({ success: true, message: "Cronograma salvo com sucesso" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  } catch (error) {
-    return new Response(JSON.stringify({ success: false, error: error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-  }
-} else {
-    // Lógica genérica para outras tabelas
-    const tabelas = {
-      "conhecimentos": "tb_conhecimentos",
-      "recursos": "tb_recursos_aplicados",
-      "canva": "tb_canva",
-      "curriculo": "tb_curriculo_alunos",
-      "empresas": "tb_empresas",
-      "pitch": "tb_pitch",
-      "uso_ia": "tb_uso_ia",
-      "acompanhamento_projeto": "tb_acompanhamento_projeto",
-      "planilha": "tb_acompanhamento_projeto",
-      "informacoes_complementares": "tb_informacoes_complementares",
-      "informacoes_completude": "tb_informacoes_completude",
-      "participantes": "tb_participantes",
-      "relatorio": "tb_relatorio",
-      "necessidades": "tb_necessidades_empresas"
-    };
-
-    const tabela = tabelas[tipo];
-    if (tabela) {
-      const usaEquipe = ["canva", "pitch", "curriculo", "recursos", "conhecimentos", "informacoes_complementares", "informacoes_completude", "acompanhamento_projeto", "planilha"];
-      let idFinal = usuario;
-
-      if (usaEquipe.includes(tipo)) {
-        const equipeRecord = await env.DB.prepare(
-          "SELECT nome_equipe FROM tb_equipe WHERE usuario = ? OR email = ? OR nome_equipe = ?"
-        ).bind(usuario, usuario, usuario).first();
-        if (equipeRecord) idFinal = equipeRecord.nome_equipe;
-      }
-
-      // 3. Removemos campos de controle do array de campos
-      const campos = Object.keys(body).filter(k => k !== "usuario" && k !== "tipo" && k !== "nome_equipe" && !k.startsWith("enai_cax") && !k.startsWith("email") && !k.startsWith("camiseta") && !k.startsWith("rg") && !k.startsWith("cpf") && !k.startsWith("data_nascimento") && !k.startsWith("idade") && !k.startsWith("telefone") && !k.startsWith("matricula"));
-
-      const exists = await env.DB.prepare(`SELECT 1 FROM ${tabela} WHERE usuario = ?`).bind(idFinal).first();
-
-      if (exists) {
-        const setClause = campos.map(c => `${c} = ?`).join(", ");
-        const values = campos.map(c => body[c]);
-        await env.DB.prepare(`UPDATE ${tabela} SET ${setClause} WHERE usuario = ?`).bind(...values, idFinal).run();
-      } else {
-        const columns = ["usuario", ...campos].join(", ");
-        const placeholders = ["?", ...campos.map(() => "?")].join(", ");
-        const values = [idFinal, ...campos.map(c => body[c])];
-        await env.DB.prepare(`INSERT INTO ${tabela} (${columns}) VALUES (${placeholders})`).bind(...values).run();
-      }
-
-      // Lógica especial para Participantes quando salvando Informações Complementares
-      if (tipo === "informacoes_complementares") {
-          const infoComp = await env.DB.prepare("SELECT id_informacoes_complementares FROM tb_informacoes_complementares WHERE usuario = ?").bind(idFinal).first();
-          if (infoComp) {
-              const idIC = infoComp.id_informacoes_complementares;
-              await env.DB.prepare("DELETE FROM tb_participantes WHERE id_informacoes_complementares = ?").bind(idIC).run();
-
-              for (let i = 1; i <= 7; i++) {
-                  const nome = body[`enai_cax${i}`];
-                  const emailP = body[`email${i}`];
-                  if (nome && nome.trim() !== "") {
-                      await env.DB.prepare(`
-                          INSERT INTO tb_participantes (id_informacoes_complementares, nome_enai_cax, email, tamanho_camiseta, rg, cpf, data_nascimento, telefone, matricula)
-                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                      `).bind(
-                          idIC, nome, emailP, body[`camiseta${i}`] || "", body[`rg${i}`] || "", body[`cpf${i}`] || "", body[`data_nascimento${i}`] || "", body[`telefone${i}`] || "", body[`matricula${i}`] || ""
-                      ).run();
-                  }
-              }
-          }
-      }
-
-      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-  }
-}
 
 
-
-
-
-    if (path === "/gerar-relatorio") {
+      if (path === "/gerar-relatorio") {
 
         try {
 
@@ -1100,13 +2963,13 @@ export default {
 
           if (!usuarioSolicitante) {
 
-               return new Response(JSON.stringify({
+            return new Response(JSON.stringify({
 
-                 success: false,
+              success: false,
 
-                 message: "Usuário não fornecido na requisição."
+              message: "Usuário não fornecido na requisição."
 
-               }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
           }
 
@@ -1325,15 +3188,16 @@ export default {
 
         }
 
+
+
+
       }
 
 
 
 
 
-
-
-if (path === "/gerar-canva") {
+      if (path === "/gerar-canva") {
 
         try {
 
@@ -1345,11 +3209,11 @@ if (path === "/gerar-canva") {
 
           if (!usuarioSolicitante) {
 
-               return new Response(JSON.stringify({
+            return new Response(JSON.stringify({
 
-                 success: false, message: "Usuário não fornecido na requisição."
+              success: false, message: "Usuário não fornecido na requisição."
 
-               }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
           }
 
@@ -1409,380 +3273,38 @@ if (path === "/gerar-canva") {
 
         }
 
-      }
-
-
-
-
-
-
-
-
-
-      if (path === "/buscar-dados") {
-        const { usuario, tipo } = body;
-
-        if (!usuario || !tipo) {
-          return new Response(JSON.stringify({ success: false, error: "Campos obrigatórios." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-
-        const tabelasValidas = {
-          "equipe": "tb_equipe", "conhecimentos": "tb_conhecimentos", "recursos": "tb_recursos_aplicados",
-          "cronograma": "tb_cronograma", "canva": "tb_canva", "curriculo": "tb_curriculo_alunos",
-          "empresas": "tb_empresas", "pitch": "tb_pitch", "uso_ia": "tb_uso_ia",
-          "acompanhamento_projeto": "tb_acompanhamento_projeto", "planilha": "tb_acompanhamento_projeto",
-          "informacoes_complementares": "tb_informacoes_complementares", "informacoes_completude": "tb_informacoes_completude",
-          "participantes": "tb_participantes", "relatorio": "tb_relatorio"
-        };
-
-        try {
-          const userRecord = await env.DB.prepare("SELECT nome_usuarios, email FROM tb_cadastros WHERE email = ? OR nome_usuarios = ?").bind(usuario, usuario).first();
-          const nomeReal = userRecord ? userRecord.nome_usuarios : usuario;
-          const emailReal = (userRecord && userRecord.email) ? userRecord.email : usuario;
-          const equipeRecord = await env.DB.prepare("SELECT nome_equipe FROM tb_equipe WHERE usuario = ? OR email = ?").bind(usuario, usuario).first();
-          const nomeEquipe = equipeRecord ? equipeRecord.nome_equipe : usuario;
-
-          if (tipo === "cronograma" || tipo === "cronograma_especifico") {
-            const { results } = await env.DB.prepare("SELECT * FROM tb_cronograma WHERE responsavel = ? OR responsavel = ? OR usuario = ?").bind(nomeReal, emailReal, nomeEquipe).all();
-            return new Response(JSON.stringify({ success: true, existe: results.length > 0, data: results }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-          } else if (tipo === "empresas") {
-            const dadosForm = await env.DB.prepare("SELECT * FROM tb_empresas WHERE email_contato = ? OR nome_empresa = ? OR usuario = ?").bind(emailReal, nomeReal, usuario).first();
-            return new Response(JSON.stringify({ success: true, existe: dadosForm !== null, data: dadosForm }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-          } else if (tipo === "informacoes_complementares") {
-              const dadosForm = await env.DB.prepare("SELECT * FROM tb_informacoes_complementares WHERE usuario = ? OR usuario = ? OR usuario = ?").bind(nomeReal, emailReal, nomeEquipe).first();
-              if (dadosForm) {
-                  const { results: participantes } = await env.DB.prepare("SELECT * FROM tb_participantes WHERE id_informacoes_complementares = ?").bind(dadosForm.id_informacoes_complementares).all();
-                  participantes.forEach((p, index) => {
-                      const i = index + 1;
-                      dadosForm[`enai_cax${i}`] = p.nome_enai_cax;
-                      dadosForm[`email${i}`] = p.email;
-                      dadosForm[`camiseta${i}`] = p.tamanho_camiseta;
-                      dadosForm[`rg${i}`] = p.rg;
-                      dadosForm[`cpf${i}`] = p.cpf;
-                      dadosForm[`data_nascimento${i}`] = p.data_nascimento;
-                      dadosForm[`telefone${i}`] = p.telefone;
-                      dadosForm[`matricula${i}`] = p.matricula;
-                  });
-              }
-              return new Response(JSON.stringify({ success: true, existe: dadosForm !== null, data: dadosForm }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-          } else if (tipo === "participantes") {
-              // Busca participantes baseada na equipe do usuário
-              const query = `
-                SELECT p.* FROM tb_participantes p
-                JOIN tb_informacoes_complementares ic ON p.id_informacoes_complementares = ic.id_informacoes_complementares
-                WHERE ic.usuario = ? OR ic.usuario = ? OR ic.usuario = ?
-              `;
-              const dadosForm = await env.DB.prepare(query).bind(nomeReal, emailReal, nomeEquipe).first();
-              return new Response(JSON.stringify({ success: true, existe: dadosForm !== null, data: dadosForm }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-          } else if (tabelasValidas[tipo]) {
-            const query = `SELECT * FROM ${tabelasValidas[tipo]} WHERE usuario = ? OR usuario = ? OR usuario = ?`;
-            const dadosForm = await env.DB.prepare(query).bind(nomeReal, emailReal, nomeEquipe).first();
-
-            return new Response(JSON.stringify({ success: true, existe: dadosForm !== null, data: dadosForm }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-          }
-
-        } catch (e) {
-          return new Response(JSON.stringify({ success: false, error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-      }
-
-
-
-
-
-
-
-
-      // ===============================================================
-
-      // ROTA POST: RASTREAR E PREENCHER CURRÍCULO AUTOMATICAMENTE
-
-      // ===============================================================
-
-      if (method === "POST" && path === "/preencher-curriculo") {
-
-        const { nome_usuario, email_usuario, cpf_usuario, habilidades, fez_projeto, cidade, motivo_projeto, aprendo_mais, prefiro_trabalhar } = body;
-
-
-
-        if (!nome_usuario) {
-
-          return new Response(JSON.stringify({ success: false, message: "O nome de usuário é obrigatório." }), {
-
-            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
-
-          });
-
-        }
-
-
-
-        try {
-
-          // -------------------------------------------------------------
-
-          // ETAPA 1: Buscar dados base na tb_participantes
-
-          // -------------------------------------------------------------
-
-          let participante = null;
-
-
-
-          if (cpf_usuario) {
-
-            participante = await env.DB.prepare("SELECT * FROM tb_participantes WHERE nome_enai_cax = ? AND cpf = ?").bind(nome_usuario, cpf_usuario).first();
-
-          }
-
-          if (!participante && email_usuario) {
-
-            participante = await env.DB.prepare("SELECT * FROM tb_participantes WHERE nome_enai_cax = ? AND email = ?").bind(nome_usuario, email_usuario).first();
-
-          }
-
-          if (!participante) {
-
-            participante = await env.DB.prepare("SELECT * FROM tb_participantes WHERE nome_enai_cax = ?").bind(nome_usuario).first();
-
-          }
-
-
-
-          let dbNome = nome_usuario;
-
-          let dbDataNascimento = null;
-
-          let dbCpf = cpf_usuario || "Não informado";
-
-          let dbTelefone = "Não informado";
-
-          let dbEmail = email_usuario || "Não informado";
-
-          let idInfoComplementares = null;
-
-
-
-          if (participante) {
-
-            dbNome = participante.nome_enai_cax || dbNome;
-
-            dbDataNascimento = participante.data_nascimento || null;
-
-            dbCpf = participante.cpf || dbCpf;
-
-            dbTelefone = participante.telefone || dbTelefone;
-
-            dbEmail = participante.email || dbEmail;
-
-            idInfoComplementares = participante.id_informacoes_complementares;
-
-          }
-
-
-
-          // -------------------------------------------------------------
-
-          // ETAPA 2: Buscar na tb_informacoes_complementares
-
-          // -------------------------------------------------------------
-
-          let dbProjeto = "Não informado";
-
-          let dbUsuarioEquipe = null;
-
-          let dbEmpresaVinculada = "Não informada";
-
-          let dbMotivoProjeto = motivo_projeto || "Participação em projeto de inovação SENAI/FUTUR.E";
-
-
-
-          if (idInfoComplementares) {
-
-            const infoComp = await env.DB.prepare("SELECT * FROM tb_informacoes_complementares WHERE id_informacoes_complementares = ?")
-
-              .bind(idInfoComplementares).first();
-
-
-
-            if (infoComp) {
-
-              dbProjeto = infoComp.projeto || dbProjeto;
-
-              dbUsuarioEquipe = infoComp.usuario || null;
-
-              dbEmpresaVinculada = infoComp.empresa || dbEmpresaVinculada;
-
-              if (!motivo_projeto && infoComp.descricao) {
-
-                dbMotivoProjeto = infoComp.descricao; // Usa a descrição do projeto como motivação padrão
-
-              }
-
-            }
-
-          }
-
-
-
-          // -------------------------------------------------------------
-
-          // ETAPA 3: Buscar tarefas na tb_acompanhamento_projeto (O QUE DESENVOLVI)
-
-          // -------------------------------------------------------------
-
-          // CORREÇÃO: Na sua tabela a coluna se chama 'aluno_responsavel' e não 'responsavel'
-
-          const tarefasQuery = await env.DB.prepare(
-
-            "SELECT tarefas FROM tb_acompanhamento_projeto WHERE aluno_responsavel = ? AND status = 'Concluído'"
-
-          ).bind(dbNome).all();
-
-
-
-          let tarefasFeitasStr = "Nenhuma tarefa concluída registrada até o momento.";
-
-          if (tarefasQuery && tarefasQuery.results.length > 0) {
-
-            tarefasFeitasStr = tarefasQuery.results.map(t => t.tarefas).join(" • ");
-
-          }
-
-
-
-          // -------------------------------------------------------------
-
-          // ETAPA 4: Salvar / Atualizar na tb_curriculo_alunos
-
-          // -------------------------------------------------------------
-
-          const curriculoExistente = await env.DB.prepare("SELECT * FROM tb_curriculo_alunos WHERE email = ? OR cpf = ? OR nome = ?").bind(dbEmail, dbCpf, dbNome).first();
-
-
-
-          if (curriculoExistente) {
-
-            // Se já existe, atualizamos os dados rastreados, mas PRESERVAMOS o que o aluno preencheu manualmente caso não venha no body
-
-            await env.DB.prepare(`
-
-              UPDATE tb_curriculo_alunos SET
-
-                nome = ?, data_nacimento = ?, telefone = ?,
-
-                empresa_vinculado = ?, projeto = ?, usuario = ?,
-
-                tarefas_feitas = ?,
-
-                habilidades = COALESCE(?, habilidades),
-
-                fez_projeto = COALESCE(?, fez_projeto),
-
-                cidade = COALESCE(?, cidade),
-
-                motivo_projeto = COALESCE(?, motivo_projeto),
-
-                aprendo_mais = COALESCE(?, aprendo_mais),
-
-                prefiro_trabalhar = COALESCE(?, prefiro_trabalhar)
-
-              WHERE id_aluno = ?
-
-            `).bind(
-
-              dbNome, dbDataNascimento, dbTelefone,
-
-              dbEmpresaVinculada, dbProjeto, dbUsuarioEquipe,
-
-              tarefasFeitasStr,
-
-              habilidades || null, fez_projeto || null, cidade || null, dbMotivoProjeto || null, aprendo_mais || null, prefiro_trabalhar || null,
-
-              curriculoExistente.id_aluno
-
-            ).run();
-
-          } else {
-
-            // INSERT inicial
-
-            await env.DB.prepare(`
-
-              INSERT INTO tb_curriculo_alunos (
-
-                nome, data_nacimento, cpf, empresa_vinculado, projeto,
-
-                telefone, email, habilidades, fez_projeto, cidade,
-
-                motivo_projeto, aprendo_mais, prefiro_trabalhar,
-
-                usuario, tarefas_feitas
-
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-
-            `).bind(
-
-              dbNome, dbDataNascimento, dbCpf, dbEmpresaVinculada, dbProjeto,
-
-              dbTelefone, dbEmail, habilidades || null, fez_projeto || null, cidade || null,
-
-              dbMotivoProjeto, aprendo_mais || null, prefiro_trabalhar || null,
-
-              dbUsuarioEquipe, tarefasFeitasStr
-
-            ).run();
-
-          }
-
-
-
-          return new Response(JSON.stringify({
-
-            success: true,
-
-            message: "Currículo sincronizado com sucesso!",
-
-            resumo_rastreado: {
-
-              nome: dbNome,
-
-              projeto: dbProjeto,
-
-              empresa: dbEmpresaVinculada,
-
-              tarefas_desenvolvidas: tarefasFeitasStr
-
-            }
-
-          }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-
-
-        } catch (error) {
-
-          return new Response(JSON.stringify({ success: false, error: "Erro no banco: " + error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-        }
 
       }
 
 
+if (method === "POST") {
+  if (path === "/salvar-curriculo") {
+    try {
+      const body = await request.json();
+      const { email } = body;
+      if (!email) return new Response(JSON.stringify({ success: false, message: 'Email obrigatório' }), { status: 400 });
 
-
-
-
+      // Lógica de salvar no DB (tb_curriculo_alunos)
+      const curriculoExistente = await env.DB.prepare("SELECT id_aluno FROM tb_curriculo_alunos WHERE email = ?").bind(email).first();
+      if (curriculoExistente) {
+          await env.DB.prepare("UPDATE tb_curriculo_alunos SET nome=?, data_nacimento=?, telefone=?, cidade=?, habilidades=?, fez_projeto=?, projeto=?, empresa_vinculado=?, motivo_projeto=?, aprendo_mais=?, prefiro_trabalhar=? WHERE email=?")
+          .bind(body.nome, body.data_nascimento, body.telefone, body.cidade, body.habilidades, body.fez_projeto, body.projeto, body.empresa_vinculado, body.motivo_projeto, body.aprendo_mais, body.prefiro_trabalhar, email).run();
+      } else {
+          await env.DB.prepare("INSERT INTO tb_curriculo_alunos (nome, email, data_nacimento, telefone, cidade, habilidades, fez_projeto, projeto, empresa_vinculado, motivo_projeto, aprendo_mais, prefiro_trabalhar, cpf) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+          .bind(body.nome, email, body.data_nascimento, body.telefone, body.cidade, body.habilidades, body.fez_projeto, body.projeto, body.empresa_vinculado, body.motivo_projeto, body.aprendo_mais, body.prefiro_trabalhar, "").run();
+      }
+      return new Response(JSON.stringify({ success: true, message: 'Currículo salvo!' }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } catch (e) {
+      return new Response(JSON.stringify({ success: false, error: e.message }), { status: 500 });
+    }
+  }
+}
 
 
 
     } catch (error) {
 
-      return new Response(JSON.stringify({ success: false, error: "Erro na leitura do JSON: " + error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: false, error: "Erro no banco: " + error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     }
 
