@@ -2,10 +2,6 @@ package com.example.dspi_app;
 
 import android.content.Context;
 import android.net.Uri;
-import com.android.volley.Request;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
-import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.InputStream;
 import okhttp3.MediaType;
@@ -13,30 +9,171 @@ import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okio.BufferedSink;
-import okio.Okio;
-import okio.Source;
 
 public class FormularioRepository {
 
     private final Context context;
     private final String BASE_URL = "https://api-dspi.whyguiih.workers.dev";
 
-    public interface OnDadosCarregadosListener {
-        void onSucesso(JSONObject dados);
-        void onNaoEncontrado();
+    public interface OnUploadProgressListener {
+        void onProgress(int progress);
+        void onSucesso(String videoUrl);
         void onErro(String erro);
     }
 
-    // Nova interface para salvar
     public interface OnSalvoListener {
         void onSucesso();
         void onErro(String erro);
     }
 
-    public interface OnUploadProgressListener {
-        void onProgress(int progress);
-        void onSucesso(String videoUrl);
+    public interface OnBuscaListener {
+        void onSucesso(JSONObject dados);
         void onErro(String erro);
+    }
+
+    //==================SALVAR FORMULARIO===============================
+    public void salvarFormulario(String tipo, JSONObject campos, OnSalvoListener listener) {
+
+        try {
+
+            JSONObject body = new JSONObject();
+            body.put("tipo", tipo);
+            body.put("usuario", getEmailUsuario());
+            body.put("campos", campos);
+
+            okhttp3.RequestBody requestBody = okhttp3.RequestBody.create(
+                    body.toString(),
+                    okhttp3.MediaType.parse("application/json")
+            );
+
+            okhttp3.Request request = new okhttp3.Request.Builder()
+                    .url(BASE_URL + "/salvar-dados")
+                    .post(requestBody)
+                    .build();
+
+            new OkHttpClient().newCall(request).enqueue(new okhttp3.Callback() {
+
+                @Override
+                public void onFailure(okhttp3.Call call, java.io.IOException e) {
+
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
+                            listener.onErro(e.getMessage()));
+
+                }
+
+                @Override
+                public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+
+                    String resposta = response.body().string();
+
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+
+                        try {
+
+                            JSONObject json = new JSONObject(resposta);
+
+                            if (json.optBoolean("success")) {
+
+                                listener.onSucesso();
+
+                            } else {
+
+                                listener.onErro(json.optString("error"));
+
+                            }
+
+                        } catch (Exception e) {
+
+                            listener.onErro(e.getMessage());
+
+                        }
+
+                    });
+
+                }
+
+            });
+
+        } catch (Exception e) {
+
+            listener.onErro(e.getMessage());
+
+        }
+
+    }
+
+
+    //==============BUSCAR FORMULARIO===================
+    public void buscarFormulario(String tipo, OnBuscaListener listener) {
+
+        try {
+
+            JSONObject body = new JSONObject();
+
+            body.put("tipo", tipo);
+            body.put("usuario", getEmailUsuario());
+
+            okhttp3.RequestBody requestBody = okhttp3.RequestBody.create(
+                    body.toString(),
+                    okhttp3.MediaType.parse("application/json")
+            );
+
+            okhttp3.Request request = new okhttp3.Request.Builder()
+                    .url(BASE_URL + "/buscar-dados")
+                    .post(requestBody)
+                    .build();
+
+            new OkHttpClient().newCall(request).enqueue(new okhttp3.Callback() {
+
+                @Override
+                public void onFailure(okhttp3.Call call, java.io.IOException e) {
+
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
+                            listener.onErro(e.getMessage()));
+
+                }
+
+                @Override
+                public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+
+                    String resposta = response.body().string();
+
+                    android.util.Log.e("API_RESPOSTA", resposta);
+
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+
+                        try {
+
+                            JSONObject json = new JSONObject(resposta);
+
+                            if (json.optBoolean("success")) {
+
+                                listener.onSucesso(json.getJSONObject("dados"));
+
+                            } else {
+
+                                listener.onErro(json.optString("error"));
+
+                            }
+
+                        } catch (Exception e) {
+
+                            listener.onErro(e.getMessage());
+
+                        }
+
+                    });
+
+                }
+
+            });
+
+        } catch (Exception e) {
+
+            listener.onErro(e.getMessage());
+
+        }
+
     }
 
     public FormularioRepository(Context context) {
@@ -46,102 +183,6 @@ public class FormularioRepository {
     private String getEmailUsuario() {
         return context.getSharedPreferences("SESSAO_USER", Context.MODE_PRIVATE)
                 .getString("email_logado", "");
-    }
-
-    // =========================================================
-    // CARREGAR
-    // =========================================================
-    public void carregarDados(String tipo, OnDadosCarregadosListener listener) {
-        carregarDados(tipo, getEmailUsuario(), listener);
-    }
-
-    public void carregarDados(String tipo, String email, OnDadosCarregadosListener listener) {
-        if (email == null || email.isEmpty()) {
-            listener.onErro("Usuário não autenticado.");
-            return;
-        }
-
-        JSONObject jsonBody = new JSONObject();
-        try {
-            jsonBody.put("usuario", email);
-            jsonBody.put("tipo", tipo);
-        } catch (JSONException e) {
-            listener.onErro("Erro ao montar requisição.");
-            return;
-        }
-
-        JsonObjectRequest request = new JsonObjectRequest(
-                com.android.volley.Request.Method.POST,
-                BASE_URL + "/buscar-dados",
-                jsonBody,
-                response -> {
-                    try {
-                        if (response.getBoolean("success")) {
-                            if (response.getBoolean("existe")) {
-                                JSONObject data = response.optJSONObject("data");
-                                listener.onSucesso(data != null ? data : response);
-                            } else {
-                                listener.onNaoEncontrado();
-                            }
-                        } else {
-                            listener.onErro(response.optString("error", "Erro na API"));
-                        }
-                    } catch (JSONException e) {
-                        listener.onErro("Erro ao processar resposta.");
-                    }
-                },
-                error -> {
-                    String erroMsg = "Falha na conexão";
-                    if (error.networkResponse != null) {
-                        erroMsg += " (Status: " + error.networkResponse.statusCode + ")";
-                        try {
-                            String body = new String(error.networkResponse.data, "UTF-8");
-                            JSONObject jsonError = new JSONObject(body);
-                            if (jsonError.has("error")) {
-                                erroMsg = jsonError.getString("error");
-                            }
-                        } catch (Exception ignored) {}
-                    } else if (error.getMessage() != null) {
-                        erroMsg += ": " + error.getMessage();
-                    }
-                    listener.onErro(erroMsg);
-                }
-        );
-
-        Volley.newRequestQueue(context).add(request);
-    }
-
-    // =========================================================
-    // SALVAR — agora avisa via callback, sem Toast próprio
-    // =========================================================
-    public void salvarDados(String tipo, JSONObject jsonCampos, OnSalvoListener listener) {
-        String emailUsuario = getEmailUsuario();
-        if (emailUsuario.isEmpty()) {
-            if (listener != null) listener.onErro("Usuário não autenticado.");
-            return;
-        }
-
-        try {
-            jsonCampos.put("usuario", emailUsuario);
-            jsonCampos.put("tipo", tipo);
-        } catch (JSONException e) {
-            if (listener != null) listener.onErro("Erro ao montar requisição.");
-            return;
-        }
-
-        JsonObjectRequest request = new JsonObjectRequest(
-                com.android.volley.Request.Method.POST,
-                BASE_URL + "/salvar-dados",
-                jsonCampos,
-                response -> {
-                    if (listener != null) listener.onSucesso();
-                },
-                error -> {
-                    if (listener != null) listener.onErro("Falha ao salvar: " + tipo);
-                }
-        );
-
-        Volley.newRequestQueue(context).add(request);
     }
 
     // =========================================================
@@ -167,7 +208,7 @@ public class FormularioRepository {
             try (android.content.res.AssetFileDescriptor fd = context.getContentResolver().openAssetFileDescriptor(videoUri, "r")) {
                 if (fd != null) size = fd.getLength();
             } catch (Exception ignored) {}
-            
+
             final long totalBytes = size;
             String mimeType = context.getContentResolver().getType(videoUri);
             if (mimeType == null) mimeType = "video/mp4";
@@ -187,14 +228,14 @@ public class FormularioRepository {
                 public void writeTo(BufferedSink sink) throws java.io.IOException {
                     try (InputStream inputStream = context.getContentResolver().openInputStream(videoUri)) {
                         if (inputStream == null) throw new java.io.IOException("Não foi possível abrir o arquivo.");
-                        
+
                         byte[] buffer = new byte[8192];
                         long uploaded = 0;
                         int read;
                         while ((read = inputStream.read(buffer)) != -1) {
                             sink.write(buffer, 0, read);
                             uploaded += read;
-                            
+
                             if (totalBytes > 0) {
                                 final int progress = (int) (100 * uploaded / totalBytes);
                                 new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
