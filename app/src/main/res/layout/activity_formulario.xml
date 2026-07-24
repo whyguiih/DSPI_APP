@@ -50,7 +50,7 @@
                 <TextView android:id="@+id/tabRecursos" style="@style/TabStyle" android:text="Recursos" />
                 <TextView android:id="@+id/tabCronograma" style="@style/TabStyle" android:text="Cronograma" />
                 <TextView android:id="@+id/tabCanva" style="@style/TabStyle" android:text="Canva" />
-                <TextView android:id="@+id/tabCurriculo" style="@style/TabStyle" android:text="Currículo" />
+
                 <TextView android:id="@+id/tabEmpresa" style="@style/TabStyle" android:text="Empresa" />
                 <TextView android:id="@+id/tabPitch" style="@style/TabStyle" android:text="Pitch" />
                 <TextView android:id="@+id/tabIA" style="@style/TabStyle" android:text="Uso de IA" />
@@ -132,30 +132,8 @@
                     <EditText android:id="@+id/etCanvaFluxoReceita" style="@style/InputGlassStyle" android:hint="Fluxo de receita" />
                     <EditText android:id="@+id/etCanvaParceirosChaves" style="@style/InputGlassStyle" android:hint="Parceiros chaves" />
 
-                    <Button
-                        android:id="@+id/btnAcaoCanva"
-                        style="@style/InputGlassStyle"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="16dp"
-                        android:text="Gerar Canvas"
-                        android:textColor="#FFFFFF" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/formCurriculo" style="@style/FormContainerStyle" android:visibility="gone">
-                    <EditText android:id="@+id/etCurrNome" style="@style/InputGlassStyle" android:hint="Nome" />
-                    <EditText android:id="@+id/etCurrDataNascimento" style="@style/InputGlassStyle" android:hint="Data de nascimento" android:inputType="date" />
-                    <EditText android:id="@+id/etCurrEmpresaVinculada" style="@style/InputGlassStyle" android:hint="Empresa vinculada" />
-                    <EditText android:id="@+id/etCurrProjeto" style="@style/InputGlassStyle" android:hint="Projeto" />
-                    <EditText android:id="@+id/etCurrTelefone" style="@style/InputGlassStyle" android:hint="Telefone" android:inputType="phone" />
-                    <EditText android:id="@+id/etCurrEmail" style="@style/InputGlassStyle" android:hint="E-mail" android:inputType="textEmailAddress" />
-                    <EditText android:id="@+id/etCurrHabilidades" style="@style/InputGlassStyle" android:hint="Habilidades" />
-                    <EditText android:id="@+id/etCurrFezProjeto" style="@style/InputGlassStyle" android:hint="Fez projeto?" />
-                    <EditText android:id="@+id/etCurrCidade" style="@style/InputGlassStyle" android:hint="Cidade" />
-                    <EditText android:id="@+id/etCurrMotivoProjeto" style="@style/InputGlassStyle" android:hint="Motivo do projeto" />
-                    <EditText android:id="@+id/etCurrAprendoMais" style="@style/InputGlassStyle" android:hint="Aprendo mais..." />
-                    <EditText android:id="@+id/etCurrPrefiroTrabalhar" style="@style/InputGlassStyle" android:hint="Prefiro trabalhar..." />
-                </LinearLayout>
 
                 <LinearLayout android:id="@+id/formEmpresa" style="@style/FormContainerStyle" android:visibility="gone">
                     <EditText android:id="@+id/etEmpresaNome" style="@style/InputGlassStyle" android:hint="Nome da Empresa" />
@@ -401,6 +379,17 @@
                         android:layout_marginTop="16dp"
                         android:text="Gerar Relatório PDF"
                         android:textColor="#FFFFFF" />
+
+                    <Button
+                        android:id="@+id/btnAcaoCanvaRelatorio"
+                        style="@style/InputGlassStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:text="Gerar Canva"
+                        android:textColor="#FFFFFF"
+                        android:visibility="gone" />
+
 
                     <Button
                         android:id="@+id/btnVisualizarRelatorio"

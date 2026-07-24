@@ -264,8 +264,8 @@ public class ProjetosActivity extends AppCompatActivity {
         String nomeEqp = projeto.getNomeEquipe() != null ? projeto.getNomeEquipe().trim() : "";
         boolean isMeuProjeto = !userLogado.isEmpty() && nomeEqp.equalsIgnoreCase(userLogado);
 
-        if ("2".equals(nivel) || isMeuProjeto) {
-            // Nível 2 ou o próprio dono do projeto vão para o Formulário
+        if ("2".equals(nivel) || "1".equals(nivel) || isMeuProjeto) {
+            // Nível 1, 2 ou o próprio dono do projeto vão para o Formulário
             intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
             intent.putExtra("projeto_usuario", projeto.getNomeEquipe());
         } else {
