@@ -71,7 +71,7 @@ public class LoginActivity extends AppCompatActivity {
                 String senhaDigitada = senha.getText().toString().trim();
 
                 if (emailDigitado.isEmpty() || senhaDigitada.isEmpty()) {
-                    Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show();
+                    mostrarMensagemGrande("Aviso", "Preencha todos os campos!");
                     return;
                 }
 
@@ -115,10 +115,10 @@ public class LoginActivity extends AppCompatActivity {
                             finish();
                         } else {
                             String mensagem = response.optString("message", "E-mail ou senha incorretos!");
-                            Toast.makeText(this, mensagem, Toast.LENGTH_LONG).show();
+                            mostrarMensagemGrande("Falha no Login", mensagem);
                         }
                     } catch (JSONException e) {
-                        Toast.makeText(this, "Erro no formato da resposta", Toast.LENGTH_SHORT).show();
+                        mostrarMensagemGrande("Erro", "Erro no formato da resposta");
                     }
                 }, error -> {
                     String erroMsg = "Erro de Servidor";
@@ -129,7 +129,7 @@ public class LoginActivity extends AppCompatActivity {
                         erroMsg += ": " + error.getMessage();
                     }
                     Log.e("VOLLEY_ERROR", erroMsg, error);
-                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
+                    mostrarMensagemGrande("Erro de Conexão", erroMsg);
                 }) {
                     @Override
                     public Map<String, String> getHeaders() {
@@ -216,10 +216,10 @@ public class LoginActivity extends AppCompatActivity {
                             finish();
                         } else {
                             String mensagem = response.optString("message", "Falha na autenticação com o Google");
-                            Toast.makeText(LoginActivity.this, mensagem, Toast.LENGTH_LONG).show();
+                            mostrarMensagemGrande("Aviso", mensagem);
                         }
                     } catch (JSONException e) {
-                        Toast.makeText(LoginActivity.this, "Erro na resposta do servidor", Toast.LENGTH_SHORT).show();
+                        mostrarMensagemGrande("Erro", "Erro na resposta do servidor");
                     }
                 },
                 error -> {
@@ -231,7 +231,7 @@ public class LoginActivity extends AppCompatActivity {
                         erroMsg += ": " + error.getMessage();
                     }
                     Log.e("VOLLEY_ERROR", erroMsg, error);
-                    Toast.makeText(LoginActivity.this, erroMsg, Toast.LENGTH_LONG).show();
+                    mostrarMensagemGrande("Erro de Conexão", erroMsg);
                 }) {
             @Override
             public Map<String, String> getHeaders() {
@@ -242,5 +242,14 @@ public class LoginActivity extends AppCompatActivity {
         };
 
         Volley.newRequestQueue(this).add(jsonObjectRequest);
+    }
+
+    private void mostrarMensagemGrande(String titulo, String mensagem) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(titulo)
+                .setMessage(mensagem)
+                .setPositiveButton("OK", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
     }
 }

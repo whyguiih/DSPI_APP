@@ -37,7 +37,7 @@ public class CadastroNecessidadesActivity extends AppCompatActivity {
         String descricao = inputDescricaoNecessidade.getText().toString().trim();
 
         if (nome.isEmpty() || descricao.isEmpty()) {
-            Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show();
+            mostrarMensagemGrande("Aviso", "Preencha todos os campos!", false);
             return;
         }
 
@@ -69,11 +69,10 @@ public class CadastroNecessidadesActivity extends AppCompatActivity {
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, jsonBody, response -> {
             try {
                 if (response.getBoolean("success")) {
-                    Toast.makeText(this, "Necessidade cadastrada com sucesso!", Toast.LENGTH_LONG).show();
-                    finish();
+                    mostrarMensagemGrande("Sucesso", "Necessidade cadastrada com sucesso!", true);
                 } else {
                     String mensagem = response.optString("message", "Erro ao cadastrar.");
-                    Toast.makeText(this, mensagem, Toast.LENGTH_LONG).show();
+                    mostrarMensagemGrande("Aviso", mensagem, false);
                     btnSalvarNecessidade.setEnabled(true);
                     btnSalvarNecessidade.setText("Salvar Necessidade");
                 }
@@ -91,7 +90,7 @@ public class CadastroNecessidadesActivity extends AppCompatActivity {
                     erroMsg += " Body: " + new String(error.networkResponse.data);
                 }
             }
-            Toast.makeText(this, "Falha no servidor: " + erroMsg, Toast.LENGTH_LONG).show();
+            mostrarMensagemGrande("Erro de Servidor", erroMsg, false);
             Log.e("CadastroNec", "Erro Volley: " + erroMsg, error);
 
             btnSalvarNecessidade.setEnabled(true);
@@ -115,5 +114,16 @@ public class CadastroNecessidadesActivity extends AppCompatActivity {
 
         // Adiciona a requisição na fila do Volley
         Volley.newRequestQueue(this).add(jsonObjectRequest);
+    }
+
+    private void mostrarMensagemGrande(String titulo, String mensagem, boolean finalizar) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(titulo)
+                .setMessage(mensagem)
+                .setPositiveButton("Entendido", (dialog, which) -> {
+                    if (finalizar) finish();
+                })
+                .setIcon(finalizar ? android.R.drawable.ic_dialog_info : android.R.drawable.ic_dialog_alert)
+                .show();
     }
 }

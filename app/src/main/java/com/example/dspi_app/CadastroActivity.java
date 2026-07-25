@@ -85,111 +85,102 @@ public class CadastroActivity extends AppCompatActivity {
 
     private void cadastrar() {
 
-        String nome = inputNome.getText().toString().trim();
+        String nome_usuarios = inputNome.getText().toString().trim();
         String email = inputEmailCadastro.getText().toString().trim();
         String senha = inputSenhaCadastro.getText().toString().trim();
         String confirmarSenha = inputConfirmaSenha.getText().toString().trim();
 
         String nivelTexto = inputNivelAcesso.getText().toString().trim();
 
-        int nivel = 0;
+        int nivel_de_acesso = 0;
 
         switch (nivelTexto) {
-            case "Adm":
-                nivel = 1;
+            case "Avaliador":
+                nivel_de_acesso = 1;
                 break;
 
-            case "DH":
-                nivel = 2;
+            case "Dr/dh":
+                nivel_de_acesso = 2;
                 break;
 
             case "Professor":
-                nivel = 3;
+                nivel_de_acesso = 3;
                 break;
 
             case "Empresa":
-                nivel = 4;
+                nivel_de_acesso = 4;
                 break;
 
             case "Aluno":
-                nivel = 5;
+                nivel_de_acesso = 5;
                 break;
 
             case "Público Geral":
-                nivel = 6;
+                nivel_de_acesso = 6;
                 break;
         }
 
-        if (TextUtils.isEmpty(nome)) {
-            inputNome.setError("Digite seu nome.");
-            inputNome.requestFocus();
+        if (TextUtils.isEmpty(nome_usuarios)) {
+            mostrarMensagemGrande("Campo Obrigatório", "Por favor, digite seu nome completo.", false);
             return;
         }
 
         if (TextUtils.isEmpty(email)) {
-            inputEmailCadastro.setError("Digite seu e-mail.");
-            inputEmailCadastro.requestFocus();
+            mostrarMensagemGrande("Campo Obrigatório", "Por favor, digite seu e-mail.", false);
             return;
         }
 
         if (TextUtils.isEmpty(senha)) {
-            inputSenhaCadastro.setError("Digite sua senha.");
-            inputSenhaCadastro.requestFocus();
+            mostrarMensagemGrande("Campo Obrigatório", "Por favor, digite uma senha.", false);
             return;
         }
 
         if (TextUtils.isEmpty(confirmarSenha)) {
-            inputConfirmaSenha.setError("Confirme sua senha.");
-            inputConfirmaSenha.requestFocus();
+            mostrarMensagemGrande("Campo Obrigatório", "Por favor, confirme sua senha.", false);
             return;
         }
 
         if (!senha.equals(confirmarSenha)) {
-            inputConfirmaSenha.setError("As senhas não coincidem.");
-            inputConfirmaSenha.requestFocus();
+            mostrarMensagemGrande("Erro", "As senhas digitadas não coincidem.", false);
             return;
         }
 
-        if (nivel == 0) {
-            inputNivelAcesso.setError("Selecione um nível de acesso.");
-            inputNivelAcesso.requestFocus();
+        if (nivel_de_acesso == 0) {
+            mostrarMensagemGrande("Campo Obrigatório", "Por favor, selecione um nível de acesso.", false);
             return;
         }
 
         // Apenas para teste
         cadastroRepository.cadastrar(
-                nome,
+                nome_usuarios,
                 email,
                 senha,
-                nivel,
+                nivel_de_acesso,
                 new CadastroRepository.CadastroListener() {
 
                     @Override
                     public void onSucesso(String mensagem) {
-
-                        Toast.makeText(
-                                CadastroActivity.this,
-                                mensagem,
-                                Toast.LENGTH_LONG
-                        ).show();
-
-                        finish();
-
+                        mostrarMensagemGrande("Sucesso", mensagem, true);
                     }
 
                     @Override
                     public void onErro(String erro) {
-
-                        Toast.makeText(
-                                CadastroActivity.this,
-                                erro,
-                                Toast.LENGTH_LONG
-                        ).show();
-
+                        mostrarMensagemGrande("Erro no Cadastro", erro, false);
                     }
 
                 });
 
         // Na próxima etapa vamos enviar esses dados ao banco.
+    }
+
+    private void mostrarMensagemGrande(String titulo, String mensagem, boolean finalizar) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(titulo)
+                .setMessage(mensagem)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    if (finalizar) finish();
+                })
+                .setIcon(finalizar ? android.R.drawable.ic_dialog_info : android.R.drawable.ic_dialog_alert)
+                .show();
     }
 }

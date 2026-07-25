@@ -23,10 +23,10 @@ public class CadastroRepository {
         this.context = context;
     }
 
-    public void cadastrar(String nome,
+    public void cadastrar(String nome_usuarios,
                           String email,
                           String senha,
-                          int nivelAcesso,
+                          int nivel_de_acesso,
                           CadastroListener listener) {
 
         new Thread(() -> {
@@ -43,28 +43,37 @@ public class CadastroRepository {
 
                 JSONObject json = new JSONObject();
 
-                json.put("nome", nome);
+                json.put("nome_usuarios", nome_usuarios);
                 json.put("email", email);
                 json.put("senha", senha);
-                json.put("nivel_de_acesso", nivelAcesso);
+                json.put("nivel_de_acesso", nivel_de_acesso);
 
                 OutputStream os = conexao.getOutputStream();
-                os.write(json.toString().getBytes());
+                os.write(json.toString().getBytes("UTF-8"));
                 os.flush();
                 os.close();
 
                 int codigo = conexao.getResponseCode();
 
-                if (codigo == 200) {
+                if (codigo == 200 || codigo == 201) {
 
                     ((CadastroActivity) context).runOnUiThread(() ->
                             listener.onSucesso("Cadastro realizado com sucesso!")
                     );
 
                 } else {
-
+                    // Tentar ler a mensagem de erro do servidor
+                    java.io.InputStream is = conexao.getErrorStream();
+                    String msgErro = "Código HTTP: " + codigo;
+                    if (is != null) {
+                        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+                        if (s.hasNext()) {
+                            msgErro += " - " + s.next();
+                        }
+                    }
+                    final String erroFinal = msgErro;
                     ((CadastroActivity) context).runOnUiThread(() ->
-                            listener.onErro("Código HTTP: " + codigo)
+                            listener.onErro(erroFinal)
                     );
 
                 }

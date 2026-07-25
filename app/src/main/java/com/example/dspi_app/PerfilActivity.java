@@ -153,7 +153,7 @@ public class PerfilActivity extends AppCompatActivity {
             String novoEmail = inputEmail.getText().toString().trim();
 
             if (novoNome.isEmpty() || novoEmail.isEmpty()) {
-                Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show();
+                mostrarErroGrande("Aviso", "Preencha todos os campos!");
                 return;
             }
 
