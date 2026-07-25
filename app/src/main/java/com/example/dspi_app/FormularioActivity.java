@@ -37,14 +37,14 @@ public class FormularioActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 1;
 
     private LinearLayout formEquipe, formConhecimentos, formRecursos, formCronograma,
-            formCanva, formCurriculo, formEmpresa, formPitch,
+            formCanva, formEmpresa, formPitch,
             formIA, formPlanilha, formComplementares, formCompletude, formRelatorio;
 
     private TextView tabEquipe, tabConhecimentos, tabRecursos, tabCronograma,
-            tabCanva, tabCurriculo, tabEmpresa, tabPitch,
+            tabCanva, tabEmpresa, tabPitch,
             tabIA, tabPlanilha, tabComplementares, tabCompletude, tabRelatorio;
 
-    private Button btnAcaoCanva, btnGerarRelatorio, btnVisualizarRelatorio;
+    private Button btnGerarRelatorio, btnVisualizarRelatorio;
 
     // Inputs da Equipe
     private EditText etNomeEquipe, etNomeProjeto, etEmail, etAreaCurso, etAreaProjeto,
@@ -70,11 +70,6 @@ public class FormularioActivity extends AppCompatActivity {
             etCanvaSegmentos, etCanvaRecursosChaves, etCanvaCanais,
             etCanvaEstruturaCustos, etCanvaFluxoReceita, etCanvaParceirosChaves;
 
-    // Inputs Currículo
-    private EditText etCurrNome, etCurrDataNacimento, etCurrEmpresaVinculado,
-            etCurrProjeto, etCurrTelefone, etCurrEmail, etCurrHabilidades,
-            etCurrFezProjeto, etCurrCidade, etCurrMotivoProjeto, etCurrAprendoMais,
-            etCurrPrefiroTrabalhar;
 
     // Inputs da Empresa
     private EditText etEmpresaNome, etEmpresaCnpj, etEmpresaRegiao, etEmpresaTelefone,
@@ -180,6 +175,35 @@ public class FormularioActivity extends AppCompatActivity {
         }
 
         vincularComponentes();
+
+        // Lógica de visibilidade e nomes baseada no nível de acesso
+        if ("1".equals(nivel)) {
+            tabRelatorio.setText("Arquivos");
+            // tabCanva e formCanva permanecem visíveis para nível 1 editar (visualizar)
+
+            // Ocultar campos de texto do relatório para o nível 1
+            for (int i = 0; i < formRelatorio.getChildCount(); i++) {
+                View child = formRelatorio.getChildAt(i);
+                if (child instanceof EditText) {
+                    child.setVisibility(View.GONE);
+                }
+            }
+            
+            // Mostrar botões de geração na aba de Arquivos (antigo Relatório)
+            Button btnAcaoCanvaRelatorio = findViewById(R.id.btnAcaoCanvaRelatorio);
+            if (btnAcaoCanvaRelatorio != null) {
+                btnAcaoCanvaRelatorio.setVisibility(View.VISIBLE);
+                btnAcaoCanvaRelatorio.setOnClickListener(v -> Toast.makeText(this, "Em breve: Gerar Canva", Toast.LENGTH_SHORT).show());
+            }
+            
+            // O botão de gerar relatório também não deve ter função no momento para o nível 1
+            btnGerarRelatorio.setOnClickListener(v -> Toast.makeText(this, "Em breve: Gerar Relatório", Toast.LENGTH_SHORT).show());
+
+        } else {
+            // Se não for nível 1, esconde relatório de todos os usuários
+            tabRelatorio.setVisibility(View.GONE);
+            formRelatorio.setVisibility(View.GONE);
+        }
         buscarFormularioNoBanco("equipe");
         buscarFormularioNoBanco("conhecimentos");
         buscarFormularioNoBanco("recursos");
@@ -192,7 +216,6 @@ public class FormularioActivity extends AppCompatActivity {
         buscarFormularioNoBanco("complementares");
         buscarFormularioNoBanco("completude");
         buscarFormularioNoBanco("relatorio");
-        buscarFormularioNoBanco("curriculo");
 
         configurarControlesVideo();
 
@@ -209,21 +232,21 @@ public class FormularioActivity extends AppCompatActivity {
 
         // ===== BOTÃO GERAR RELATÓRIO =====
         btnGerarRelatorio.setOnClickListener(v -> {
-            String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
-            fazerRequisicaoNode(usuarioAtual);
+            if ("1".equals(nivel)) {
+                Toast.makeText(this, "Em breve: Gerar Relatório", Toast.LENGTH_SHORT).show();
+            } else {
+                String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
+                fazerRequisicaoNode(usuarioAtual);
+            }
         });
 
-        // ===== BOTÃO CANVA =====
-        btnAcaoCanva.setOnClickListener(v -> {
-            String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
-            fazerRequisicaoCanvaNode(usuarioAtual);
-        });
 
         btnEditarDados = findViewById(R.id.btnEditarDados);
 
         String nivelValidacao = getIntent().getStringExtra("nivel_de_acesso");
-        if (nivelValidacao != null && (nivelValidacao.trim().equals("5") || nivelValidacao.trim().equals("2"))) {
+        if (nivelValidacao != null && (nivelValidacao.trim().equals("5") || nivelValidacao.trim().equals("2") || nivelValidacao.trim().equals("1"))) {
             btnEditarDados.setVisibility(View.GONE);
+            btnUploadVideo.setVisibility(View.GONE);
         }
 
         atualizarTodosFormularios(false);
@@ -254,7 +277,6 @@ public class FormularioActivity extends AppCompatActivity {
                 salvarFormularioNoBanco("complementares");
                 salvarFormularioNoBanco("completude");
                 salvarFormularioNoBanco("relatorio");
-                salvarFormularioNoBanco("curriculo");
             }
         });
 
@@ -325,68 +347,6 @@ public class FormularioActivity extends AppCompatActivity {
         }
     }
 
-    private void fazerRequisicaoCanvaNode(String usuarioAtual) {
-        Toast.makeText(this, "Validando dados do Canva...", Toast.LENGTH_SHORT).show();
-
-        String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-canva?usuario=" + usuarioAtual;
-        JSONObject jsonBody = new JSONObject();
-
-        com.android.volley.toolbox.JsonObjectRequest request = new com.android.volley.toolbox.JsonObjectRequest(
-                com.android.volley.Request.Method.POST,
-                urlNode,
-                jsonBody,
-                response -> {
-                    try {
-                        if (response.getBoolean("success")) {
-                            Toast.makeText(this, "Canva pronto! Iniciando download...", Toast.LENGTH_SHORT).show();
-                            String nomeEquipe = etNomeEquipe.getText().toString().trim();
-                            if (nomeEquipe.isEmpty()) {
-                                nomeEquipe = usuarioAtual;
-                            }
-                            baixarCanvaNoAndroid(nomeEquipe);
-                        } else {
-                            Toast.makeText(this, "Aviso: " + response.optString("message"), Toast.LENGTH_LONG).show();
-                        }
-                    } catch (JSONException e) {
-                        Toast.makeText(this, "Erro ao processar resposta do servidor.", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                error -> {
-                    String erroMsg = "Erro de conexão. Status: ";
-                    if (error.networkResponse != null) {
-                        erroMsg += error.networkResponse.statusCode;
-                        if (error.networkResponse.statusCode == 404) {
-                            erroMsg = "Canva não preenchido ou não encontrado.";
-                        }
-                    } else {
-                        erroMsg += "Desconhecido";
-                    }
-                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
-                }
-        );
-
-        com.android.volley.toolbox.Volley.newRequestQueue(this).add(request);
-    }
-
-    private void baixarCanvaNoAndroid(String nomeEquipeOuUsuario) {
-        String nomeCodificado = Uri.encode(nomeEquipeOuUsuario);
-        String urlPython = "http://10.0.0.192:5000/download-canva/" + nomeCodificado;
-
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
-        request.setTitle("Canva " + nomeEquipeOuUsuario);
-        request.setDescription("Baixando seu Business Model Canvas...");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-
-        String nomeArquivoSeguro = nomeEquipeOuUsuario.replaceAll("[^a-zA-Z0-9]", "_");
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Canva_" + nomeArquivoSeguro + ".pdf");
-
-        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        if (manager != null) {
-            manager.enqueue(request);
-            Toast.makeText(this, "Download do Canva iniciado...", Toast.LENGTH_LONG).show();
-        }
-    }
-
     // =========================================================================
     // DEMAIS MÉTODOS DO APLICATIVO
     // =========================================================================
@@ -439,19 +399,6 @@ public class FormularioActivity extends AppCompatActivity {
         etCanvaEstruturaCustos = findViewById(R.id.etCanvaEstruturaCustos);
         etCanvaFluxoReceita = findViewById(R.id.etCanvaFluxoReceita);
         etCanvaParceirosChaves = findViewById(R.id.etCanvaParceirosChaves);
-
-        etCurrNome = findViewById(R.id.etCurrNome);
-        etCurrDataNacimento = findViewById(R.id.etCurrDataNascimento);
-        etCurrEmpresaVinculado = findViewById(R.id.etCurrEmpresaVinculada);
-        etCurrProjeto = findViewById(R.id.etCurrProjeto);
-        etCurrTelefone = findViewById(R.id.etCurrTelefone);
-        etCurrEmail = findViewById(R.id.etCurrEmail);
-        etCurrHabilidades = findViewById(R.id.etCurrHabilidades);
-        etCurrFezProjeto = findViewById(R.id.etCurrFezProjeto);
-        etCurrCidade = findViewById(R.id.etCurrCidade);
-        etCurrMotivoProjeto = findViewById(R.id.etCurrMotivoProjeto);
-        etCurrAprendoMais = findViewById(R.id.etCurrAprendoMais);
-        etCurrPrefiroTrabalhar = findViewById(R.id.etCurrPrefiroTrabalhar);
 
         etEmpresaNome = findViewById(R.id.etEmpresaNome);
         etEmpresaCnpj = findViewById(R.id.etEmpresaCnpj);
@@ -564,7 +511,6 @@ public class FormularioActivity extends AppCompatActivity {
         formRecursos = findViewById(R.id.formRecursos);
         formCronograma = findViewById(R.id.formCronograma);
         formCanva = findViewById(R.id.formCanva);
-        formCurriculo = findViewById(R.id.formCurriculo);
         formEmpresa = findViewById(R.id.formEmpresa);
         formPitch = findViewById(R.id.formPitch);
         formIA = findViewById(R.id.formIA);
@@ -578,7 +524,6 @@ public class FormularioActivity extends AppCompatActivity {
         tabRecursos = findViewById(R.id.tabRecursos);
         tabCronograma = findViewById(R.id.tabCronograma);
         tabCanva = findViewById(R.id.tabCanva);
-        tabCurriculo = findViewById(R.id.tabCurriculo);
         tabEmpresa = findViewById(R.id.tabEmpresa);
         tabPitch = findViewById(R.id.tabPitch);
         tabIA = findViewById(R.id.tabIA);
@@ -587,7 +532,6 @@ public class FormularioActivity extends AppCompatActivity {
         tabCompletude = findViewById(R.id.tabCompletude);
         tabRelatorio = findViewById(R.id.tabRelatorio);
 
-        btnAcaoCanva = findViewById(R.id.btnAcaoCanva);
         btnGerarRelatorio = findViewById(R.id.btnGerarRelatorio);
         btnVisualizarRelatorio = findViewById(R.id.btnVisualizarRelatorio);
     }
@@ -971,44 +915,6 @@ public class FormularioActivity extends AppCompatActivity {
                 campos.put("preco_total",
                         etRelPrecoTotal.getText().toString().trim());
 
-            }
-            else if (tipo.equals("curriculo")) {
-
-                campos.put("nome",
-                        etCurrNome.getText().toString().trim());
-
-                campos.put("data_nascimento",
-                        etCurrDataNacimento.getText().toString().trim());
-
-                campos.put("empresa_vinculado",
-                        etCurrEmpresaVinculado.getText().toString().trim());
-
-                campos.put("projeto",
-                        etCurrProjeto.getText().toString().trim());
-
-                campos.put("telefone",
-                        etCurrTelefone.getText().toString().trim());
-
-                campos.put("email",
-                        etCurrEmail.getText().toString().trim());
-
-                campos.put("habilidades",
-                        etCurrHabilidades.getText().toString().trim());
-
-                campos.put("fez_projeto",
-                        etCurrFezProjeto.getText().toString().trim());
-
-                campos.put("cidade",
-                        etCurrCidade.getText().toString().trim());
-
-                campos.put("motivo_projeto",
-                        etCurrMotivoProjeto.getText().toString().trim());
-
-                campos.put("aprendo_mais",
-                        etCurrAprendoMais.getText().toString().trim());
-
-                campos.put("prefiro_trabalhar",
-                        etCurrPrefiroTrabalhar.getText().toString().trim());
             }
 
 
@@ -1408,22 +1314,6 @@ public class FormularioActivity extends AppCompatActivity {
 
                 }
 
-                else if (tipo.equals("curriculo")) {
-
-                    etCurrNome.setText(dados.optString("nome"));
-                    etCurrDataNacimento.setText(dados.optString("data_nascimento"));
-                    etCurrEmpresaVinculado.setText(dados.optString("empresa_vinculado"));
-                    etCurrProjeto.setText(dados.optString("projeto"));
-                    etCurrTelefone.setText(dados.optString("telefone"));
-                    etCurrEmail.setText(dados.optString("email"));
-                    etCurrHabilidades.setText(dados.optString("habilidades"));
-                    etCurrFezProjeto.setText(dados.optString("fez_projeto"));
-                    etCurrCidade.setText(dados.optString("cidade"));
-                    etCurrMotivoProjeto.setText(dados.optString("motivo_projeto"));
-                    etCurrAprendoMais.setText(dados.optString("aprendo_mais"));
-                    etCurrPrefiroTrabalhar.setText(dados.optString("prefiro_trabalhar"));
-
-                }
 
             }
 
@@ -1440,7 +1330,6 @@ public class FormularioActivity extends AppCompatActivity {
         tabRecursos.setOnClickListener(v -> alternarFormulario(formRecursos, tabRecursos));
         tabCronograma.setOnClickListener(v -> alternarFormulario(formCronograma, tabCronograma));
         tabCanva.setOnClickListener(v -> alternarFormulario(formCanva, tabCanva));
-        tabCurriculo.setOnClickListener(v -> alternarFormulario(formCurriculo, tabCurriculo));
         tabEmpresa.setOnClickListener(v -> alternarFormulario(formEmpresa, tabEmpresa));
         tabPitch.setOnClickListener(v -> alternarFormulario(formPitch, tabPitch));
         tabIA.setOnClickListener(v -> alternarFormulario(formIA, tabIA));
@@ -1456,7 +1345,6 @@ public class FormularioActivity extends AppCompatActivity {
         formRecursos.setVisibility(View.GONE);
         formCronograma.setVisibility(View.GONE);
         formCanva.setVisibility(View.GONE);
-        formCurriculo.setVisibility(View.GONE);
         formEmpresa.setVisibility(View.GONE);
         formPitch.setVisibility(View.GONE);
         formIA.setVisibility(View.GONE);
@@ -1595,29 +1483,34 @@ public class FormularioActivity extends AppCompatActivity {
     private void definirCamposEditaveis(LinearLayout formulario, boolean habilitado) {
         for (int i = 0; i < formulario.getChildCount(); i++) {
             View view = formulario.getChildAt(i);
+            
             if (view instanceof android.widget.EditText) {
                 android.widget.EditText editText = (android.widget.EditText) view;
                 editText.setEnabled(habilitado);
                 editText.setFocusable(habilitado);
                 editText.setFocusableInTouchMode(habilitado);
                 editText.setClickable(habilitado);
-
                 editText.setTextColor(android.graphics.Color.WHITE);
                 editText.setHintTextColor(android.graphics.Color.parseColor("#80FFFFFF"));
-
                 if (!habilitado) {
                     editText.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#66FFFFFF")));
                 } else {
                     editText.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#FFFFFF")));
                 }
+            } else if (view instanceof android.widget.Spinner) {
+                view.setEnabled(habilitado);
+                view.setAlpha(habilitado ? 1.0f : 0.6f);
             } else if (view instanceof android.widget.Button && view.getId() != R.id.btnEditarDados) {
-                if (view.getId() == R.id.btnGerarRelatorio || view.getId() == R.id.btnAcaoCanva || view.getId() == R.id.btnVisualizarRelatorio) {
+                if (view.getId() == R.id.btnGerarRelatorio || view.getId() == R.id.btnVisualizarRelatorio || view.getId() == R.id.btnAcaoCanvaRelatorio) {
                     view.setEnabled(true);
                     view.setAlpha(1.0f);
                 } else {
                     view.setEnabled(habilitado);
                     view.setAlpha(habilitado ? 1.0f : 0.5f);
                 }
+            } else if (view instanceof android.widget.FrameLayout || view instanceof android.widget.LinearLayout) {
+                // Se houver containers internos (ex: controles de vídeo), pode ser necessário tratar recursivamente ou desabilitar o container
+                view.setEnabled(habilitado);
             }
         }
     }
@@ -1628,7 +1521,6 @@ public class FormularioActivity extends AppCompatActivity {
         definirCamposEditaveis(formRecursos, habilitado);
         definirCamposEditaveis(formCronograma, habilitado);
         definirCamposEditaveis(formCanva, habilitado);
-        definirCamposEditaveis(formCurriculo, habilitado);
         definirCamposEditaveis(formEmpresa, habilitado);
         definirCamposEditaveis(formPitch, habilitado);
         definirCamposEditaveis(formIA, habilitado);
@@ -1639,7 +1531,7 @@ public class FormularioActivity extends AppCompatActivity {
     }
 
     private void destacarAba(TextView tabAtiva) {
-        TextView[] todasAbas = {tabEquipe, tabConhecimentos, tabRecursos, tabCronograma, tabCanva, tabCurriculo, tabEmpresa, tabPitch, tabIA, tabPlanilha, tabComplementares, tabCompletude, tabRelatorio};
+        TextView[] todasAbas = {tabEquipe, tabConhecimentos, tabRecursos, tabCronograma, tabCanva, tabEmpresa, tabPitch, tabIA, tabPlanilha, tabComplementares, tabCompletude, tabRelatorio};
         for (TextView tab : todasAbas) {
             tab.setAlpha(0.5f);
         }

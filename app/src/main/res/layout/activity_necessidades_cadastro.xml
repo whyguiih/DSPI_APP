@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/bg_gradient"
+    android:gravity="center">
+
+    <!-- Título da Página -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cadastrar Nova Necessidade"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="32dp" />
+
+    <!-- Campo: Nome da Necessidade -->
+    <EditText
+        android:id="@+id/inputNomeNecessidade"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_input_glass"
+        android:hint="Nome da necessidade"
+        android:textColorHint="#B3FFFFFF"
+        android:textColor="#FFFFFF"
+        android:padding="12dp"
+        android:inputType="text"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Campo: Descrição -->
+    <EditText
+        android:id="@+id/inputDescricaoNecessidade"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:background="@drawable/bg_input_glass"
+        android:hint="Descreva os detalhes da necessidade..."
+        android:textColorHint="#B3FFFFFF"
+        android:textColor="#FFFFFF"
+        android:padding="12dp"
+        android:gravity="top|start"
+        android:inputType="textMultiLine"
+        android:lines="5"
+        android:layout_marginBottom="32dp"/>
+
+    <!-- Botão Enviar -->
+    <Button
+        android:id="@+id/btnSalvarNecessidade"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/bg_button_glass"
+        android:text="Salvar Necessidade"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:textAllCaps="false"/>
+
+</LinearLayout>

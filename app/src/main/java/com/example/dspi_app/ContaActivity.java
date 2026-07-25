@@ -52,31 +52,51 @@ public class ContaActivity extends AppCompatActivity {
         if (nivel == null) {
             nivel = prefs.getString("nivel_de_acesso", "5");
         }
-
+        boolean usuarioEmpresa = prefs.getBoolean("empresa_verificador", false);
 
         emailLogado = prefs.getString("email_logado", "usuario@email.com");
 
         // Configurar o menu inferior
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
-        // Vincular componentes da tela
         LinearLayout btnEditarPerfil = findViewById(R.id.btnEditarPerfil);
         LinearLayout btnMeusProjetos = findViewById(R.id.btnMeusProjetos);
-        LinearLayout btnMeuCurriculo = findViewById(R.id.btnMeuCurriculo); // Confira se o ID está certo!
+        LinearLayout btnMeuCurriculo = findViewById(R.id.btnMeuCurriculo);
         LinearLayout btnCadastro = findViewById(R.id.btnCadastrar);
-
-
         LinearLayout btnSair = findViewById(R.id.btnSair);
+        LinearLayout btnNecessidades = findViewById(R.id.btnNecessidades);
+
+        if (usuarioEmpresa) {
+            // Se for empresa, mostra o botão
+            btnNecessidades.setVisibility(View.VISIBLE);
+
+            // 3. Já deixamos o clique preparado para a Parte 2.0 (abrir a subpágina)
+            btnNecessidades.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(ContaActivity.this, CadastroNecessidadesActivity.class);
+                    startActivity(intent);
+                }
+            });
+        } else {
+            btnNecessidades.setVisibility(View.GONE);
+        }
 
         // Esconder o botão "Meus Projetos" para usuários de nível 6
         if ("6".equals(nivel) || "2".equals(nivel) || "1".equals(nivel) ) {
             btnMeusProjetos.setVisibility(View.GONE);
         }
 
-        if (nivel.equals("2") || nivel.equals("3")) {
+// Esconder o botão "Criar Conta"
+        if ("2".equals(nivel) || "3".equals(nivel)) {
             btnCadastro.setVisibility(View.VISIBLE);
         } else {
             btnCadastro.setVisibility(View.GONE);
+        }
+
+// Esconder o botão "Meu Currículo" se não for nível 5
+        if (!"5".equals(nivel)) {
+            btnMeuCurriculo.setVisibility(View.GONE);
         }
 
         // Configuração dos botões e subpáginas
