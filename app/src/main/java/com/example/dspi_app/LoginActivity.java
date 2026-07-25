@@ -37,8 +37,6 @@ public class LoginActivity extends AppCompatActivity {
 
     private CredentialManager credentialManager;
 
-    private AppCompatButton btnCadastro;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         SplashScreen.installSplashScreen(this);
@@ -47,8 +45,6 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         credentialManager = CredentialManager.create(this);
-
-        btnCadastro = findViewById(R.id.btnCadastro);
 
         View mainLayout = findViewById(R.id.mainLayout);
         if (mainLayout != null) {
@@ -144,11 +140,6 @@ public class LoginActivity extends AppCompatActivity {
                 Volley.newRequestQueue(this).add(jsonObjectRequest);
             });
         }
-
-        btnCadastro.setOnClickListener(v -> {
-            Intent intent = new Intent(LoginActivity.this, CadastroActivity.class);
-            startActivity(intent);
-        });
     }
 
     private void loginComGoogle() {

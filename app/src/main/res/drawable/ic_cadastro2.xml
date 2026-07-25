@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+    width="512"
+    height="512"
+    viewBox="0 0 512 512">
+
+  <defs>
+    <linearGradient id="plusGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E8E8E8"/>
+    </linearGradient>
+  </defs>
+
+  <path
+      fill="url(#plusGradient)"
+      d="
+            M216 72
+            a24 24 0 0 1 24-24
+            h32
+            a24 24 0 0 1 24 24
+            v144
+            h144
+            a24 24 0 0 1 24 24
+            v32
+            a24 24 0 0 1-24 24
+            h-144
+            v144
+            a24 24 0 0 1-24 24
+            h-32
+            a24 24 0 0 1-24-24
+            v-144
+            h-144
+            a24 24 0 0 1-24-24
+            v-32
+            a24 24 0 0 1 24-24
+            h144
+            z"/>
+</svg>

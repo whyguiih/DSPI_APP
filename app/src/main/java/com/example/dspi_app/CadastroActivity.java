@@ -6,6 +6,7 @@ import android.text.TextUtils;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,16 +47,14 @@ public class CadastroActivity extends AppCompatActivity {
         inputEmailCadastro = findViewById(R.id.inputEmailCadastro);
         inputSenhaCadastro = findViewById(R.id.inputSenhaCadastro);
         inputConfirmaSenha = findViewById(R.id.inputConfirmaSenha);
+        ImageView btnVoltar = findViewById(R.id.btnVoltar);
 
         // Botões
         btnCadastrar = findViewById(R.id.btnCadastrar);
-        txtFazerLogin = findViewById(R.id.txtFazerLogin);
 
         btnCadastrar.setOnClickListener(v -> cadastrar());
 
-        txtFazerLogin.setOnClickListener(v -> {
-            Intent intent = new Intent(CadastroActivity.this, MainActivity.class);
-            startActivity(intent);
+        btnVoltar.setOnClickListener(v -> {
             finish();
         });
 

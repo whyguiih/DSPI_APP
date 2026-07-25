@@ -5,11 +5,13 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -51,6 +53,7 @@ public class ContaActivity extends AppCompatActivity {
             nivel = prefs.getString("nivel_de_acesso", "5");
         }
 
+
         emailLogado = prefs.getString("email_logado", "usuario@email.com");
 
         // Configurar o menu inferior
@@ -60,12 +63,20 @@ public class ContaActivity extends AppCompatActivity {
         LinearLayout btnEditarPerfil = findViewById(R.id.btnEditarPerfil);
         LinearLayout btnMeusProjetos = findViewById(R.id.btnMeusProjetos);
         LinearLayout btnMeuCurriculo = findViewById(R.id.btnMeuCurriculo); // Confira se o ID está certo!
+        LinearLayout btnCadastro = findViewById(R.id.btnCadastrar);
+
 
         LinearLayout btnSair = findViewById(R.id.btnSair);
 
         // Esconder o botão "Meus Projetos" para usuários de nível 6
         if ("6".equals(nivel) || "2".equals(nivel) || "1".equals(nivel) ) {
             btnMeusProjetos.setVisibility(View.GONE);
+        }
+
+        if (nivel.equals("2") || nivel.equals("3")) {
+            btnCadastro.setVisibility(View.VISIBLE);
+        } else {
+            btnCadastro.setVisibility(View.GONE);
         }
 
         // Configuração dos botões e subpáginas
@@ -101,19 +112,24 @@ public class ContaActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-
-        btnSair.setOnClickListener(v -> {
-            // Limpa as SharedPreferences
-            SharedPreferences.Editor editor = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit();
-            editor.clear();
-            editor.apply();
-
-            Intent intent = new Intent(ContaActivity.this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        btnCadastro.setOnClickListener(v -> {
+            Intent intent = new Intent(ContaActivity.this, CadastroActivity.class);
             startActivity(intent);
-            finish();
         });
-    }
+
+
+            btnSair.setOnClickListener(v -> {
+                // Limpa as SharedPreferences
+                SharedPreferences.Editor editor = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit();
+                editor.clear();
+                editor.apply();
+
+                Intent intent = new Intent(ContaActivity.this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            });
+        }
 
     @Override
     protected void onResume() {
