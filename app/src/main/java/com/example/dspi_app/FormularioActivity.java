@@ -45,6 +45,8 @@ public class FormularioActivity extends AppCompatActivity {
             tabIA, tabPlanilha, tabComplementares, tabCompletude, tabRelatorio, tabFeedback;
 
     private Button btnGerarRelatorio, btnVisualizarRelatorio, btnAtualizarFeedback;
+    private LinearLayout containerDocumentos;
+    private TextView tvTituloDocumentos;
 
     // Inputs da Equipe
     private EditText etNomeEquipe, etNomeProjeto, etEmail, etAreaCurso, etAreaProjeto,
@@ -617,6 +619,61 @@ public class FormularioActivity extends AppCompatActivity {
         btnVisualizarRelatorio = findViewById(R.id.btnVisualizarRelatorio);
         btnAtualizarFeedback = findViewById(R.id.btnAtualizarFeedback);
         btnEditarDados = findViewById(R.id.btnEditarDados);
+
+        containerDocumentos = findViewById(R.id.containerDocumentos);
+        tvTituloDocumentos = findViewById(R.id.tvTituloDocumentos);
+    }
+
+    private void buscarDocumentosNoBanco() {
+        if (containerDocumentos == null) return;
+        containerDocumentos.removeAllViews();
+
+        String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
+        FormularioRepository repository = new FormularioRepository(this);
+
+        repository.listarDocumentos(usuarioAtual, new FormularioRepository.OnListarDocumentosListener() {
+            @Override
+            public void onSucesso(org.json.JSONArray documentos) {
+                if (documentos == null || documentos.length() == 0) {
+                    if (tvTituloDocumentos != null) tvTituloDocumentos.setVisibility(View.GONE);
+                    return;
+                }
+
+                if (tvTituloDocumentos != null) tvTituloDocumentos.setVisibility(View.VISIBLE);
+
+                for (int i = 0; i < documentos.length(); i++) {
+                    try {
+                        JSONObject doc = documentos.getJSONObject(i);
+                        String nome = doc.getString("nome_documento");
+                        String url = doc.getString("url_documento");
+                        String tipo = doc.optString("tipo_documento", "Arquivo");
+
+                        Button btnDoc = new Button(FormularioActivity.this);
+                        btnDoc.setText(tipo + ": " + nome);
+                        
+                        // Aplicar estilo similar aos outros botões
+                        btnDoc.setBackgroundResource(R.drawable.bg_glass);
+                        btnDoc.setTextColor(android.graphics.Color.WHITE);
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                (int) (56 * getResources().getDisplayMetrics().density));
+                        params.setMargins(0, 0, 0, (int) (8 * getResources().getDisplayMetrics().density));
+                        btnDoc.setLayoutParams(params);
+
+                        btnDoc.setOnClickListener(v -> abrirPdf(url));
+                        containerDocumentos.addView(btnDoc);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onErro(String erro) {
+                // Silencioso ou log
+            }
+        });
     }
 
     private void configurarSpinnerCompletude(Spinner spinner) {
@@ -1423,7 +1480,10 @@ public class FormularioActivity extends AppCompatActivity {
         tabPlanilha.setOnClickListener(v -> alternarFormulario(formPlanilha, tabPlanilha));
         tabComplementares.setOnClickListener(v -> alternarFormulario(formComplementares, tabComplementares));
         tabCompletude.setOnClickListener(v -> alternarFormulario(formCompletude, tabCompletude));
-        tabRelatorio.setOnClickListener(v -> alternarFormulario(formRelatorio, tabRelatorio));
+        tabRelatorio.setOnClickListener(v -> {
+            alternarFormulario(formRelatorio, tabRelatorio);
+            buscarDocumentosNoBanco();
+        });
         tabFeedback.setOnClickListener(v -> alternarFormulario(formFeedback, tabFeedback));
     }
 

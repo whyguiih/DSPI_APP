@@ -360,6 +360,69 @@ export default {
 
     // ==========================================
 
+    // ==========================================
+    // ROTA DE UPLOAD DE DOCUMENTO (FORM-DATA)
+    // ==========================================
+    if (path === "/upload-documento") {
+      try {
+        const formData = await request.formData();
+        const usuario = formData.get('usuario');
+        const tipo = formData.get('tipo'); // 'Curriculo', 'Relatorio', etc.
+        const nome = formData.get('nome');
+        const file = formData.get('file');
+
+        if (!usuario || !file || !tipo) {
+          return new Response(JSON.stringify({ success: false, error: 'Dados incompletos' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const fileName = `documentos/${tipo.toLowerCase()}_${usuario.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`;
+        const R2_PUBLIC_URL = "https://pub-8b39c2fa88234341ac68682a11d82f77.r2.dev";
+        const fileUrl = `${R2_PUBLIC_URL}/${fileName}`;
+
+        // Salvar no R2
+        await env.BUCKET_VIDEOS.put(fileName, file.stream(), {
+          httpMetadata: { contentType: 'application/pdf' }
+        });
+
+        // Salvar na tb_documentos
+        await env.DB.prepare(`
+          INSERT INTO tb_documentos (nome_documento, tipo_documento, url_documento, usuario_vinculado)
+          VALUES (?, ?, ?, ?)
+        `).bind(nome || fileName, tipo, fileUrl, usuario).run();
+
+        return new Response(JSON.stringify({ success: true, url: fileUrl }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
+    if (path === "/listar-documentos") {
+      try {
+        const { searchParams } = new URL(request.url);
+        const usuario = searchParams.get('usuario');
+        if (!usuario) {
+          return new Response(JSON.stringify({ success: false, error: 'Usuário não fornecido' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const { results } = await env.DB.prepare("SELECT * FROM tb_documentos WHERE usuario_vinculado = ? ORDER BY data_geracao DESC").bind(usuario).all();
+        return new Response(JSON.stringify({ success: true, data: results }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
     if (path === "/upload-video") {
 
       return await handleUploadVideo(request, env, corsHeaders);
