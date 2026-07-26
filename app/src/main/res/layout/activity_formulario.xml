@@ -57,7 +57,7 @@
                 <TextView android:id="@+id/tabPlanilha" style="@style/TabStyle" android:text="Planilha" />
                 <TextView android:id="@+id/tabComplementares" style="@style/TabStyle" android:text="Complementares" />
                 <TextView android:id="@+id/tabCompletude" style="@style/TabStyle" android:text="Completude" />
-                <TextView android:id="@+id/tabRelatorio" style="@style/TabStyle" android:text="Relatório" />
+                <TextView android:id="@+id/tabRelatorio" style="@style/TabStyle" android:text="Arquivos" />
             </LinearLayout>
         </HorizontalScrollView>
 

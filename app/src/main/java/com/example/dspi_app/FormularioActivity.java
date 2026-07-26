@@ -188,8 +188,7 @@ public class FormularioActivity extends AppCompatActivity {
 
         if ("1".equals(nivel)) {
             tabRelatorio.setText("Arquivos");
-            // tabCanva e formCanva permanecem visíveis para nível 1 editar (visualizar)
-
+            tabRelatorio.setVisibility(View.VISIBLE);
             // Ocultar campos de texto do relatório para o nível 1
             for (int i = 0; i < formRelatorio.getChildCount(); i++) {
                 View child = formRelatorio.getChildAt(i);
@@ -198,9 +197,9 @@ public class FormularioActivity extends AppCompatActivity {
                 }
             }
         } else {
-            // Se não for nível 1, o relatório/arquivos tab permanece visível para que todos possam gerar os relatórios/canvas
-            tabRelatorio.setVisibility(View.VISIBLE);
-            formRelatorio.setVisibility(View.VISIBLE);
+            // Se não for nível 1, a aba de arquivos/relatório não deve ser exibida
+            tabRelatorio.setVisibility(View.GONE);
+            formRelatorio.setVisibility(View.GONE);
         }
         buscarFormularioNoBanco("equipe");
         buscarFormularioNoBanco("conhecimentos");
@@ -327,17 +326,18 @@ public class FormularioActivity extends AppCompatActivity {
         String urlPython = "http://192.168.1.112:5000/download-relatorio/" + nomeCodificado;
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
-        request.setTitle("Relatório " + nomeEquipeOuUsuario);
-        request.setDescription("Baixando seu relatório PDF...");
+        request.setTitle("Relatório - " + nomeEquipeOuUsuario);
+        request.setDescription("Baixando PDF...");
+        request.setMimeType("application/pdf");
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
-        String nomeArquivoSeguro = nomeEquipeOuUsuario.replaceAll("[^a-zA-Z0-9]", "_");
+        String nomeArquivoSeguro = nomeEquipeOuUsuario.replaceAll("[^a-zA-Z0-9]", "_") + "_" + System.currentTimeMillis();
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Relatorio_" + nomeArquivoSeguro + ".pdf");
 
         DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         if (manager != null) {
             manager.enqueue(request);
-            Toast.makeText(this, "Download do relatório iniciado...", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Download iniciado! Verifique sua pasta de Downloads.", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -382,17 +382,18 @@ public class FormularioActivity extends AppCompatActivity {
         String urlPython = "http://192.168.1.112:5000/download-canva/" + nomeCodificado;
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
-        request.setTitle("Canva " + nomeEquipeOuUsuario);
-        request.setDescription("Baixando seu Canva PDF...");
+        request.setTitle("Canva - " + nomeEquipeOuUsuario);
+        request.setDescription("Baixando Canva PDF...");
+        request.setMimeType("application/pdf");
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
-        String nomeArquivoSeguro = nomeEquipeOuUsuario.replaceAll("[^a-zA-Z0-9]", "_");
+        String nomeArquivoSeguro = nomeEquipeOuUsuario.replaceAll("[^a-zA-Z0-9]", "_") + "_" + System.currentTimeMillis();
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Canva_" + nomeArquivoSeguro + ".pdf");
 
         DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         if (manager != null) {
             manager.enqueue(request);
-            Toast.makeText(this, "Download do Canva iniciado...", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Download do Canva iniciado! Verifique sua pasta de Downloads.", Toast.LENGTH_LONG).show();
         }
     }
 

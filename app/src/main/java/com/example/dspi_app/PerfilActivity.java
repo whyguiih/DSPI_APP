@@ -110,6 +110,13 @@ public class PerfilActivity extends AppCompatActivity {
         inputNome.setText(prefs.getString("nome_usuario", "Nome do Usuário"));
         inputEmail.setText(emailAntigo);
 
+        // Se for nível 5, não permite alteração no e-mail
+        if ("5".equals(nivel)) {
+            inputEmail.setEnabled(false);
+            inputEmail.setFocusable(false);
+            inputEmail.setAlpha(0.7f);
+        }
+
         fotoBase64 = prefs.getString("foto_usuario", "");
         int radiusPx = (int) (16 * getResources().getDisplayMetrics().density);
 
@@ -233,14 +240,17 @@ public class PerfilActivity extends AppCompatActivity {
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
         request.setTitle("Currículo Profissional");
-        request.setDescription("Baixando seu currículo em PDF...");
+        request.setDescription("Baixando currículo...");
+        request.setMimeType("application/pdf");
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Curriculo_Profissional.pdf");
+        String nomeFinal = "Curriculo_" + System.currentTimeMillis() + ".pdf";
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, nomeFinal);
 
         DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         if (manager != null) {
             manager.enqueue(request);
+            Toast.makeText(this, "Download iniciado! Verifique sua pasta de Downloads.", Toast.LENGTH_LONG).show();
         }
     }
 

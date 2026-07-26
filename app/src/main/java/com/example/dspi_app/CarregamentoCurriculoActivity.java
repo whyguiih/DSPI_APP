@@ -93,6 +93,9 @@ public class CarregamentoCurriculoActivity extends AppCompatActivity {
 
         emailUsuarioLogado = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).getString("email_logado", "");
         if (!emailUsuarioLogado.isEmpty()) {
+            inputEmailCadastro.setText(emailUsuarioLogado);
+            inputEmailCadastro.setEnabled(false);
+            inputEmailCadastro.setFocusable(false);
             carregarDadosExistentes();
         }
 
