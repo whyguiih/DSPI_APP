@@ -28,9 +28,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.EditText;
+
+import java.util.ArrayList;
+
 public class EmpresasActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 3; // 3 = Empresas
     private final String BASE_URL = "https://api-dspi.whyguiih.workers.dev"; // Sua API
+    private final ArrayList<JSONObject> listaEmpresas = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +58,23 @@ public class EmpresasActivity extends AppCompatActivity {
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         carregarListaDeEmpresas();
+
+        EditText etPesquisa = findViewById(R.id.etPesquisa);
+
+        etPesquisa.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filtrarEmpresas(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
     }
 
     private void carregarListaDeEmpresas() {
@@ -67,9 +91,12 @@ public class EmpresasActivity extends AppCompatActivity {
                     try {
                         if (response.optBoolean("success")) {
                             JSONArray data = response.optJSONArray("data");
+                            listaEmpresas.clear();
                             if (data != null) {
                                 for (int i = 0; i < data.length(); i++) {
                                     JSONObject empresa = data.getJSONObject(i);
+
+                                    listaEmpresas.add(empresa);
 
                                     String nome = empresa.optString("nome_empresa", "Empresa Desconhecida");
                                     String cnpj = empresa.optString("cnpj", "");
@@ -164,6 +191,34 @@ public class EmpresasActivity extends AppCompatActivity {
         });
 
         container.addView(itemEmpresa);
+    }
+
+    private void filtrarEmpresas(String texto) {
+
+        LinearLayout listaEmpresasLayout = findViewById(R.id.listaEmpresasLayout);
+        listaEmpresasLayout.removeAllViews();
+
+        texto = texto.toLowerCase().trim();
+
+        for (JSONObject empresa : listaEmpresas) {
+
+            String nome = empresa.optString("nome_empresa", "");
+
+            if (nome.toLowerCase().startsWith(texto)) {
+
+                adicionarEmpresaNaTela(
+                        listaEmpresasLayout,
+                        nome,
+                        empresa.optString("cnpj", ""),
+                        empresa.optString("telefone_contato", ""),
+                        empresa.optString("email_contato", ""),
+                        empresa.optString("endereco", ""),
+                        empresa.optString("foto_perfil", ""),
+                        empresa.optString("descricao", "Nenhuma descrição disponível ainda."),
+                        empresa.optString("setor", "Não informado")
+                );
+            }
+        }
     }
 
     private void configurarBolhaAnimada() {
