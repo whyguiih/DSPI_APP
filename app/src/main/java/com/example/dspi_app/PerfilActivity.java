@@ -234,7 +234,7 @@ public class PerfilActivity extends AppCompatActivity {
 
     private void baixarCurriculoNoAndroid(String identificador) {
         String codificado = Uri.encode(identificador);
-        String urlPython = "http://192.168.1.112:5000/download-curriculo/" + codificado;
+        String urlPython = "https://avell.tailfdec8e.ts.net:8443/download-curriculo/" + codificado;
         android.util.Log.d("DOWNLOAD_DEBUG", "Solicitando PDF em: " + urlPython);
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));

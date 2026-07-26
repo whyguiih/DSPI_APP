@@ -350,7 +350,7 @@ public class FormularioActivity extends AppCompatActivity {
 
     private void baixarPdfNoAndroid(String nomeEquipeOuUsuario) {
         String nomeCodificado = Uri.encode(nomeEquipeOuUsuario);
-        String urlPython = "http://192.168.1.112:5000/download-relatorio/" + nomeCodificado;
+        String urlPython = "https://avell.tailfdec8e.ts.net:8443/download-relatorio/" + nomeCodificado;
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
         request.setTitle("Relatório - " + nomeEquipeOuUsuario);
@@ -406,7 +406,7 @@ public class FormularioActivity extends AppCompatActivity {
 
     private void baixarCanvaNoAndroid(String nomeEquipeOuUsuario) {
         String nomeCodificado = Uri.encode(nomeEquipeOuUsuario);
-        String urlPython = "http://192.168.1.112:5000/download-canva/" + nomeCodificado;
+        String urlPython = "https://avell.tailfdec8e.ts.net:8443/download-canva/" + nomeCodificado;
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
         request.setTitle("Canva - " + nomeEquipeOuUsuario);
