@@ -62,11 +62,11 @@ public class CadastroActivity extends AppCompatActivity {
 
         String[] niveis = {
                 "Avaliador",
-                "Dr/dh",
+                "DR/DN",
                 "Professor",
                 "Empresa",
                 "Aluno",
-                "Público Geral"
+                "Público Externo"
         };
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
