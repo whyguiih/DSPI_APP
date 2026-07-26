@@ -36,6 +36,10 @@ public class CurriculoRepository {
                        String motivo, String aprendo, String prefiroTrabalhar,
                        CurriculoListener listener) {
 
+        // Puxa o e-mail real da conta
+        android.content.SharedPreferences prefs = context.getSharedPreferences("SESSAO_USER", android.content.Context.MODE_PRIVATE);
+        String emailSessao = prefs.getString("email_logado", "");
+
         JSONObject json = new JSONObject();
         try {
             json.put("nome", nome);
@@ -44,12 +48,13 @@ public class CurriculoRepository {
             json.put("telefone", telefone);
             json.put("cidade", cidade);
             json.put("habilidades", habilidade);
-            json.put("fez_projeto", oQueFez); // Sincronizado com body.fez_projeto na API
+            json.put("fez_projeto", oQueFez);
             json.put("projeto", projeto);
-            json.put("empresa_vinculado", empresa); // Sincronizado com body.empresa_vinculado na API
-            json.put("motivo_projeto", motivo); // Sincronizado com body.motivo_projeto na API
-            json.put("aprendo_mais", aprendo); // Sincronizado com body.aprendo_mais na API
-            json.put("prefiro_trabalhar", prefiroTrabalhar); // Sincronizado com body.prefiro_trabalhar na API
+            json.put("empresa_vinculado", empresa);
+            json.put("motivo_projeto", motivo);
+            json.put("aprendo_mais", aprendo);
+            json.put("prefiro_trabalhar", prefiroTrabalhar);
+            json.put("usuario_logado", emailSessao); // Vínculo mestre
         } catch (JSONException e) {
             listener.onErro("Erro ao preparar dados: " + e.getMessage());
             return;

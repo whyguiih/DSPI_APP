@@ -178,8 +178,13 @@ public class PerfilActivity extends AppCompatActivity {
         Toast.makeText(this, "Sincronizando dados profissionais...", Toast.LENGTH_SHORT).show();
         String url = "https://api-dspi.whyguiih.workers.dev/preencher-curriculo";
         
+        // Puxa o e-mail real da conta do SharedPreferences
+        SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
+        String emailSessao = prefs.getString("email_logado", "");
+
         JSONObject jsonBody = new JSONObject();
         try {
+            jsonBody.put("email_sessao", emailSessao); // Chave mestre para busca
             jsonBody.put("nome_usuario", inputNome.getText().toString());
             jsonBody.put("email_usuario", inputEmail.getText().toString());
         } catch (JSONException e) { e.printStackTrace(); }
@@ -189,37 +194,49 @@ public class PerfilActivity extends AppCompatActivity {
                     try {
                         if (response.getBoolean("success")) {
                             Toast.makeText(this, "Currículo pronto! Baixando...", Toast.LENGTH_SHORT).show();
-                            String nomeParaArquivo = inputNome.getText().toString().trim();
-                            baixarCurriculoNoAndroid(nomeParaArquivo);
+                            // Passamos o e-mail da sessão para o Python também!
+                            baixarCurriculoNoAndroid(emailSessao);
                         } else {
                             mostrarErroGrande("Aviso do Servidor", response.optString("message"));
                         }
                     } catch (JSONException e) {
-                        mostrarErroGrande("Erro de Processamento", "Houve uma falha ao ler a resposta do servidor de currículos.");
+                        mostrarErroGrande("Erro de Processamento", "Houve uma falha ao ler a resposta do servidor.");
                     }
                 },
-                error -> mostrarErroGrande("Erro de Conexão", "Não foi possível conectar ao servidor de nuvem para gerar o currículo. Verifique sua conexão.")
-        );
+                error -> {
+                    String mensagemErro = "Não foi possível conectar ao servidor de nuvem.";
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
+                        try {
+                            String responseBody = new String(error.networkResponse.data, "utf-8");
+                            JSONObject data = new JSONObject(responseBody);
+                            mensagemErro = data.optString("message", mensagemErro);
+                        } catch (Exception e) { e.printStackTrace(); }
+                    }
+                    mostrarErroGrande("Aviso", mensagemErro);
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Content-Type", "application/json; charset=utf-8");
+                return headers;
+            }
+        };
         Volley.newRequestQueue(this).add(request);
     }
 
-    private void baixarCurriculoNoAndroid(String nomeAluno) {
-        // Usar Uri.encode para compatibilidade com Flask (%20 em vez de +)
-        String nomeCodificado = Uri.encode(nomeAluno);
-        
-        // Forçar explicitamente o uso de HTTP (sem S) para o servidor local
-        String urlPython = "http://192.168.1.112:5000/download-curriculo/" + nomeCodificado;
+    private void baixarCurriculoNoAndroid(String identificador) {
+        String codificado = Uri.encode(identificador);
+        String urlPython = "http://192.168.1.112:5000/download-curriculo/" + codificado;
         android.util.Log.d("DOWNLOAD_DEBUG", "Solicitando PDF em: " + urlPython);
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
-        request.setAllowedOverRoaming(true);
-        request.setTitle("Currículo " + nomeAluno);
-        request.setDescription("Baixando seu currículo profissional...");
+        request.setTitle("Currículo Profissional");
+        request.setDescription("Baixando seu currículo em PDF...");
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
-        String nomeArquivoSeguro = nomeAluno.replaceAll("[^a-zA-Z0-9]", "_");
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Curriculo_" + nomeArquivoSeguro + ".pdf");
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Curriculo_Profissional.pdf");
 
         DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         if (manager != null) {

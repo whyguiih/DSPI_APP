@@ -369,8 +369,36 @@ export default {
 
 
     try {
-
       const body = await request.json();
+
+      if (path === "/preencher-curriculo") {
+        try {
+          const emailSessao = body.email_sessao || "";
+          const emailForm = body.email_usuario || "";
+          const nomeForm = body.nome_usuario || "";
+
+          if (!emailSessao && !emailForm) {
+            return new Response(JSON.stringify({ success: false, message: "E-mail não identificado." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+
+          // Busca prioritária pelo e-mail da sessão, depois e-mail do form ou nome
+          const record = await env.DB.prepare(
+            "SELECT id_aluno FROM tb_curriculo_alunos WHERE usuario = ? OR email = ? OR nome = ?"
+          ).bind(emailSessao, emailForm, nomeForm).first();
+
+          if (!record) {
+            return new Response(JSON.stringify({
+              success: false,
+              message: "Currículo não encontrado! Por favor, vá na aba 'Meu Currículo', preencha seus dados e clique em SALVAR antes de gerar o PDF."
+            }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+
+          return new Response(JSON.stringify({ success: true, message: "OK" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        } catch (e) {
+          return new Response(JSON.stringify({ success: false, message: "Erro: " + e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
+
       const { tipo, usuario, campos } = body;
 
       //============SALVAR DADOS FORMULARIO==================
@@ -3393,11 +3421,13 @@ if (path === "/salvar-curriculo") {
     const {
       nome, email, data_nascimento, telefone, cidade, habilidades,
       fez_projeto, projeto, empresa_vinculado, motivo_projeto,
-      aprendo_mais, prefiro_trabalhar
+      aprendo_mais, prefiro_trabalhar, usuario_logado
     } = body;
 
-    if (!email) {
-      return new Response(JSON.stringify({ success: false, message: 'ERRO: E-mail não recebido no servidor.' }), {
+    const emailBusca = usuario_logado || email;
+
+    if (!emailBusca) {
+      return new Response(JSON.stringify({ success: false, message: 'ERRO: E-mail não identificado.' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -3405,20 +3435,20 @@ if (path === "/salvar-curriculo") {
     const val = (v) => (v === undefined || v === null) ? "" : String(v);
 
     const curriculoExistente = await env.DB.prepare(
-      "SELECT id_aluno FROM tb_curriculo_alunos WHERE email = ?"
-    ).bind(email).first();
+      "SELECT id_aluno FROM tb_curriculo_alunos WHERE usuario = ? OR email = ?"
+    ).bind(emailBusca, emailBusca).first();
 
     if (curriculoExistente) {
       await env.DB.prepare(`
         UPDATE tb_curriculo_alunos SET
           nome = ?, data_nascimento = ?, telefone = ?, cidade = ?, habilidades = ?,
           fez_projeto = ?, projeto = ?, empresa_vinculado = ?, motivo_projeto = ?,
-          aprendo_mais = ?, prefiro_trabalhar = ?
-        WHERE email = ?
+          aprendo_mais = ?, prefiro_trabalhar = ?, usuario = ?
+        WHERE id_aluno = ?
       `).bind(
         val(nome), val(data_nascimento), val(telefone), val(cidade), val(habilidades),
         val(fez_projeto), val(projeto), val(empresa_vinculado), val(motivo_projeto),
-        val(aprendo_mais), val(prefiro_trabalhar), email
+        val(aprendo_mais), val(prefiro_trabalhar), emailBusca, curriculoExistente.id_aluno
       ).run();
 
       return new Response(JSON.stringify({ success: true, message: 'Currículo atualizado com sucesso!' }), {
@@ -3426,17 +3456,16 @@ if (path === "/salvar-curriculo") {
       });
 
     } else {
-      // CORREÇÃO: Parêntese fechado antes de VALUES e removido o "" extra do bind()
       await env.DB.prepare(`
         INSERT INTO tb_curriculo_alunos (
           nome, email, data_nascimento, telefone, cidade, habilidades,
           fez_projeto, projeto, empresa_vinculado, motivo_projeto,
-          aprendo_mais, prefiro_trabalhar
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          aprendo_mais, prefiro_trabalhar, usuario
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
-        val(nome), email, val(data_nascimento), val(telefone), val(cidade), val(habilidades),
+        val(nome), val(email), val(data_nascimento), val(telefone), val(cidade), val(habilidades),
         val(fez_projeto), val(projeto), val(empresa_vinculado), val(motivo_projeto),
-        val(aprendo_mais), val(prefiro_trabalhar)
+        val(aprendo_mais), val(prefiro_trabalhar), emailBusca
       ).run();
 
       return new Response(JSON.stringify({ success: true, message: 'Currículo criado com sucesso!' }), {

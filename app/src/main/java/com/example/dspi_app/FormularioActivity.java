@@ -230,12 +230,8 @@ public class FormularioActivity extends AppCompatActivity {
 
         // ===== BOTÃO GERAR RELATÓRIO =====
         btnGerarRelatorio.setOnClickListener(v -> {
-            if ("1".equals(nivel)) {
-                Toast.makeText(this, "Em breve: Gerar Relatório", Toast.LENGTH_SHORT).show();
-            } else {
-                String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
-                fazerRequisicaoNode(usuarioAtual);
-            }
+            String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
+            fazerRequisicaoNode(usuarioAtual);
         });
 
 
