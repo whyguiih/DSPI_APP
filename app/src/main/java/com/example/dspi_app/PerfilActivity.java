@@ -1,6 +1,5 @@
 package com.example.dspi_app;
 
-import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,7 +10,6 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.View;
@@ -173,85 +171,6 @@ public class PerfilActivity extends AppCompatActivity {
                     .setNegativeButton("Não", null)
                     .show();
         });
-
-        // Botão para Gerar/Verificar Currículo (Igual ao padrão do relatório)
-        View btnVerificarCurriculo = findViewById(R.id.btnVerificarCurriculo);
-        if (btnVerificarCurriculo != null) {
-            btnVerificarCurriculo.setOnClickListener(v -> gerarCurriculoPDF());
-        }
-    }
-
-    private void gerarCurriculoPDF() {
-        Toast.makeText(this, "Sincronizando dados profissionais...", Toast.LENGTH_SHORT).show();
-        String url = "https://api-dspi.whyguiih.workers.dev/preencher-curriculo";
-        
-        // Puxa o e-mail real da conta do SharedPreferences
-        SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
-        String emailSessao = prefs.getString("email_logado", "");
-
-        JSONObject jsonBody = new JSONObject();
-        try {
-            jsonBody.put("email_sessao", emailSessao); // Chave mestre para busca
-            jsonBody.put("nome_usuario", inputNome.getText().toString());
-            jsonBody.put("email_usuario", inputEmail.getText().toString());
-        } catch (JSONException e) { e.printStackTrace(); }
-
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
-                response -> {
-                    try {
-                        if (response.getBoolean("success")) {
-                            Toast.makeText(this, "Currículo pronto! Baixando...", Toast.LENGTH_SHORT).show();
-                            // Passamos o e-mail da sessão para o Python também!
-                            baixarCurriculoNoAndroid(emailSessao);
-                        } else {
-                            mostrarErroGrande("Aviso do Servidor", response.optString("message"));
-                        }
-                    } catch (JSONException e) {
-                        mostrarErroGrande("Erro de Processamento", "Houve uma falha ao ler a resposta do servidor.");
-                    }
-                },
-                error -> {
-                    String mensagemErro = "Não foi possível conectar ao servidor de nuvem.";
-                    if (error.networkResponse != null && error.networkResponse.data != null) {
-                        try {
-                            String responseBody = new String(error.networkResponse.data, "utf-8");
-                            JSONObject data = new JSONObject(responseBody);
-                            mensagemErro = data.optString("message", mensagemErro);
-                        } catch (Exception e) { e.printStackTrace(); }
-                    }
-                    mostrarErroGrande("Aviso", mensagemErro);
-                }
-        ) {
-            @Override
-            public Map<String, String> getHeaders() {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("Content-Type", "application/json; charset=utf-8");
-                return headers;
-            }
-        };
-        Volley.newRequestQueue(this).add(request);
-    }
-
-    private void baixarCurriculoNoAndroid(String identificador) {
-        String codificado = Uri.encode(identificador);
-        String urlPython = "https://avell.tailfdec8e.ts.net:8443/download-curriculo/" + codificado;
-        android.util.Log.d("DOWNLOAD_DEBUG", "Solicitando PDF em: " + urlPython);
-
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
-        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
-        request.setTitle("Currículo Profissional");
-        request.setDescription("Baixando currículo...");
-        request.setMimeType("application/pdf");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-
-        String nomeFinal = "Curriculo_" + System.currentTimeMillis() + ".pdf";
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, nomeFinal);
-
-        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        if (manager != null) {
-            manager.enqueue(request);
-            Toast.makeText(this, "Download iniciado! Verifique sua pasta de Downloads.", Toast.LENGTH_LONG).show();
-        }
     }
 
     private int getOrientationDegrees(Uri uri) {
