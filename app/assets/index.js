@@ -844,6 +844,8 @@ export default {
 
         }
 
+
+
         //===============TB_CANVA===============
         if (tipo === "canva") {
 
@@ -1944,6 +1946,19 @@ export default {
 
         }
 
+
+
+      if (tipo === "feedback") {
+    const record = await env.DB.prepare(`
+      SELECT comentario_empresa FROM tb_acompanhamento_projeto WHERE usuario = ?
+    `).bind(usuario).first();
+
+    return new Response(JSON.stringify({
+      success: true,
+      dados: record || { comentario_empresa: "" }
+    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
         // ================= TB_EQUIPE =================
 
         if (tipo === "equipe") {
@@ -2571,17 +2586,17 @@ export default {
         }
 
         if (tipo === "curriculo") {
+          const result = await env.DB.prepare(`
+            SELECT *
+            FROM tb_curriculo_alunos
+            WHERE usuario = ? OR email = ?
+            LIMIT 1
+          `).bind(usuario, usuario).first();
 
-          const { results } = await env.DB.prepare(`
-    SELECT *
-    FROM tb_curriculo_alunos
-    WHERE usuario = ?
-    LIMIT 1
-  `).bind(usuario).all();
-
-          if (!results || results.length === 0) {
+          if (!result) {
             return new Response(JSON.stringify({
-              success: false,
+              success: true,
+              existe: false,
               message: "Currículo não encontrado."
             }), {
               headers: {
@@ -2593,7 +2608,8 @@ export default {
 
           return new Response(JSON.stringify({
             success: true,
-            dados: results[0]
+            existe: true,
+            dados: result
           }), {
             headers: {
               ...corsHeaders,
@@ -2614,6 +2630,61 @@ export default {
         });
 
       }
+
+
+
+
+
+
+
+
+      if (path === "/salvar-comentario") {
+  const { nome_equipe, comentario } = body;
+
+  if (!nome_equipe || !comentario) {
+    return new Response(JSON.stringify({ success: false, message: "Dados ausentes." }),
+    { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  try {
+    // Tenta atualizar na tb_acompanhamento_projeto
+    const info = await env.DB.prepare(`
+      UPDATE tb_acompanhamento_projeto
+      SET comentario_empresa = ?
+      WHERE usuario = ? OR usuario = (SELECT nome_usuarios FROM tb_cadastros WHERE email = ?)
+    `).bind(comentario, nome_equipe, nome_equipe).run();
+
+    if (info.meta.changes > 0) {
+      return new Response(JSON.stringify({ success: true, message: "Feedback salvo com sucesso!" }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } else {
+      return new Response(JSON.stringify({ success: false, message: "Projeto não encontrado para esta equipe." }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+  } catch (e) {
+    return new Response(JSON.stringify({ success: false, error: e.message }),
+    { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
       if (path === "/atualizar-perfil") {
@@ -2946,6 +3017,8 @@ export default {
 
 
 
+
+
       if (path === "/login") {
 
         const { email, senha } = body;
@@ -2976,31 +3049,6 @@ export default {
 
 
 
-      if (path === "/salvar-comentario") {
-
-        const { nome_equipe, comentario } = body;
-
-        if (!nome_equipe || !comentario) return new Response(JSON.stringify({ success: false, message: "Nome da equipe ou comentário ausente." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-
-
-        const info = await env.DB.prepare(`
-
-          UPDATE tb_acompanhamento_projeto
-
-          SET comentario_empresa = ?
-
-          WHERE usuario = ? OR usuario = (SELECT nome_usuarios FROM tb_cadastros WHERE email = ?)
-
-        `).bind(comentario, nome_equipe, nome_equipe).run();
-
-
-
-        if (info.meta.changes > 0) return new Response(JSON.stringify({ success: true, message: "Comentário salvo com sucesso!" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-        else return new Response(JSON.stringify({ success: false, message: "Equipe não encontrada na base de dados." }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-      }
 
 
 

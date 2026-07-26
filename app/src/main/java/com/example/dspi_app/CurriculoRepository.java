@@ -108,8 +108,8 @@ public class CurriculoRepository {
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
-                            if (response.getBoolean("existe")) {
-                                listener.onSucesso(response.getJSONObject("data"));
+                            if (response.optBoolean("existe", false)) {
+                                listener.onSucesso(response.getJSONObject("dados"));
                             } else {
                                 listener.onNaoEncontrado();
                             }

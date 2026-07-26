@@ -2,10 +2,12 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_gradient">
+    android:background="@drawable/bg_gradient"
+    tools:context=".CarregamentoCurriculoActivity">
 
     <ImageButton
         android:id="@+id/btnBack"
@@ -13,7 +15,8 @@
         android:layout_height="48dp"
         android:layout_margin="16dp"
         android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@android:drawable/ic_menu_revert"
+        android:contentDescription="Voltar"
+        android:src="@drawable/ic_back"
         app:tint="#FFFFFF"
         android:elevation="10dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -27,17 +30,16 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingVertical="32dp">
+            android:paddingVertical="64dp"
+            android:paddingHorizontal="24dp">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/cadastroGlassContainer"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="32dp"
-                android:padding="32dp"
+                android:padding="28dp"
                 android:background="@drawable/bg_glass"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
@@ -47,7 +49,6 @@
                     android:layout_height="wrap_content"
                     android:adjustViewBounds="true"
                     android:src="@drawable/logo_integra"
-                    android:layout_marginBottom="24dp"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
@@ -56,9 +57,9 @@
                     android:id="@+id/txtCrieCurriculo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Preencha seu curriculo"
+                    android:text="Preencha seu Currículo"
                     android:textColor="#FFFFFF"
-                    android:textSize="22sp"
+                    android:textSize="24sp"
                     android:textStyle="bold"
                     android:fontFamily="@font/neo_sans"
                     android:layout_marginTop="16dp"
@@ -66,212 +67,320 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
 
-                <EditText
-                    android:id="@+id/inputNome"
-                    android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="32dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="Nome Completo"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="textPersonName"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/txtCrieCurriculo" />
-
-                <EditText
-                    android:id="@+id/inputEmailCadastro"
-                    android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="E-mail Institucional ou Pessoal"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="textEmailAddress"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputNome" />
-
-                <EditText
-                    android:id="@+id/inputDataNascimento"
-                    android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="Data de Nascimento (DD/MM/AAAA)"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="date"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputEmailCadastro" />
-
-                <EditText
-                    android:id="@+id/inputTelefone"
-                    android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="Telefone de contato"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="phone"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputDataNascimento" />
-
-                <EditText
-                    android:id="@+id/inputCidade"
-                    android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="Cidade em realizou as atividades"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="textPersonName"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputTelefone" />
-
-                <EditText
-                    android:id="@+id/inputProjeto"
-                    android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="Projeto ao qual está vinculado"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="textPersonName"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputCidade" />
-
-                <EditText
-                    android:id="@+id/inputEmpresa"
-                    android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="Empresa ao qual o projeto está vinculado:"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="textPersonName"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputProjeto" />
-
-                <EditText
-                    android:id="@+id/inputHabilidade"
-                    android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="Habilidades"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="textPersonName"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputEmpresa" />
-
-                <EditText
-                    android:id="@+id/inputOQueFez"
-                    android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="O que desenvolvi no projeto"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="textPersonName"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputHabilidade" />
-
-                <EditText
-                    android:id="@+id/inputMotivo"
-                    android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="Motivo de participar do projeto."
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="textPersonName"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputOQueFez" />
-
-                <EditText
-                    android:id="@+id/inputAprendo"
-                    android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="Aprendo mais:"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="textPersonName"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputMotivo" />
-
-                <EditText
-                    android:id="@+id/inputPrefiroTrabalhar"
-                    android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_input_glass"
-                    android:hint="Prefiro trabalhar de que forma:"
-                    android:textColorHint="#B3FFFFFF"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:paddingHorizontal="20dp"
-                    android:inputType="textPersonName"
-                    android:fontFamily="@font/neo_sans"
-                    app:layout_constraintTop_toBottomOf="@id/inputAprendo" />
-
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/btnCadastrar"
-                    android:layout_width="240dp"
-                    android:layout_height="60dp"
-                    android:layout_marginTop="32dp"
-                    android:background="@drawable/bg_button_login"
-                    android:text="CADASTRAR"
-                    android:textColor="#FFFFFF"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:fontFamily="@font/neo_sans"
-                    android:elevation="0dp"
-                    android:stateListAnimator="@null"
-                    app:layout_constraintTop_toBottomOf="@id/inputPrefiroTrabalhar"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
-
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:id="@+id/formContainer"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="24dp"
-                    app:layout_constraintTop_toBottomOf="@id/btnCadastrar"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent">
+                    android:orientation="vertical"
+                    android:layout_marginTop="32dp"
+                    app:layout_constraintTop_toBottomOf="@id/txtCrieCurriculo">
 
+                    <!-- Nome Completo -->
+                    <TextView
+                        android:id="@+id/lblNome"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Nome Completo"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:textStyle="bold"
+                        android:labelFor="@id/inputNome"
+                        android:layout_marginBottom="6dp" />
+                    <EditText
+                        android:id="@+id/inputNome"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:paddingHorizontal="20dp"
+                        android:inputType="textPersonName"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginBottom="20dp" />
+
+                    <!-- E-mail -->
+                    <TextView
+                        android:id="@+id/lblEmail"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="E-mail Institucional ou Pessoal"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:textStyle="bold"
+                        android:labelFor="@id/inputEmailCadastro"
+                        android:layout_marginBottom="6dp" />
+                    <EditText
+                        android:id="@+id/inputEmailCadastro"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:paddingHorizontal="20dp"
+                        android:inputType="textEmailAddress"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginBottom="20dp" />
+
+                    <!-- Data Nascimento -->
+                    <TextView
+                        android:id="@+id/lblDataNasc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Data de Nascimento"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:textStyle="bold"
+                        android:labelFor="@id/inputDataNascimento"
+                        android:layout_marginBottom="6dp" />
+                    <EditText
+                        android:id="@+id/inputDataNascimento"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:paddingHorizontal="20dp"
+                        android:inputType="date"
+                        android:hint="DD/MM/AAAA"
+                        android:textColorHint="#80FFFFFF"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginBottom="20dp" />
+
+                    <!-- Telefone -->
+                    <TextView
+                        android:id="@+id/lblTelefone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Telefone de contato"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:textStyle="bold"
+                        android:labelFor="@id/inputTelefone"
+                        android:layout_marginBottom="6dp" />
+                    <EditText
+                        android:id="@+id/inputTelefone"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:paddingHorizontal="20dp"
+                        android:inputType="phone"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginBottom="20dp" />
+
+                    <!-- Cidade -->
+                    <TextView
+                        android:id="@+id/lblCidade"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cidade das atividades"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:textStyle="bold"
+                        android:labelFor="@id/inputCidade"
+                        android:layout_marginBottom="6dp" />
+                    <EditText
+                        android:id="@+id/inputCidade"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:paddingHorizontal="20dp"
+                        android:inputType="textPersonName"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginBottom="20dp" />
+
+                    <!-- Projeto -->
+                    <TextView
+                        android:id="@+id/lblProjeto"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Projeto vinculado"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:textStyle="bold"
+                        android:labelFor="@id/inputProjeto"
+                        android:layout_marginBottom="6dp" />
+                    <EditText
+                        android:id="@+id/inputProjeto"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:paddingHorizontal="20dp"
+                        android:inputType="textPersonName"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginBottom="20dp" />
+
+                    <!-- Empresa -->
+                    <TextView
+                        android:id="@+id/lblEmpresa"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Empresa vinculada"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:textStyle="bold"
+                        android:labelFor="@id/inputEmpresa"
+                        android:layout_marginBottom="6dp" />
+                    <EditText
+                        android:id="@+id/inputEmpresa"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:paddingHorizontal="20dp"
+                        android:inputType="textPersonName"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginBottom="20dp" />
+
+                    <!-- Habilidades -->
+                    <TextView
+                        android:id="@+id/lblHabilidade"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Habilidades"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:textStyle="bold"
+                        android:labelFor="@id/inputHabilidade"
+                        android:layout_marginBottom="6dp" />
+                    <EditText
+                        android:id="@+id/inputHabilidade"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:paddingHorizontal="20dp"
+                        android:inputType="textPersonName"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginBottom="20dp" />
+
+                    <!-- O que desenvolvi -->
+                    <TextView
+                        android:id="@+id/lblOQueFez"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="O que desenvolvi no projeto"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:textStyle="bold"
+                        android:labelFor="@id/inputOQueFez"
+                        android:layout_marginBottom="6dp" />
+                    <EditText
+                        android:id="@+id/inputOQueFez"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="80dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:padding="20dp"
+                        android:inputType="textMultiLine"
+                        android:gravity="top"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginBottom="20dp" />
+
+                    <!-- Motivo -->
+                    <TextView
+                        android:id="@+id/lblMotivo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Motivo de participar do projeto"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:textStyle="bold"
+                        android:labelFor="@id/inputMotivo"
+                        android:layout_marginBottom="6dp" />
+                    <EditText
+                        android:id="@+id/inputMotivo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="80dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:padding="20dp"
+                        android:inputType="textMultiLine"
+                        android:gravity="top"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginBottom="20dp" />
+
+                    <!-- Aprendo mais -->
+                    <TextView
+                        android:id="@+id/lblAprendo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Como aprendo melhor?"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:textStyle="bold"
+                        android:labelFor="@id/inputAprendo"
+                        android:layout_marginBottom="6dp" />
+                    <EditText
+                        android:id="@+id/inputAprendo"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:paddingHorizontal="20dp"
+                        android:inputType="textPersonName"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginBottom="20dp" />
+
+                    <!-- Prefiro trabalhar -->
+                    <TextView
+                        android:id="@+id/lblPrefiro"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Forma de trabalho preferida"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:textStyle="bold"
+                        android:labelFor="@id/inputPrefiroTrabalhar"
+                        android:layout_marginBottom="6dp" />
+                    <EditText
+                        android:id="@+id/inputPrefiroTrabalhar"
+                        android:layout_width="match_parent"
+                        android:layout_height="55dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:paddingHorizontal="20dp"
+                        android:inputType="textPersonName"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginBottom="40dp" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnCadastrar"
+                        android:layout_width="match_parent"
+                        android:layout_height="60dp"
+                        android:background="@drawable/bg_button_login"
+                        android:text="CADASTRAR"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/neo_sans"
+                        android:elevation="4dp"
+                        android:stateListAnimator="@null" />
 
                 </LinearLayout>
 
