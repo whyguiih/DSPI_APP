@@ -177,6 +177,15 @@ public class FormularioActivity extends AppCompatActivity {
         vincularComponentes();
 
         // Lógica de visibilidade e nomes baseada no nível de acesso
+        Button btnAcaoCanvaRelatorio = findViewById(R.id.btnAcaoCanvaRelatorio);
+        if (btnAcaoCanvaRelatorio != null) {
+            btnAcaoCanvaRelatorio.setVisibility(View.VISIBLE);
+            btnAcaoCanvaRelatorio.setOnClickListener(v -> {
+                String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
+                fazerRequisicaoCanva(usuarioAtual);
+            });
+        }
+
         if ("1".equals(nivel)) {
             tabRelatorio.setText("Arquivos");
             // tabCanva e formCanva permanecem visíveis para nível 1 editar (visualizar)
@@ -188,21 +197,10 @@ public class FormularioActivity extends AppCompatActivity {
                     child.setVisibility(View.GONE);
                 }
             }
-            
-            // Mostrar botões de geração na aba de Arquivos (antigo Relatório)
-            Button btnAcaoCanvaRelatorio = findViewById(R.id.btnAcaoCanvaRelatorio);
-            if (btnAcaoCanvaRelatorio != null) {
-                btnAcaoCanvaRelatorio.setVisibility(View.VISIBLE);
-                btnAcaoCanvaRelatorio.setOnClickListener(v -> Toast.makeText(this, "Em breve: Gerar Canva", Toast.LENGTH_SHORT).show());
-            }
-            
-            // O botão de gerar relatório também não deve ter função no momento para o nível 1
-            btnGerarRelatorio.setOnClickListener(v -> Toast.makeText(this, "Em breve: Gerar Relatório", Toast.LENGTH_SHORT).show());
-
         } else {
-            // Se não for nível 1, esconde relatório de todos os usuários
-            tabRelatorio.setVisibility(View.GONE);
-            formRelatorio.setVisibility(View.GONE);
+            // Se não for nível 1, o relatório/arquivos tab permanece visível para que todos possam gerar os relatórios/canvas
+            tabRelatorio.setVisibility(View.VISIBLE);
+            formRelatorio.setVisibility(View.VISIBLE);
         }
         buscarFormularioNoBanco("equipe");
         buscarFormularioNoBanco("conhecimentos");
@@ -330,7 +328,7 @@ public class FormularioActivity extends AppCompatActivity {
 
     private void baixarPdfNoAndroid(String nomeEquipeOuUsuario) {
         String nomeCodificado = Uri.encode(nomeEquipeOuUsuario);
-        String urlPython = "http://10.0.0.192:5000/download-relatorio/" + nomeCodificado;
+        String urlPython = "http://192.168.1.112:5000/download-relatorio/" + nomeCodificado;
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
         request.setTitle("Relatório " + nomeEquipeOuUsuario);
@@ -344,6 +342,61 @@ public class FormularioActivity extends AppCompatActivity {
         if (manager != null) {
             manager.enqueue(request);
             Toast.makeText(this, "Download do relatório iniciado...", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void fazerRequisicaoCanva(String usuarioAtual) {
+        Toast.makeText(this, "Validando dados do Canva...", Toast.LENGTH_SHORT).show();
+
+        String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-canva?usuario=" + usuarioAtual;
+        JSONObject jsonBody = new JSONObject();
+
+        com.android.volley.toolbox.JsonObjectRequest request = new com.android.volley.toolbox.JsonObjectRequest(
+                com.android.volley.Request.Method.POST,
+                urlNode,
+                jsonBody,
+                response -> {
+                    try {
+                        if (response.getBoolean("success")) {
+                            Toast.makeText(this, "Dados do Canva prontos! Iniciando download...", Toast.LENGTH_SHORT).show();
+                            baixarCanvaNoAndroid(usuarioAtual);
+                        } else {
+                            Toast.makeText(this, "Aviso: " + response.optString("message"), Toast.LENGTH_LONG).show();
+                        }
+                    } catch (JSONException e) {
+                        Toast.makeText(this, "Erro ao processar resposta do servidor.", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    String erroMsg = "Erro de conexão. Status: ";
+                    if (error.networkResponse != null) {
+                        erroMsg += error.networkResponse.statusCode;
+                    } else {
+                        erroMsg += "Desconhecido";
+                    }
+                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
+                }
+        );
+
+        com.android.volley.toolbox.Volley.newRequestQueue(this).add(request);
+    }
+
+    private void baixarCanvaNoAndroid(String nomeEquipeOuUsuario) {
+        String nomeCodificado = Uri.encode(nomeEquipeOuUsuario);
+        String urlPython = "http://192.168.1.112:5000/download-canva/" + nomeCodificado;
+
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
+        request.setTitle("Canva " + nomeEquipeOuUsuario);
+        request.setDescription("Baixando seu Canva PDF...");
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+        String nomeArquivoSeguro = nomeEquipeOuUsuario.replaceAll("[^a-zA-Z0-9]", "_");
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Canva_" + nomeArquivoSeguro + ".pdf");
+
+        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        if (manager != null) {
+            manager.enqueue(request);
+            Toast.makeText(this, "Download do Canva iniciado...", Toast.LENGTH_LONG).show();
         }
     }
 

@@ -208,7 +208,7 @@ public class PerfilActivity extends AppCompatActivity {
         String nomeCodificado = Uri.encode(nomeAluno);
         
         // Forçar explicitamente o uso de HTTP (sem S) para o servidor local
-        String urlPython = "http://10.0.0.192:5000/download-curriculo/" + nomeCodificado;
+        String urlPython = "http://192.168.1.112:5000/download-curriculo/" + nomeCodificado;
         android.util.Log.d("DOWNLOAD_DEBUG", "Solicitando PDF em: " + urlPython);
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));

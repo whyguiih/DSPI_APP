@@ -1965,6 +1965,33 @@ export default {
           });
 
         }
+
+        //===============TB_NECESSIDADES_EMPRESAS===============
+        if (tipo === "necessidades") {
+
+          // 1. Busca a empresa baseada no e-mail (usuario) que o app enviou
+          const empresa = await env.DB.prepare(`
+            SELECT id_empresa FROM tb_empresas WHERE email_contato = ? OR usuario = ?
+          `).bind(usuario, usuario).first();
+
+          if (!empresa) {
+            return new Response(JSON.stringify({
+              success: true,
+              dados: [] // Retorna vazio se não achar a empresa, para não dar erro
+            }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+
+          // 2. Busca todas as necessidades atreladas ao ID dessa empresa
+          const { results } = await env.DB.prepare(`
+            SELECT nome, descricao FROM tb_necessidades_empresas WHERE empresa_id = ?
+          `).bind(empresa.id_empresa).all();
+
+          return new Response(JSON.stringify({
+            success: true,
+            dados: results || []
+          }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
         //===============TB_CONHECIMENTOS===============
         if (tipo === "conhecimentos") {
 
@@ -2677,7 +2704,7 @@ export default {
 
         const {
 
-          nome,
+          nome_usuarios,
 
           email,
 
@@ -2689,7 +2716,7 @@ export default {
 
 
 
-        if (!nome || !email || !senha || nivel_de_acesso == null) {
+        if (!nome_usuarios || !email || !senha || nivel_de_acesso == null) {
 
           return new Response(
 
@@ -2793,27 +2820,29 @@ export default {
 
                 senha,
 
-                nivel_de_acesso,
+
 
                 email,
+                nivel_de_acesso
 
-                foto_perfil
+
 
             )
 
-            VALUES (?, ?, ?, ?, NULL)
+            VALUES (?, ?, ?, ?)
 
         `)
 
             .bind(
 
-              nome,
+              nome_usuarios,
 
               senha,
 
-              nivel_de_acesso,
 
-              email
+
+              email,
+               nivel_de_acesso
 
             )
 
@@ -3277,29 +3306,152 @@ export default {
       }
 
 
-if (method === "POST") {
-  if (path === "/salvar-curriculo") {
-    try {
-      const body = await request.json();
-      const { email } = body;
-      if (!email) return new Response(JSON.stringify({ success: false, message: 'Email obrigatório' }), { status: 400 });
+      if (path === "/preencher-curriculo") {
+        try {
+          const { email_usuario, nome_usuario } = body;
 
-      // Lógica de salvar no DB (tb_curriculo_alunos)
-      const curriculoExistente = await env.DB.prepare("SELECT id_aluno FROM tb_curriculo_alunos WHERE email = ?").bind(email).first();
-      if (curriculoExistente) {
-          await env.DB.prepare("UPDATE tb_curriculo_alunos SET nome=?, data_nacimento=?, telefone=?, cidade=?, habilidades=?, fez_projeto=?, projeto=?, empresa_vinculado=?, motivo_projeto=?, aprendo_mais=?, prefiro_trabalhar=? WHERE email=?")
-          .bind(body.nome, body.data_nascimento, body.telefone, body.cidade, body.habilidades, body.fez_projeto, body.projeto, body.empresa_vinculado, body.motivo_projeto, body.aprendo_mais, body.prefiro_trabalhar, email).run();
-      } else {
-          await env.DB.prepare("INSERT INTO tb_curriculo_alunos (nome, email, data_nacimento, telefone, cidade, habilidades, fez_projeto, projeto, empresa_vinculado, motivo_projeto, aprendo_mais, prefiro_trabalhar, cpf) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-          .bind(body.nome, email, body.data_nascimento, body.telefone, body.cidade, body.habilidades, body.fez_projeto, body.projeto, body.empresa_vinculado, body.motivo_projeto, body.aprendo_mais, body.prefiro_trabalhar, "").run();
+          if (!email_usuario) {
+            return new Response(JSON.stringify({
+              success: false, message: "E-mail do usuário não fornecido."
+            }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+
+          const record = await env.DB.prepare(
+            "SELECT id_aluno FROM tb_curriculo_alunos WHERE email = ? OR nome = ?"
+          ).bind(email_usuario, nome_usuario).first();
+
+          if (!record) {
+            return new Response(JSON.stringify({
+              success: false,
+              message: "Currículo não encontrado! Por favor, preencha o seu currículo na aba 'Meu Currículo' e salve-o antes de gerar o PDF."
+            }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+
+          return new Response(JSON.stringify({
+            success: true,
+            message: "Currículo pronto! Baixando..."
+          }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+        } catch (error) {
+          return new Response(JSON.stringify({
+            success: false, error: "Erro ao validar currículo: " + error.message
+          }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
       }
-      return new Response(JSON.stringify({ success: true, message: 'Currículo salvo!' }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    } catch (e) {
-      return new Response(JSON.stringify({ success: false, error: e.message }), { status: 500 });
+// ==========================================
+      // CADASTRO DE NECESSIDADES DA EMPRESA
+      // ==========================================
+      if (path === "/necessidades-cadastro") {
+        try {
+          // Extraindo os dados do JSON recebido
+          const usuarioStr = body.usuario;
+          const nome = body.nome;
+          const descricao = body.descricao;
+
+          // 1. Validação
+          if (!usuarioStr || !nome || !descricao) {
+            return new Response(JSON.stringify({
+              success: false,
+              message: "Dados incompletos. É necessário enviar usuario, nome e descricao."
+            }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+
+          // 2. Buscar o id_empresa diretamente usando o e-mail para evitar erro de Integer vs String
+          const empresaRecord = await env.DB.prepare(`
+            SELECT id_empresa FROM tb_empresas WHERE email_contato = ? OR usuario = ?
+          `).bind(usuarioStr, usuarioStr).first();
+
+          if (!empresaRecord) {
+            return new Response(JSON.stringify({
+              success: false,
+              message: "Erro: Nenhuma empresa vinculada a este e-mail foi encontrada."
+            }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+
+          // 3. Fazer o INSERT na tabela correta
+          await env.DB.prepare(`
+            INSERT INTO tb_necessidades_empresas (empresa_id, nome, descricao)
+            VALUES (?, ?, ?)
+          `).bind(empresaRecord.id_empresa, nome, descricao).run();
+
+          return new Response(JSON.stringify({
+            success: true,
+            message: "Necessidade cadastrada com sucesso!"
+          }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+        } catch (dbError) {
+          // Captura erros do D1 (como tabelas inexistentes ou chaves estrangeiras erradas)
+          return new Response(JSON.stringify({
+            success: false,
+            message: "ERRO NO BANCO D1: " + dbError.message
+          }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
+
+if (path === "/salvar-curriculo") {
+  try {
+    const {
+      nome, email, data_nascimento, telefone, cidade, habilidades,
+      fez_projeto, projeto, empresa_vinculado, motivo_projeto,
+      aprendo_mais, prefiro_trabalhar
+    } = body;
+
+    if (!email) {
+      return new Response(JSON.stringify({ success: false, message: 'ERRO: E-mail não recebido no servidor.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
+
+    const val = (v) => (v === undefined || v === null) ? "" : String(v);
+
+    const curriculoExistente = await env.DB.prepare(
+      "SELECT id_aluno FROM tb_curriculo_alunos WHERE email = ?"
+    ).bind(email).first();
+
+    if (curriculoExistente) {
+      await env.DB.prepare(`
+        UPDATE tb_curriculo_alunos SET
+          nome = ?, data_nascimento = ?, telefone = ?, cidade = ?, habilidades = ?,
+          fez_projeto = ?, projeto = ?, empresa_vinculado = ?, motivo_projeto = ?,
+          aprendo_mais = ?, prefiro_trabalhar = ?
+        WHERE email = ?
+      `).bind(
+        val(nome), val(data_nascimento), val(telefone), val(cidade), val(habilidades),
+        val(fez_projeto), val(projeto), val(empresa_vinculado), val(motivo_projeto),
+        val(aprendo_mais), val(prefiro_trabalhar), email
+      ).run();
+
+      return new Response(JSON.stringify({ success: true, message: 'Currículo atualizado com sucesso!' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+
+    } else {
+      // CORREÇÃO: Parêntese fechado antes de VALUES e removido o "" extra do bind()
+      await env.DB.prepare(`
+        INSERT INTO tb_curriculo_alunos (
+          nome, email, data_nascimento, telefone, cidade, habilidades,
+          fez_projeto, projeto, empresa_vinculado, motivo_projeto,
+          aprendo_mais, prefiro_trabalhar
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        val(nome), email, val(data_nascimento), val(telefone), val(cidade), val(habilidades),
+        val(fez_projeto), val(projeto), val(empresa_vinculado), val(motivo_projeto),
+        val(aprendo_mais), val(prefiro_trabalhar)
+      ).run();
+
+      return new Response(JSON.stringify({ success: true, message: 'Currículo criado com sucesso!' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+  } catch (dbError) {
+    return new Response(JSON.stringify({
+      success: false,
+      message: 'ERRO NO BANCO (D1): ' + dbError.message
+    }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 }
-
 
     } catch (error) {
 
