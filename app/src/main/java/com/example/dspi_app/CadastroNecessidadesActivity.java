@@ -29,6 +29,8 @@ public class CadastroNecessidadesActivity extends AppCompatActivity {
         inputDescricaoNecessidade = findViewById(R.id.inputDescricaoNecessidade);
         btnSalvarNecessidade = findViewById(R.id.btnSalvarNecessidade);
 
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         btnSalvarNecessidade.setOnClickListener(v -> enviarFormulario());
     }
 

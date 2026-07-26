@@ -32,14 +32,21 @@ public class FormularioRepository {
     }
 
     //==================SALVAR FORMULARIO===============================
-    public void salvarFormulario(String tipo, JSONObject campos, OnSalvoListener listener) {
+    public void salvarFormulario(String tipo, String usuario, JSONObject campos, OnSalvoListener listener) {
 
         try {
-
+            String urlFinal = BASE_URL + "/salvar-dados";
             JSONObject body = new JSONObject();
-            body.put("tipo", tipo);
-            body.put("usuario", getEmailUsuario());
-            body.put("campos", campos);
+
+            if (tipo.equals("feedback")) {
+                urlFinal = BASE_URL + "/salvar-comentario";
+                body.put("nome_equipe", usuario);
+                body.put("comentario", campos.optString("comentario"));
+            } else {
+                body.put("tipo", tipo);
+                body.put("usuario", usuario);
+                body.put("campos", campos);
+            }
 
             okhttp3.RequestBody requestBody = okhttp3.RequestBody.create(
                     body.toString(),
@@ -47,7 +54,7 @@ public class FormularioRepository {
             );
 
             okhttp3.Request request = new okhttp3.Request.Builder()
-                    .url(BASE_URL + "/salvar-dados")
+                    .url(urlFinal)
                     .post(requestBody)
                     .build();
 
@@ -63,33 +70,24 @@ public class FormularioRepository {
 
                 @Override
                 public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
-
-                    String resposta = response.body().string();
-
+                    String resposta = response.body() != null ? response.body().string() : "";
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-
                         try {
-
-                            JSONObject json = new JSONObject(resposta);
-
-                            if (json.optBoolean("success")) {
-
-                                listener.onSucesso();
-
-                            } else {
-
-                                listener.onErro(json.optString("error"));
-
+                            // Proteção: Se não começar com '{', não é JSON, é um erro de rota/servidor
+                            if (!resposta.trim().startsWith("{")) {
+                                listener.onErro("O servidor retornou um erro inesperado: " + resposta);
+                                return;
                             }
-
+                            JSONObject json = new JSONObject(resposta);
+                            if (json.optBoolean("success")) {
+                                listener.onSucesso();
+                            } else {
+                                listener.onErro(json.optString("message", json.optString("error", "Erro na API")));
+                            }
                         } catch (Exception e) {
-
-                            listener.onErro(e.getMessage());
-
+                            listener.onErro("Erro ao ler resposta: " + e.getMessage());
                         }
-
                     });
-
                 }
 
             });
@@ -104,14 +102,14 @@ public class FormularioRepository {
 
 
     //==============BUSCAR FORMULARIO===================
-    public void buscarFormulario(String tipo, OnBuscaListener listener) {
+    public void buscarFormulario(String tipo, String usuario, OnBuscaListener listener) {
 
         try {
 
             JSONObject body = new JSONObject();
 
             body.put("tipo", tipo);
-            body.put("usuario", getEmailUsuario());
+            body.put("usuario", usuario);
 
             okhttp3.RequestBody requestBody = okhttp3.RequestBody.create(
                     body.toString(),
@@ -136,30 +134,36 @@ public class FormularioRepository {
                 @Override
                 public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
 
-                    String resposta = response.body().string();
+                    String resposta = response.body() != null ? response.body().string() : "";
 
                     android.util.Log.e("API_RESPOSTA", resposta);
 
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
 
                         try {
+                            if (!resposta.trim().startsWith("{")) {
+                                listener.onErro("Resposta do servidor inválida (não JSON): " + resposta);
+                                return;
+                            }
 
                             JSONObject json = new JSONObject(resposta);
 
                             if (json.optBoolean("success")) {
-
-                                listener.onSucesso(json.getJSONObject("dados"));
-
+                                // Verifica se 'dados' é um objeto antes de converter
+                                Object dadosObj = json.opt("dados");
+                                if (dadosObj instanceof JSONObject) {
+                                    listener.onSucesso((JSONObject) dadosObj);
+                                } else {
+                                    // Se 'dados' for nulo ou outro tipo, retorna um objeto vazio para não quebrar
+                                    listener.onSucesso(new JSONObject());
+                                }
                             } else {
-
-                                listener.onErro(json.optString("error"));
-
+                                String erroMsg = json.optString("error", json.optString("message", "Erro ao buscar dados"));
+                                listener.onErro(erroMsg);
                             }
 
                         } catch (Exception e) {
-
-                            listener.onErro(e.getMessage());
-
+                            listener.onErro("Erro de processamento: " + e.getMessage());
                         }
 
                     });

@@ -262,14 +262,17 @@ public class ProjetosActivity extends AppCompatActivity {
         Intent intent;
         String userLogado = nomeUsuario.trim();
         String nomeEqp = projeto.getNomeEquipe() != null ? projeto.getNomeEquipe().trim() : "";
+        String empresaVinc = projeto.getEmpresaVinculada() != null ? projeto.getEmpresaVinculada().trim() : "";
+        
         boolean isMeuProjeto = !userLogado.isEmpty() && nomeEqp.equalsIgnoreCase(userLogado);
+        boolean isEmpresaVinculada = "4".equals(nivel) && !userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado);
 
-        if ("2".equals(nivel) || "1".equals(nivel) || isMeuProjeto) {
-            // Nível 1, 2 ou o próprio dono do projeto vão para o Formulário
+        // Se for nível 1, 2, Empresa Vinculada ao projeto ou o próprio dono do projeto, abre o Formulário Completo
+        if ("2".equals(nivel) || "1".equals(nivel) || isEmpresaVinculada || isMeuProjeto) {
             intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
             intent.putExtra("projeto_usuario", projeto.getNomeEquipe());
         } else {
-            // Restante (Nível 5, 4, 6 vendo projetos alheios) vão para Detalhes resumido
+            // Outros níveis vendo projetos alheios (ou empresa vendo projeto não vinculado) vão para Detalhes resumido
             intent = new Intent(ProjetosActivity.this, ProjetoDetalhesActivity.class);
             intent.putExtra("projeto_selecionado", projeto);
         }

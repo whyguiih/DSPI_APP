@@ -27,9 +27,15 @@ public class ConfiguradorMenu {
                 navegarPara(activity, MainActivity.class, currentTabIndex, nivelFinal)
         );
 
-        activity.findViewById(R.id.btnProjetos).setOnClickListener(v ->
-                navegarPara(activity, ProjetosActivity.class, currentTabIndex, nivelFinal)
-        );
+        activity.findViewById(R.id.btnProjetos).setOnClickListener(v -> {
+            if (nivelFinal.equals("4")) {
+                // Empresas veem todos os projetos ou os vinculados? 
+                // ProjetosActivity parece lidar com a listagem.
+                navegarPara(activity, ProjetosActivity.class, currentTabIndex, nivelFinal);
+            } else {
+                navegarPara(activity, ProjetosActivity.class, currentTabIndex, nivelFinal);
+            }
+        });
 
         View btnNai = activity.findViewById(R.id.btnNai);
         if (nivelFinal.equals("6") || nivelFinal.equals("4")) {

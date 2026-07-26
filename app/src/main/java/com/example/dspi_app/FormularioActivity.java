@@ -38,18 +38,21 @@ public class FormularioActivity extends AppCompatActivity {
 
     private LinearLayout formEquipe, formConhecimentos, formRecursos, formCronograma,
             formCanva, formEmpresa, formPitch,
-            formIA, formPlanilha, formComplementares, formCompletude, formRelatorio;
+            formIA, formPlanilha, formComplementares, formCompletude, formRelatorio, formFeedback;
 
     private TextView tabEquipe, tabConhecimentos, tabRecursos, tabCronograma,
             tabCanva, tabEmpresa, tabPitch,
-            tabIA, tabPlanilha, tabComplementares, tabCompletude, tabRelatorio;
+            tabIA, tabPlanilha, tabComplementares, tabCompletude, tabRelatorio, tabFeedback;
 
-    private Button btnGerarRelatorio, btnVisualizarRelatorio;
+    private Button btnGerarRelatorio, btnVisualizarRelatorio, btnAtualizarFeedback;
 
     // Inputs da Equipe
     private EditText etNomeEquipe, etNomeProjeto, etEmail, etAreaCurso, etAreaProjeto,
             etNomeOrientador, etNomeCoorientador, etIntegrante1, etIntegrante2,
             etIntegrante3, etIntegrante4, etIntegrante5;
+
+    // ... 
+    private EditText etFeedbackGeral;
 
     // Inputs de Conhecimentos
     private EditText etPlanoCurso, etConhecimentosAplicados, etCapacidadesAplicadas;
@@ -189,6 +192,7 @@ public class FormularioActivity extends AppCompatActivity {
         if ("1".equals(nivel)) {
             tabRelatorio.setText("Arquivos");
             tabRelatorio.setVisibility(View.VISIBLE);
+            tabFeedback.setVisibility(View.GONE);
             // Ocultar campos de texto do relatório para o nível 1
             for (int i = 0; i < formRelatorio.getChildCount(); i++) {
                 View child = formRelatorio.getChildAt(i);
@@ -196,10 +200,20 @@ public class FormularioActivity extends AppCompatActivity {
                     child.setVisibility(View.GONE);
                 }
             }
+        } else if ("4".equals(nivel)) {
+            // Nível 4: Empresa
+            if (tabRelatorio != null) tabRelatorio.setVisibility(View.GONE);
+            if (tabFeedback != null) tabFeedback.setVisibility(View.VISIBLE);
+            
+            // Empresa não pode editar nada, exceto feedback
+            modoEdicao = false;
+            if (btnEditarDados != null) btnEditarDados.setVisibility(View.GONE);
+            if (btnUploadVideo != null) btnUploadVideo.setVisibility(View.GONE);
         } else {
-            // Se não for nível 1, a aba de arquivos/relatório não deve ser exibida
+            // Se não for nível 1 ou 4
             tabRelatorio.setVisibility(View.GONE);
             formRelatorio.setVisibility(View.GONE);
+            tabFeedback.setVisibility(View.GONE);
         }
         buscarFormularioNoBanco("equipe");
         buscarFormularioNoBanco("conhecimentos");
@@ -213,6 +227,7 @@ public class FormularioActivity extends AppCompatActivity {
         buscarFormularioNoBanco("complementares");
         buscarFormularioNoBanco("completude");
         buscarFormularioNoBanco("relatorio");
+        buscarFormularioNoBanco("feedback");
 
         configurarControlesVideo();
 
@@ -225,53 +240,65 @@ public class FormularioActivity extends AppCompatActivity {
                 }
         );
 
-        btnUploadVideo.setOnClickListener(v -> videoPickerLauncher.launch("video/*"));
+        if (btnUploadVideo != null) {
+            btnUploadVideo.setOnClickListener(v -> videoPickerLauncher.launch("video/*"));
+        }
 
         // ===== BOTÃO GERAR RELATÓRIO =====
-        btnGerarRelatorio.setOnClickListener(v -> {
-            String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
-            fazerRequisicaoNode(usuarioAtual);
-        });
+        if (btnGerarRelatorio != null) {
+            btnGerarRelatorio.setOnClickListener(v -> {
+                String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
+                fazerRequisicaoNode(usuarioAtual);
+            });
+        }
 
 
-        btnEditarDados = findViewById(R.id.btnEditarDados);
+        // ===== BOTÃO ATUALIZAR FEEDBACK =====
+        if (btnAtualizarFeedback != null) {
+            btnAtualizarFeedback.setOnClickListener(v -> {
+                salvarFormularioNoBanco("feedback");
+            });
+        }
+
 
         String nivelValidacao = getIntent().getStringExtra("nivel_de_acesso");
-        if (nivelValidacao != null && (nivelValidacao.trim().equals("5") || nivelValidacao.trim().equals("2") || nivelValidacao.trim().equals("1"))) {
-            btnEditarDados.setVisibility(View.GONE);
-            btnUploadVideo.setVisibility(View.GONE);
+        if (nivelValidacao != null && (nivelValidacao.trim().equals("5") || nivelValidacao.trim().equals("2") || nivelValidacao.trim().equals("1") || nivelValidacao.trim().equals("4"))) {
+            if (btnEditarDados != null) btnEditarDados.setVisibility(View.GONE);
+            if (btnUploadVideo != null) btnUploadVideo.setVisibility(View.GONE);
         }
 
         atualizarTodosFormularios(false);
 
-        btnEditarDados.setOnClickListener(v -> {
-            modoEdicao = !modoEdicao;
-            atualizarTodosFormularios(modoEdicao);
+        if (btnEditarDados != null) {
+            btnEditarDados.setOnClickListener(v -> {
+                modoEdicao = !modoEdicao;
+                atualizarTodosFormularios(modoEdicao);
 
 
+                if (modoEdicao) {
+                    btnEditarDados.setText("Salvar Alterações");
+                } else {
+                    btnEditarDados.setText("Editar Dados");
 
-            if (modoEdicao) {
-                btnEditarDados.setText("Salvar Alterações");
-            } else {
-                btnEditarDados.setText("Editar Dados");
+                    salvamentosPendentes = 0;
+                    houveErroAoSalvar = false;
 
-                salvamentosPendentes = 0;
-                houveErroAoSalvar = false;
-
-                salvarFormularioNoBanco("equipe");
-                salvarFormularioNoBanco("conhecimentos");
-                salvarFormularioNoBanco("recursos");
-                salvarFormularioNoBanco("cronograma");
-                salvarFormularioNoBanco("canva");
-                salvarFormularioNoBanco("empresa");
-                salvarFormularioNoBanco("pitch");
-                salvarFormularioNoBanco("ia");
-                salvarFormularioNoBanco("planilha");
-                salvarFormularioNoBanco("complementares");
-                salvarFormularioNoBanco("completude");
-                salvarFormularioNoBanco("relatorio");
-            }
-        });
+                    salvarFormularioNoBanco("equipe");
+                    salvarFormularioNoBanco("conhecimentos");
+                    salvarFormularioNoBanco("recursos");
+                    salvarFormularioNoBanco("cronograma");
+                    salvarFormularioNoBanco("canva");
+                    salvarFormularioNoBanco("empresa");
+                    salvarFormularioNoBanco("pitch");
+                    salvarFormularioNoBanco("ia");
+                    salvarFormularioNoBanco("planilha");
+                    salvarFormularioNoBanco("complementares");
+                    salvarFormularioNoBanco("completude");
+                    salvarFormularioNoBanco("relatorio");
+                    salvarFormularioNoBanco("feedback");
+                }
+            });
+        }
 
         configurarCliques();
         destacarAba(tabEquipe);
@@ -556,6 +583,8 @@ public class FormularioActivity extends AppCompatActivity {
         etRelFormaPagamento = findViewById(R.id.etRelFormaPagamento);
         etRelPrecoTotal = findViewById(R.id.etRelPrecoTotal);
 
+        etFeedbackGeral = findViewById(R.id.etFeedbackGeral);
+
         formEquipe = findViewById(R.id.formEquipe);
         formConhecimentos = findViewById(R.id.formConhecimentos);
         formRecursos = findViewById(R.id.formRecursos);
@@ -568,6 +597,7 @@ public class FormularioActivity extends AppCompatActivity {
         formComplementares = findViewById(R.id.formComplementares);
         formCompletude = findViewById(R.id.formCompletude);
         formRelatorio = findViewById(R.id.formRelatorio);
+        formFeedback = findViewById(R.id.formFeedback);
 
         tabEquipe = findViewById(R.id.tabEquipe);
         tabConhecimentos = findViewById(R.id.tabConhecimentos);
@@ -581,9 +611,12 @@ public class FormularioActivity extends AppCompatActivity {
         tabComplementares = findViewById(R.id.tabComplementares);
         tabCompletude = findViewById(R.id.tabCompletude);
         tabRelatorio = findViewById(R.id.tabRelatorio);
+        tabFeedback = findViewById(R.id.tabFeedback);
 
         btnGerarRelatorio = findViewById(R.id.btnGerarRelatorio);
         btnVisualizarRelatorio = findViewById(R.id.btnVisualizarRelatorio);
+        btnAtualizarFeedback = findViewById(R.id.btnAtualizarFeedback);
+        btnEditarDados = findViewById(R.id.btnEditarDados);
     }
 
     private void configurarSpinnerCompletude(Spinner spinner) {
@@ -625,6 +658,8 @@ public class FormularioActivity extends AppCompatActivity {
         JSONObject campos = new JSONObject();
 
         try {
+
+            String usuarioParaSalvar = (tipo.equals("feedback")) ? targetEmail : emailUsuario;
 
             if (tipo.equals("equipe")) {
 
@@ -965,10 +1000,12 @@ public class FormularioActivity extends AppCompatActivity {
                 campos.put("preco_total",
                         etRelPrecoTotal.getText().toString().trim());
 
+            } else if (tipo.equals("feedback")) {
+                campos.put("comentario", etFeedbackGeral.getText().toString().trim());
             }
 
 
-            repository.salvarFormulario(tipo, campos, new FormularioRepository.OnSalvoListener() {
+            repository.salvarFormulario(tipo, usuarioParaSalvar, campos, new FormularioRepository.OnSalvoListener() {
 
                 @Override
                 public void onSucesso() {
@@ -976,10 +1013,10 @@ public class FormularioActivity extends AppCompatActivity {
                     salvamentosPendentes--;
 
                     if (salvamentosPendentes == 0 && !houveErroAoSalvar) {
+                        
+                        String msgSucesso = tipo.equals("feedback") ? "Feedback atualizado com sucesso!" : "Todos os dados foram salvos com sucesso!";
 
-                        Toast.makeText(FormularioActivity.this,
-                                "Todos os dados foram salvos com sucesso!",
-                                Toast.LENGTH_LONG).show();
+                        mostrarMensagemFeedback("Sucesso", msgSucesso, true);
 
                         houveErroAoSalvar = false;
                     }
@@ -992,9 +1029,7 @@ public class FormularioActivity extends AppCompatActivity {
 
                     houveErroAoSalvar = true;
 
-                    Toast.makeText(FormularioActivity.this,
-                            "Erro ao salvar " + tipo + ":\n\n" + erro,
-                            Toast.LENGTH_LONG).show();
+                    mostrarMensagemFeedback("Erro ao Salvar", "Erro ao salvar " + tipo + ":\n\n" + erro, false);
                 }
             });
 
@@ -1014,7 +1049,7 @@ public class FormularioActivity extends AppCompatActivity {
 
         FormularioRepository repository = new FormularioRepository(this);
 
-        repository.buscarFormulario(tipo, new FormularioRepository.OnBuscaListener() {
+        repository.buscarFormulario(tipo, targetEmail, new FormularioRepository.OnBuscaListener() {
 
             @Override
             public void onSucesso(JSONObject dados) {
@@ -1362,6 +1397,8 @@ public class FormularioActivity extends AppCompatActivity {
                     etRelPrecoTotal.setText(
                             dados.optString("preco_total"));
 
+                } else if (tipo.equals("feedback")) {
+                    etFeedbackGeral.setText(dados.optString("comentario_empresa"));
                 }
 
 
@@ -1387,6 +1424,7 @@ public class FormularioActivity extends AppCompatActivity {
         tabComplementares.setOnClickListener(v -> alternarFormulario(formComplementares, tabComplementares));
         tabCompletude.setOnClickListener(v -> alternarFormulario(formCompletude, tabCompletude));
         tabRelatorio.setOnClickListener(v -> alternarFormulario(formRelatorio, tabRelatorio));
+        tabFeedback.setOnClickListener(v -> alternarFormulario(formFeedback, tabFeedback));
     }
 
     private void alternarFormulario(LinearLayout formAtivo, TextView tabAtiva) {
@@ -1402,6 +1440,7 @@ public class FormularioActivity extends AppCompatActivity {
         formComplementares.setVisibility(View.GONE);
         formCompletude.setVisibility(View.GONE);
         formRelatorio.setVisibility(View.GONE);
+        formFeedback.setVisibility(View.GONE);
 
         formAtivo.setVisibility(View.VISIBLE);
         destacarAba(tabAtiva);
@@ -1566,26 +1605,42 @@ public class FormularioActivity extends AppCompatActivity {
     }
 
     private void atualizarTodosFormularios(boolean habilitado) {
-        definirCamposEditaveis(formEquipe, habilitado);
-        definirCamposEditaveis(formConhecimentos, habilitado);
-        definirCamposEditaveis(formRecursos, habilitado);
-        definirCamposEditaveis(formCronograma, habilitado);
-        definirCamposEditaveis(formCanva, habilitado);
-        definirCamposEditaveis(formEmpresa, habilitado);
-        definirCamposEditaveis(formPitch, habilitado);
-        definirCamposEditaveis(formIA, habilitado);
-        definirCamposEditaveis(formPlanilha, habilitado);
-        definirCamposEditaveis(formComplementares, habilitado);
-        definirCamposEditaveis(formCompletude, habilitado);
-        definirCamposEditaveis(formRelatorio, habilitado);
+        // Se for nível 4 (Empresa), todos os formulários são apenas leitura, exceto o feedback
+        String nivelAcesso = getIntent().getStringExtra("nivel_de_acesso");
+        boolean isEmpresa = "4".equals(nivelAcesso);
+
+        definirCamposEditaveis(formEquipe, isEmpresa ? false : habilitado);
+        definirCamposEditaveis(formConhecimentos, isEmpresa ? false : habilitado);
+        definirCamposEditaveis(formRecursos, isEmpresa ? false : habilitado);
+        definirCamposEditaveis(formCronograma, isEmpresa ? false : habilitado);
+        definirCamposEditaveis(formCanva, isEmpresa ? false : habilitado);
+        definirCamposEditaveis(formEmpresa, isEmpresa ? false : habilitado);
+        definirCamposEditaveis(formPitch, isEmpresa ? false : habilitado);
+        definirCamposEditaveis(formIA, isEmpresa ? false : habilitado);
+        definirCamposEditaveis(formPlanilha, isEmpresa ? false : habilitado);
+        definirCamposEditaveis(formComplementares, isEmpresa ? false : habilitado);
+        definirCamposEditaveis(formCompletude, isEmpresa ? false : habilitado);
+        definirCamposEditaveis(formRelatorio, isEmpresa ? false : habilitado);
+        
+        // Feedback é editável para empresas ou se o modo edição estiver ON
+        definirCamposEditaveis(formFeedback, isEmpresa || habilitado);
     }
 
     private void destacarAba(TextView tabAtiva) {
-        TextView[] todasAbas = {tabEquipe, tabConhecimentos, tabRecursos, tabCronograma, tabCanva, tabEmpresa, tabPitch, tabIA, tabPlanilha, tabComplementares, tabCompletude, tabRelatorio};
+        TextView[] todasAbas = {tabEquipe, tabConhecimentos, tabRecursos, tabCronograma, tabCanva, tabEmpresa, tabPitch, tabIA, tabPlanilha, tabComplementares, tabCompletude, tabRelatorio, tabFeedback};
         for (TextView tab : todasAbas) {
-            tab.setAlpha(0.5f);
+            if (tab != null) tab.setAlpha(0.5f);
         }
-        tabAtiva.setAlpha(1.0f);
+        if (tabAtiva != null) tabAtiva.setAlpha(1.0f);
+    }
+
+    private void mostrarMensagemFeedback(String titulo, String mensagem, boolean sucesso) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(titulo)
+                .setMessage(mensagem)
+                .setPositiveButton("OK", null)
+                .setIcon(sucesso ? android.R.drawable.ic_dialog_info : android.R.drawable.ic_dialog_alert)
+                .show();
     }
 
     private void abrirPdf(String url) {

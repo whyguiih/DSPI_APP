@@ -58,6 +58,7 @@
                 <TextView android:id="@+id/tabComplementares" style="@style/TabStyle" android:text="Complementares" />
                 <TextView android:id="@+id/tabCompletude" style="@style/TabStyle" android:text="Completude" />
                 <TextView android:id="@+id/tabRelatorio" style="@style/TabStyle" android:text="Arquivos" />
+                <TextView android:id="@+id/tabFeedback" style="@style/TabStyle" android:text="Feedback" />
             </LinearLayout>
         </HorizontalScrollView>
 
@@ -400,6 +401,27 @@
                         android:text="Abrir PDF do Relatório"
                         android:textColor="#FFFFFF"
                         android:visibility="gone" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/formFeedback" style="@style/FormContainerStyle" android:visibility="gone">
+                    <EditText
+                        android:id="@+id/etFeedbackGeral"
+                        style="@style/InputGlassStyle"
+                        android:hint="Feedback Geral da Empresa"
+                        android:gravity="top|start"
+                        android:minLines="5"
+                        android:inputType="textMultiLine"/>
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnAtualizarFeedback"
+                        style="@style/InputGlassStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="60dp"
+                        android:layout_marginTop="16dp"
+                        android:text="ATUALIZAR FEEDBACK"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/neo_sans" />
                 </LinearLayout>
 
             </LinearLayout>
