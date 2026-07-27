@@ -2801,59 +2801,51 @@ if (path === "/atualizar-perfil") {
 
 
       if (path === "/login-google") {
-
         const { idToken } = body;
-
         if (!idToken) return new Response(JSON.stringify({ success: false, message: "Token ausente." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-        const googleVerifyUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`;
-
+        const googleVerifyUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
         const googleResponse = await fetch(googleVerifyUrl);
 
         if (!googleResponse.ok) return new Response(JSON.stringify({ success: false, message: "Token do Google inválido." }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-
-
         const googleUser = await googleResponse.json();
+        const email = googleUser.email || "";
+        let nome = googleUser.name || email.split('@')[0];
+        const foto = googleUser.picture || "";
 
-        const email = googleUser.email;
-
-        const nome = googleUser.name;
-
-        const foto = googleUser.picture;
-
-
-
-        const stmtCheck = env.DB.prepare("SELECT nome_usuarios, email, nivel_de_acesso, foto_perfil FROM tb_cadastros WHERE email = ?").bind(email);
-
+        // Busca o usuário pelo e-mail
+        const stmtCheck = env.DB.prepare("SELECT id_cadastro, nome_usuarios, email, nivel_de_acesso, foto_perfil FROM tb_cadastros WHERE email = ?").bind(email);
         const { results } = await stmtCheck.all();
 
-
-
         let usuarioFinal;
-
         if (results && results.length > 0) {
-
           usuarioFinal = results[0];
-
         } else {
+          // Tenta inserir. Se o nome_usuarios falhar por ser UNIQUE, tentamos usar o e-mail como nome
+          try {
+            const insertResult = await env.DB.prepare("INSERT INTO tb_cadastros (nome_usuarios, email, senha, nivel_de_acesso, foto_perfil) VALUES (?, ?, ?, ?, ?)")
+              .bind(nome, email, 'GOOGLE_AUTH', 6, foto).run();
 
-          await env.DB.prepare("INSERT INTO tb_cadastros (nome_usuarios, email, senha, nivel_de_acesso, foto_perfil) VALUES (?, ?, ?, ?, ?)")
+            usuarioFinal = { id_cadastro: insertResult.meta.last_row_id, nome_usuarios: nome, email: email, nivel_de_acesso: 6, foto_perfil: foto };
+          } catch (e) {
+             // Fallback: se o nome já existir, usa o e-mail como nome para garantir a unicidade exigida pela tabela
+             const insertResultFallback = await env.DB.prepare("INSERT INTO tb_cadastros (nome_usuarios, email, senha, nivel_de_acesso, foto_perfil) VALUES (?, ?, ?, ?, ?)")
+              .bind(email, email, 'GOOGLE_AUTH', 6, foto).run();
 
-            .bind(nome, email, 'GOOGLE_AUTH', 6, foto).run();
-
-          usuarioFinal = { nome_usuarios: nome, email: email, nivel_de_acesso: 6, foto_perfil: foto };
-
+             usuarioFinal = { id_cadastro: insertResultFallback.meta.last_row_id, nome_usuarios: email, email: email, nivel_de_acesso: 6, foto_perfil: foto };
+          }
         }
 
-
-
         return new Response(JSON.stringify({
-
-          success: true, nivel: usuarioFinal.nivel_de_acesso, email_usuario: usuarioFinal.email || usuarioFinal.nome_usuarios, nome_usuario: usuarioFinal.nome_usuarios, foto_usuario: usuarioFinal.foto_perfil, message: "Autenticado via Google com sucesso!"
-
+          success: true,
+          id: usuarioFinal.id_cadastro,
+          nivel: usuarioFinal.nivel_de_acesso,
+          email_usuario: usuarioFinal.email,
+          nome_usuario: usuarioFinal.nome_usuarios,
+          foto_usuario: usuarioFinal.foto_perfil,
+          message: "Autenticado via Google com sucesso!"
         }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
       }
 
 
@@ -2989,21 +2981,14 @@ if (path === "/atualizar-perfil") {
 
       if (path === "/login") {
         const { email, senha } = body;
-        const stmt = env.DB.prepare("SELECT nome_usuarios, nivel_de_acesso, email, foto_perfil FROM tb_cadastros WHERE (email = ? OR nome_usuarios = ?) AND senha = ?").bind(email, email, senha);
+        const stmt = env.DB.prepare("SELECT id_cadastro, nome_usuarios, nivel_de_acesso, email, foto_perfil FROM tb_cadastros WHERE (email = ? OR nome_usuarios = ?) AND senha = ?").bind(email, email, senha);
         const { results } = await stmt.all();
 
-
-
         if (results && results.length > 0) {
-
           const user = results[0];
-
           return new Response(JSON.stringify({
-
-            success: true, nome_usuario: user.nome_usuarios, nivel: user.nivel_de_acesso, email: user.email, foto_perfil: user.foto_perfil
-
+            success: true, id: user.id_cadastro, nome_usuario: user.nome_usuarios, nivel: user.nivel_de_acesso, email: user.email, foto_perfil: user.foto_perfil
           }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
         } else {
 
           return new Response(JSON.stringify({ success: false, message: "E-mail ou senha incorretos!" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
