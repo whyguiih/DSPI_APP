@@ -240,13 +240,15 @@ public class ProjetosActivity extends AppCompatActivity {
 
         tvSeusProjetos.setText("Meus Projetos");
 
+        boolean podeExcluir = podeExcluirProjetos();
+
         if (meusProjetos.isEmpty()) {
             tvSeusProjetos.setVisibility(View.GONE);
             rvMeusProjetos.setVisibility(View.GONE);
         } else {
             tvSeusProjetos.setVisibility(View.VISIBLE);
             rvMeusProjetos.setVisibility(View.VISIBLE);
-            rvMeusProjetos.setAdapter(new ProjetoAdapter(meusProjetos, this::abrirPaginaDetalhes));
+            rvMeusProjetos.setAdapter(new ProjetoAdapter(meusProjetos, this::abrirPaginaDetalhes, this::confirmarExclusaoProjeto, podeExcluir));
         }
 
         if (outrosProjetos.isEmpty()) {
@@ -255,8 +257,13 @@ public class ProjetosActivity extends AppCompatActivity {
         } else {
             tvOutrosProjetos.setVisibility(View.VISIBLE);
             rvOutrosProjetos.setVisibility(View.VISIBLE);
-            rvOutrosProjetos.setAdapter(new ProjetoAdapter(outrosProjetos, this::abrirPaginaDetalhes));
+            // AQUI: sempre false, ninguém pode excluir projetos da lista "Outros"
+            rvOutrosProjetos.setAdapter(new ProjetoAdapter(outrosProjetos, this::abrirPaginaDetalhes, this::confirmarExclusaoProjeto, false));
         }
+    }
+
+    private boolean podeExcluirProjetos() {
+        return "3".equals(nivel);
     }
 
     private void configurarBolhaAnimada() {
@@ -320,15 +327,27 @@ public class ProjetosActivity extends AppCompatActivity {
         overridePendingTransition(0, 0);
     }
 
+
+
     public static class ProjetoAdapter extends RecyclerView.Adapter<ProjetoAdapter.ViewHolder> {
         private final List<Projeto> projetos;
         private final OnItemClickListener listener;
+        private final OnDeleteClickListener deleteListener;
+        private final boolean permitirExclusao;
 
         public interface OnItemClickListener { void onItemClick(Projeto projeto); }
+        public interface OnDeleteClickListener { void onDeleteClick(Projeto projeto); }
 
-        public ProjetoAdapter(List<Projeto> projetos, OnItemClickListener listener) {
+        public ProjetoAdapter(List<Projeto> projetos, OnItemClickListener listener,
+                              OnDeleteClickListener deleteListener, boolean permitirExclusao) {
             this.projetos = projetos;
             this.listener = listener;
+            this.deleteListener = deleteListener;
+            this.permitirExclusao = permitirExclusao;
+        }
+
+        public ProjetoAdapter(List<Projeto> projetos, OnItemClickListener listener) {
+            this(projetos, listener, null, false);
         }
 
         @NonNull
@@ -346,12 +365,14 @@ public class ProjetosActivity extends AppCompatActivity {
             holder.tvStatus.setText("Status: " + (st == null || st.trim().isEmpty() || st.equals("null") ? "Não Iniciado" : st));
             holder.tvEquipe.setText("Equipe: " + projeto.getNomeEquipe());
 
-            // Exibe badge se houver vídeo
             if (projeto.getVideoUrl() != null && !projeto.getVideoUrl().isEmpty() && !projeto.getVideoUrl().equals("null")) {
                 holder.tvBadgePitch.setVisibility(View.VISIBLE);
             } else {
                 holder.tvBadgePitch.setVisibility(View.GONE);
             }
+
+            holder.btnExcluir.setVisibility(permitirExclusao ? View.VISIBLE : View.GONE);
+            holder.btnExcluir.setOnClickListener(v -> deleteListener.onDeleteClick(projeto));
 
             holder.itemView.setOnClickListener(v -> listener.onItemClick(projeto));
         }
@@ -361,13 +382,66 @@ public class ProjetosActivity extends AppCompatActivity {
 
         public static class ViewHolder extends RecyclerView.ViewHolder {
             TextView tvNome, tvStatus, tvEquipe, tvBadgePitch;
+            Button btnExcluir;
             public ViewHolder(View itemView) {
                 super(itemView);
                 tvNome = itemView.findViewById(R.id.tvItemNomeProjeto);
                 tvStatus = itemView.findViewById(R.id.tvItemStatus);
                 tvEquipe = itemView.findViewById(R.id.tvItemEquipe);
                 tvBadgePitch = itemView.findViewById(R.id.tvBadgePitch);
+                btnExcluir = itemView.findViewById(R.id.btnExcluirProjeto);
             }
         }
+    }
+
+    private void confirmarExclusaoProjeto(Projeto projeto) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Excluir Projeto")
+                .setMessage("Tem certeza que deseja excluir o projeto \"" + projeto.getNomeProjeto()
+                        + "\" da equipe \"" + projeto.getNomeEquipe() + "\"?\n\n"
+                        + "Essa ação apaga TODOS os dados desse projeto (equipe, formulários, cronograma, canvas, pitch, relatório etc.) e não pode ser desfeita.")
+                .setPositiveButton("Excluir", (dialog, which) -> excluirProjetoNaApi(projeto))
+                .setNegativeButton("Cancelar", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+    }
+
+    private void excluirProjetoNaApi(Projeto projeto) {
+        String url = "https://api-dspi.whyguiih.workers.dev/excluir-projeto";
+
+        JSONObject body = new JSONObject();
+        try {
+            body.put("nome_equipe", projeto.getNomeEquipe());
+        } catch (Exception e) {
+            Toast.makeText(this, "Erro ao montar requisição.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.POST,
+                url,
+                body,
+                response -> {
+                    try {
+                        if (response.getBoolean("success")) {
+                            Toast.makeText(this, "Projeto excluído com sucesso.", Toast.LENGTH_SHORT).show();
+                            buscarProjetosDaApi();
+                        } else {
+                            Toast.makeText(this, "Erro: " + response.optString("error"), Toast.LENGTH_LONG).show();
+                        }
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Erro ao processar resposta.", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    String erroMsg = "Erro de conexão ao excluir.";
+                    if (error.networkResponse != null) {
+                        erroMsg += " Status: " + error.networkResponse.statusCode;
+                    }
+                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
+                }
+        );
+
+        Volley.newRequestQueue(this).add(request);
     }
 }
