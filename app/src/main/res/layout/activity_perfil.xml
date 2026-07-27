@@ -141,6 +141,113 @@
                     android:inputType="textEmailAddress"
                     android:fontFamily="@font/neo_sans" />
 
+                <!-- CONTAINER DE DADOS DA EMPRESA (Inicia oculto) -->
+                <LinearLayout
+                    android:id="@+id/containerEmpresa"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <EditText
+                        android:id="@+id/editCnpj"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:hint="CNPJ"
+                        android:inputType="number"
+                        android:padding="12dp"
+                        android:textColorHint="#A0A0A0" />
+
+                    <EditText
+                        android:id="@+id/editSetor"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:hint="Setor de Atuação"
+                        android:inputType="text"
+                        android:padding="12dp"
+                        android:textColorHint="#A0A0A0" />
+
+                    <EditText
+                        android:id="@+id/editTelefone"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:hint="Telefone de Contato"
+                        android:inputType="phone"
+                        android:padding="12dp"
+                        android:textColorHint="#A0A0A0" />
+
+                    <EditText
+                        android:id="@+id/editEndereco"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:hint="Endereço Completo"
+                        android:inputType="textPostalAddress"
+                        android:padding="12dp"
+                        android:textColorHint="#A0A0A0" />
+
+                    <EditText
+                        android:id="@+id/editDescricao"
+                        android:layout_width="match_parent"
+                        android:layout_height="100dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:gravity="top|start"
+                        android:hint="Descrição da Empresa"
+                        android:inputType="textMultiLine"
+                        android:padding="12dp"
+                        android:textColorHint="#A0A0A0" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/labelSenha"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Alterar Senha"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="14sp"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginStart="4dp"
+                    android:fontFamily="@font/neo_sans" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:layout_marginTop="8dp">
+
+                    <EditText
+                        android:id="@+id/editTextTextPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_input_glass"
+                        android:hint="Sua nova senha"
+                        android:textColorHint="#66FFFFFF"
+                        android:textColor="#FFFFFF"
+                        android:paddingStart="20dp"
+                        android:paddingEnd="50dp"
+                        android:inputType="textPassword"
+                        android:fontFamily="@font/neo_sans" />
+
+                    <ImageButton
+                        android:id="@+id/btnVerSenha"
+                        android:layout_width="48dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="end|center_vertical"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@android:drawable/ic_menu_view"
+                        app:tint="#B3FFFFFF"
+                        android:padding="12dp"
+                        android:scaleType="centerInside" />
+                </FrameLayout>
+
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnSalvar"
                     android:layout_width="match_parent"
@@ -157,15 +264,18 @@
                     android:id="@+id/btnVerificarCurriculo"
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="16dp"
                     android:background="@drawable/bg_input_glass"
                     android:text="GERAR CURRÍCULO PROFISSIONAL"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:fontFamily="@font/neo_sans" />
+                    android:fontFamily="@font/neo_sans"
+                    android:visibility="gone" /> <!-- Controlado via código para Nível 5 -->
 
             </LinearLayout>
+
+
         </ScrollView>
     </androidx.constraintlayout.widget.ConstraintLayout>
 

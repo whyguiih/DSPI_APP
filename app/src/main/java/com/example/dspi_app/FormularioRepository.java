@@ -31,6 +31,46 @@ public class FormularioRepository {
         void onErro(String erro);
     }
 
+    public interface OnListarDocumentosListener {
+        void onSucesso(org.json.JSONArray documentos);
+        void onErro(String erro);
+    }
+
+    // ================== LISTAR DOCUMENTOS ===================
+    public void listarDocumentos(String usuario, OnListarDocumentosListener listener) {
+        String url = BASE_URL + "/listar-documentos?usuario=" + usuario;
+
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        new OkHttpClient().newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
+                        listener.onErro(e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                String resposta = response.body() != null ? response.body().string() : "";
+                new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                    try {
+                        JSONObject json = new JSONObject(resposta);
+                        if (json.optBoolean("success")) {
+                            listener.onSucesso(json.optJSONArray("data"));
+                        } else {
+                            listener.onErro(json.optString("error", "Erro ao listar documentos"));
+                        }
+                    } catch (Exception e) {
+                        listener.onErro("Erro ao processar lista: " + e.getMessage());
+                    }
+                });
+            }
+        });
+    }
+
     //==================SALVAR FORMULARIO===============================
     public void salvarFormulario(String tipo, String usuario, JSONObject campos, OnSalvoListener listener) {
 

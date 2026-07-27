@@ -1,6 +1,5 @@
 package com.example.dspi_app;
 
-import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,13 +10,13 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
@@ -45,12 +44,16 @@ import androidx.appcompat.app.AlertDialog;
 
 public class PerfilActivity extends AppCompatActivity {
 
+    LinearLayout containerEmpresa;
+    EditText editCnpj, editSetor, editTelefone, editEndereco, editDescricao;
+
     private final int CURRENT_TAB_INDEX = 3;
     private String nivel;
-    private EditText inputNome, inputEmail;
+    private EditText inputNome, inputEmail, editTextTextPassword;
     private ImageView imgPerfil;
     private String fotoBase64 = "";
     private String emailAntigo = "";
+    private String senhaAntiga = "";
 
     private final ActivityResultLauncher<Intent> pickImageLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -99,16 +102,46 @@ public class PerfilActivity extends AppCompatActivity {
 
         inputNome = findViewById(R.id.inputNome);
         inputEmail = findViewById(R.id.inputEmail);
+        editTextTextPassword = findViewById(R.id.editTextTextPassword);
         imgPerfil = findViewById(R.id.imgPerfil);
         ImageButton btnBack = findViewById(R.id.btnBack);
+        ImageButton btnVerSenha = findViewById(R.id.btnVerSenha);
+
+        btnVerSenha.setOnClickListener(v -> {
+            if (editTextTextPassword.getInputType() == (android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
+                editTextTextPassword.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                btnVerSenha.setImageResource(android.R.drawable.ic_menu_close_clear_cancel); // Ícone de "esconder"
+            } else {
+                editTextTextPassword.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                btnVerSenha.setImageResource(android.R.drawable.ic_menu_view); // Ícone de "olho"
+            }
+            // Move o cursor para o final do texto
+            editTextTextPassword.setSelection(editTextTextPassword.getText().length());
+        });
         View btnSalvar = findViewById(R.id.btnSalvar);
         View btnAlterarFoto = findViewById(R.id.btnAlterarFoto);
         TextView btnRemoverFoto = findViewById(R.id.btnRemoverFoto);
+        containerEmpresa = findViewById(R.id.containerEmpresa);
+        editCnpj = findViewById(R.id.editCnpj);
+        editSetor = findViewById(R.id.editSetor);
+        editTelefone = findViewById(R.id.editTelefone);
+        editEndereco = findViewById(R.id.editEndereco);
+        editDescricao = findViewById(R.id.editDescricao);
+
+        if ("4".equals(nivel)) {
+            containerEmpresa.setVisibility(View.VISIBLE);
+        } else {
+            containerEmpresa.setVisibility(View.GONE);
+        }
 
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         emailAntigo = prefs.getString("email_logado", "email@exemplo.com");
+        senhaAntiga = prefs.getString("senha", "");
+        
         inputNome.setText(prefs.getString("nome_usuario", "Nome do Usuário"));
         inputEmail.setText(emailAntigo);
+        editTextTextPassword.setText(senhaAntiga);
+        editTextTextPassword.setHint("Digite para alterar sua senha");
 
         // Se for nível 5, não permite alteração no e-mail
         if ("5".equals(nivel)) {
@@ -158,100 +191,25 @@ public class PerfilActivity extends AppCompatActivity {
         btnSalvar.setOnClickListener(v -> {
             String novoNome = inputNome.getText().toString().trim();
             String novoEmail = inputEmail.getText().toString().trim();
+            String novaSenhaRaw = editTextTextPassword.getText().toString().trim();
 
             if (novoNome.isEmpty() || novoEmail.isEmpty()) {
-                mostrarErroGrande("Aviso", "Preencha todos os campos!");
+                mostrarErroGrande("Aviso", "Preencha todos os campos obrigatórios!");
                 return;
             }
+
+            // Se a senha estiver vazia, enviamos a senha antiga para o banco manter a mesma
+            String senhaParaEnviar = novaSenhaRaw.isEmpty() ? senhaAntiga : novaSenhaRaw;
 
             new AlertDialog.Builder(this)
                     .setTitle("Confirmar Alterações")
                     .setMessage("Deseja realmente salvar as alterações no seu perfil?")
                     .setPositiveButton("Sim", (dialog, which) -> {
-                        enviarParaAPI(novoNome, novoEmail, fotoBase64);
+                        enviarParaAPI(novoNome, novoEmail, senhaParaEnviar, fotoBase64);
                     })
                     .setNegativeButton("Não", null)
                     .show();
         });
-
-        // Botão para Gerar/Verificar Currículo (Igual ao padrão do relatório)
-        View btnVerificarCurriculo = findViewById(R.id.btnVerificarCurriculo);
-        if (btnVerificarCurriculo != null) {
-            btnVerificarCurriculo.setOnClickListener(v -> gerarCurriculoPDF());
-        }
-    }
-
-    private void gerarCurriculoPDF() {
-        Toast.makeText(this, "Sincronizando dados profissionais...", Toast.LENGTH_SHORT).show();
-        String url = "https://api-dspi.whyguiih.workers.dev/preencher-curriculo";
-        
-        // Puxa o e-mail real da conta do SharedPreferences
-        SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
-        String emailSessao = prefs.getString("email_logado", "");
-
-        JSONObject jsonBody = new JSONObject();
-        try {
-            jsonBody.put("email_sessao", emailSessao); // Chave mestre para busca
-            jsonBody.put("nome_usuario", inputNome.getText().toString());
-            jsonBody.put("email_usuario", inputEmail.getText().toString());
-        } catch (JSONException e) { e.printStackTrace(); }
-
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
-                response -> {
-                    try {
-                        if (response.getBoolean("success")) {
-                            Toast.makeText(this, "Currículo pronto! Baixando...", Toast.LENGTH_SHORT).show();
-                            // Passamos o e-mail da sessão para o Python também!
-                            baixarCurriculoNoAndroid(emailSessao);
-                        } else {
-                            mostrarErroGrande("Aviso do Servidor", response.optString("message"));
-                        }
-                    } catch (JSONException e) {
-                        mostrarErroGrande("Erro de Processamento", "Houve uma falha ao ler a resposta do servidor.");
-                    }
-                },
-                error -> {
-                    String mensagemErro = "Não foi possível conectar ao servidor de nuvem.";
-                    if (error.networkResponse != null && error.networkResponse.data != null) {
-                        try {
-                            String responseBody = new String(error.networkResponse.data, "utf-8");
-                            JSONObject data = new JSONObject(responseBody);
-                            mensagemErro = data.optString("message", mensagemErro);
-                        } catch (Exception e) { e.printStackTrace(); }
-                    }
-                    mostrarErroGrande("Aviso", mensagemErro);
-                }
-        ) {
-            @Override
-            public Map<String, String> getHeaders() {
-                Map<String, String> headers = new HashMap<>();
-                headers.put("Content-Type", "application/json; charset=utf-8");
-                return headers;
-            }
-        };
-        Volley.newRequestQueue(this).add(request);
-    }
-
-    private void baixarCurriculoNoAndroid(String identificador) {
-        String codificado = Uri.encode(identificador);
-        String urlPython = "https://avell.tailfdec8e.ts.net:8443/download-curriculo/" + codificado;
-        android.util.Log.d("DOWNLOAD_DEBUG", "Solicitando PDF em: " + urlPython);
-
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
-        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
-        request.setTitle("Currículo Profissional");
-        request.setDescription("Baixando currículo...");
-        request.setMimeType("application/pdf");
-        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-
-        String nomeFinal = "Curriculo_" + System.currentTimeMillis() + ".pdf";
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, nomeFinal);
-
-        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        if (manager != null) {
-            manager.enqueue(request);
-            Toast.makeText(this, "Download iniciado! Verifique sua pasta de Downloads.", Toast.LENGTH_LONG).show();
-        }
     }
 
     private int getOrientationDegrees(Uri uri) {
@@ -284,14 +242,23 @@ public class PerfilActivity extends AppCompatActivity {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
-    private void enviarParaAPI(String nome, String email, String foto) {
+    private void enviarParaAPI(String nome, String email, String senha, String foto) {
         String url = "https://api-dspi.whyguiih.workers.dev/atualizar-perfil";
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("email_atual", emailAntigo);
             jsonBody.put("novo_nome", nome);
             jsonBody.put("novo_email", email);
+            jsonBody.put("nova_senha", senha );
             jsonBody.put("foto_perfil", foto);
+
+            if ("4".equals(nivel)) {
+                jsonBody.put("cnpj", editCnpj.getText().toString().trim());
+                jsonBody.put("endereco", editEndereco.getText().toString().trim());
+                jsonBody.put("setor", editSetor.getText().toString().trim());
+                jsonBody.put("descricao", editDescricao.getText().toString().trim());
+                jsonBody.put("telefone_contato", editTelefone.getText().toString().trim());
+            }
         } catch (JSONException e) { e.printStackTrace(); }
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
@@ -302,6 +269,7 @@ public class PerfilActivity extends AppCompatActivity {
                             SharedPreferences.Editor editor = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit();
                             editor.putString("nome_usuario", nome);
                             editor.putString("email_logado", email);
+                            editor.putString("senha", senha); // Atualiza com a senha enviada
                             editor.putString("foto_usuario", urlFotoR2);
                             editor.apply();
                             Toast.makeText(this, "Perfil atualizado com sucesso!", Toast.LENGTH_SHORT).show();
@@ -310,7 +278,9 @@ public class PerfilActivity extends AppCompatActivity {
                         }
                     } catch (JSONException e) { e.printStackTrace(); }
                 },
-                error -> Toast.makeText(this, "Erro de conexão", Toast.LENGTH_SHORT).show()
+                error -> {
+                    // Erro de conexão silenciado
+                }
         ) {
             @Override
             public Map<String, String> getHeaders() {

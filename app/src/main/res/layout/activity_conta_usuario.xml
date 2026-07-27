@@ -104,6 +104,13 @@
                         <TextView style="@style/ListGlassText" android:text="Cadastrar Usuário"/>
                     </LinearLayout>
 
+                    <LinearLayout android:id="@+id/btnVerificarCurriculo"
+                        style="@style/ListGlassButtonStyle"
+                        android:visibility="gone">
+                        <ImageView style="@style/ListGlassIcon" android:src="@drawable/ic_curriculo" app:tint="#FFFFFF"/>
+                        <TextView style="@style/ListGlassText" android:text="Gerar Currículo Profissional"/>
+                    </LinearLayout>
+
                     <LinearLayout android:id="@+id/btnSair"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

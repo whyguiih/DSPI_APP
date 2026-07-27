@@ -257,85 +257,79 @@ export default {
 
 
       if (path === "/listar-projetos") {
-
         try {
-
           const { results: projetos } = await env.DB.prepare(`
-
             SELECT
-
-              e.nome_projeto, e.nome_equipe, e.nome_integrante, e.nome_orientador,
-
+              e.nome_projeto, e.nome_equipe,
+              e.nome_integrante, e.nome_integrante2, e.nome_integrante3, e.nome_integrante4, e.nome_integrante5,
+              e.nome_orientador,
               a.status, a.tarefas, a.dificuldades_enxergadas, a.comentario_empresa,
-
               c.proposta_chave, c.segmentos_clientes, c.atividades_chaves, c.recursos_chaves, c.relacionamentos_clientes, c.canais, c.estrutura_custos, c.fluxo_receita, c.parceiros_chaves,
-
               ic.empresa AS empresa_vinculada,
-
               p.video_url
-
             FROM tb_equipe e
-
             LEFT JOIN tb_acompanhamento_projeto a ON e.usuario = a.usuario
-
             LEFT JOIN tb_canva c ON e.usuario = c.usuario
-
             LEFT JOIN tb_informacoes_complementares ic ON e.usuario = ic.usuario
-
             LEFT JOIN tb_pitch p ON (e.nome_equipe = p.usuario OR e.usuario = p.usuario)
-
           `).all();
-
-
 
           const { results: empresas } = await env.DB.prepare(`
-
             SELECT nome_empresa, email_contato FROM tb_empresas
-
           `).all();
 
-
-
-          // A MÁGICA REVERSA: O App Android precisa do NOME.
-
-          // Se o banco guardou o E-mail (como no caso da Threeeo), o código acha a empresa e troca pelo Nome.
-
           const projetosTraduzidos = projetos.map(projeto => {
+            // Concatena todos os integrantes em um único campo para o App
+            const lista = [
+              projeto.nome_integrante,
+              projeto.nome_integrante2,
+              projeto.nome_integrante3,
+              projeto.nome_integrante4,
+              projeto.nome_integrante5
+            ].filter(n => n && n.trim() !== "").join(", ");
+
+            projeto.nome_integrante = lista || "Sem integrantes";
 
             if (projeto.empresa_vinculada) {
-
               const empresaEncontrada = empresas.find(
-
                 emp => emp.nome_empresa === projeto.empresa_vinculada || emp.email_contato === projeto.empresa_vinculada
-
               );
-
-              // Forçamos o envio do NOME DA EMPRESA para o App Android
-
               if (empresaEncontrada && empresaEncontrada.nome_empresa) {
-
                 projeto.empresa_vinculada = empresaEncontrada.nome_empresa;
-
               }
-
             }
-
             return projeto;
-
           });
 
-
-
           return new Response(JSON.stringify({ success: true, data: projetosTraduzidos }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
         } catch (erro) {
-
           return new Response(JSON.stringify({ success: false, error: erro.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
         }
-
       }
 
+      // ==========================================
+      // LISTAGEM DE DOCUMENTOS (CURRICULOS, ETC)
+      // ==========================================
+      if (path === "/listar-documentos") {
+        try {
+          const { searchParams } = new URL(request.url);
+          const usuario = searchParams.get('usuario');
+          if (!usuario) {
+            return new Response(JSON.stringify({ success: false, error: 'Usuário não fornecido' }), {
+              status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+
+          const { results } = await env.DB.prepare("SELECT * FROM tb_documentos WHERE usuario_vinculado = ? ORDER BY data_geracao DESC").bind(usuario).all();
+          return new Response(JSON.stringify({ success: true, data: results }), {
+            status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          return new Response(JSON.stringify({ success: false, error: err.message }), {
+            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
     }
 
 
@@ -354,16 +348,45 @@ export default {
 
 
 
-    // ==========================================
-
-    // ROTA DE UPLOAD DE VÍDEO (FORM-DATA)
-
-    // ==========================================
-
     if (path === "/upload-video") {
-
       return await handleUploadVideo(request, env, corsHeaders);
+    }
 
+    if (path === "/upload-documento") {
+      try {
+        const formData = await request.formData();
+        const usuario = formData.get('usuario');
+        const tipo = formData.get('tipo');
+        const nome = formData.get('nome');
+        const file = formData.get('file');
+
+        if (!usuario || !file || !tipo) {
+          return new Response(JSON.stringify({ success: false, error: 'Dados incompletos' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const fileName = `documentos/${tipo.toLowerCase()}_${usuario.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`;
+        const R2_PUBLIC_URL = "https://pub-8b39c2fa88234341ac68682a11d82f77.r2.dev";
+        const fileUrl = `${R2_PUBLIC_URL}/${fileName}`;
+
+        await env.BUCKET_VIDEOS.put(fileName, file.stream(), {
+          httpMetadata: { contentType: 'application/pdf' }
+        });
+
+        await env.DB.prepare(`
+          INSERT INTO tb_documentos (nome_documento, tipo_documento, url_documento, usuario_vinculado)
+          VALUES (?, ?, ?, ?)
+        `).bind(nome || fileName, tipo, fileUrl, usuario).run();
+
+        return new Response(JSON.stringify({ success: true, url: fileUrl }), {
+          status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ success: false, error: err.message }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
     }
 
 
@@ -432,6 +455,11 @@ export default {
             nome_integrante5
           } = campos;
 
+          // Verifica o nível de acesso do usuário
+          const userRecord = await env.DB.prepare("SELECT nivel_de_acesso FROM tb_cadastros WHERE email = ? OR nome_usuarios = ?")
+            .bind(usuario, usuario).first();
+          const nivelAcesso = userRecord ? userRecord.nivel_de_acesso : 0;
+
           const equipe = await env.DB.prepare(`
         SELECT id_equipe
         FROM tb_equipe
@@ -473,7 +501,7 @@ export default {
             ).run();
 
           } else {
-
+            // Se for professor (nível 3) ou qualquer outro nível sem projeto, cria um novo
             await env.DB.prepare(`
             INSERT INTO tb_equipe
             (
@@ -509,6 +537,12 @@ export default {
               usuario
             ).run();
 
+            // Inicializa a tabela de completude para o novo projeto
+            await env.DB.prepare(`
+              INSERT INTO tb_informacoes_completude
+              (usuario, qtd, dados_equipe, conhecimentos, recursos_aplicados, canvas_preencher, pitch_escrito, pitch_video, cronograma, foto_equipe, fotos_etapa_projeto)
+              VALUES (?, 0, 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada')
+            `).bind(usuario).run();
           }
 
           return new Response(JSON.stringify({
@@ -843,6 +877,8 @@ export default {
           });
 
         }
+
+
 
         //===============TB_CANVA===============
         if (tipo === "canva") {
@@ -1944,6 +1980,19 @@ export default {
 
         }
 
+
+
+      if (tipo === "feedback") {
+    const record = await env.DB.prepare(`
+      SELECT comentario_empresa FROM tb_acompanhamento_projeto WHERE usuario = ?
+    `).bind(usuario).first();
+
+    return new Response(JSON.stringify({
+      success: true,
+      dados: record || { comentario_empresa: "" }
+    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
         // ================= TB_EQUIPE =================
 
         if (tipo === "equipe") {
@@ -2571,17 +2620,17 @@ export default {
         }
 
         if (tipo === "curriculo") {
+          const result = await env.DB.prepare(`
+            SELECT *
+            FROM tb_curriculo_alunos
+            WHERE usuario = ? OR email = ?
+            LIMIT 1
+          `).bind(usuario, usuario).first();
 
-          const { results } = await env.DB.prepare(`
-    SELECT *
-    FROM tb_curriculo_alunos
-    WHERE usuario = ?
-    LIMIT 1
-  `).bind(usuario).all();
-
-          if (!results || results.length === 0) {
+          if (!result) {
             return new Response(JSON.stringify({
-              success: false,
+              success: true,
+              existe: false,
               message: "Currículo não encontrado."
             }), {
               headers: {
@@ -2593,7 +2642,8 @@ export default {
 
           return new Response(JSON.stringify({
             success: true,
-            dados: results[0]
+            existe: true,
+            dados: result
           }), {
             headers: {
               ...corsHeaders,
@@ -2616,48 +2666,130 @@ export default {
       }
 
 
-      if (path === "/atualizar-perfil") {
-
-        const { email_atual, novo_nome, novo_email, foto_perfil } = body;
 
 
+
+
+
+
+      if (path === "/salvar-comentario") {
+  const { nome_equipe, comentario } = body;
+
+  if (!nome_equipe) {
+    return new Response(JSON.stringify({ success: false, message: "Dados ausentes." }),
+    { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  try {
+    // Tenta atualizar na tb_acompanhamento_projeto
+    const info = await env.DB.prepare(`
+      UPDATE tb_acompanhamento_projeto
+      SET comentario_empresa = ?
+      WHERE usuario = ? OR usuario = (SELECT nome_usuarios FROM tb_cadastros WHERE email = ?)
+    `).bind(comentario, nome_equipe, nome_equipe).run();
+
+    if (info.meta.changes > 0) {
+      return new Response(JSON.stringify({ success: true, message: "Feedback salvo com sucesso!" }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } else {
+      return new Response(JSON.stringify({ success: false, message: "Projeto não encontrado para esta equipe." }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+  } catch (e) {
+    return new Response(JSON.stringify({ success: false, error: e.message }),
+    { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if (path === "/atualizar-perfil") {
+        const {
+            email_atual,
+            novo_nome,
+            novo_email,
+            foto_perfil,
+            cnpj,
+            endereco,
+            setor,
+            descricao,
+            telefone_contato
+        } = body;
 
         try {
-
           const urlFotoSalva = await uploadBase64ToR2(foto_perfil, email_atual, env);
 
-
-
+          // 1. TENTA ATUALIZAR O CADASTRO NORMAL (Serve para todos os usuários)
           const queryCadastros = "UPDATE tb_cadastros SET nome_usuarios = ?, email = ?, foto_perfil = ? WHERE email = ?";
-
           const infoCadastros = await env.DB.prepare(queryCadastros).bind(novo_nome, novo_email, urlFotoSalva, email_atual).run();
 
+          // 2. SE FOR EMPRESA (O Android só manda 'cnpj' se for Nível 4)
+          if (cnpj !== undefined) {
 
+            if (infoCadastros.meta.changes > 0) {
+              const queryEmpresas = `
+                UPDATE tb_empresas
+                SET foto_perfil = ?, nome_empresa = ?, usuario = ?, email_contato = ?,
+                    cnpj = COALESCE(?, cnpj), endereco = COALESCE(?, endereco),
+                    setor = COALESCE(?, setor), descricao = COALESCE(?, descricao),
+                    telefone_contato = COALESCE(?, telefone_contato)
+                WHERE email_contato = ?
+              `;
+              await env.DB.prepare(queryEmpresas)
+                  .bind(urlFotoSalva, novo_nome, novo_nome, novo_email, cnpj, endereco, setor, descricao, telefone_contato, email_atual)
+                  .run();
+            } else {
+              // Fallback se o email não for encontrado (legado do seu sistema)
+              const queryOld = "UPDATE tb_cadastros SET nome_usuarios = ?, email = ?, foto_perfil = ? WHERE nome_usuarios = ?";
+              await env.DB.prepare(queryOld).bind(novo_nome, novo_email, urlFotoSalva, email_atual).run();
 
-          if (infoCadastros.meta.changes > 0) {
-
-            const queryEmpresas = "UPDATE tb_empresas SET foto_perfil = ? WHERE email_contato = ?";
-
-            await env.DB.prepare(queryEmpresas).bind(urlFotoSalva, email_atual).run();
-
-            return new Response(JSON.stringify({ success: true, foto_url: urlFotoSalva }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-          } else {
-
-            const queryOld = "UPDATE tb_cadastros SET nome_usuarios = ?, email = ?, foto_perfil = ? WHERE nome_usuarios = ?";
-
-            await env.DB.prepare(queryOld).bind(novo_nome, novo_email, urlFotoSalva, email_atual).run();
-
-            return new Response(JSON.stringify({ success: true, foto_url: urlFotoSalva }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+              const queryEmpresasOld = `
+                UPDATE tb_empresas
+                SET foto_perfil = ?, nome_empresa = ?, usuario = ?, email_contato = ?,
+                    cnpj = COALESCE(?, cnpj), endereco = COALESCE(?, endereco),
+                    setor = COALESCE(?, setor), descricao = COALESCE(?, descricao),
+                    telefone_contato = COALESCE(?, telefone_contato)
+                WHERE usuario = ? OR nome_empresa = ?
+              `;
+              await env.DB.prepare(queryEmpresasOld)
+                  .bind(urlFotoSalva, novo_nome, novo_nome, novo_email, cnpj, endereco, setor, descricao, telefone_contato, email_atual, email_atual)
+                  .run();
+            }
 
           }
+          // 3. SE NÃO FOR EMPRESA (Aluno, Professor, etc - Volta a funcionar como era antes)
+          else {
+            if (infoCadastros.meta.changes === 0) {
+              // Fallback legado para os usuários normais
+              const queryOld = "UPDATE tb_cadastros SET nome_usuarios = ?, email = ?, foto_perfil = ? WHERE nome_usuarios = ?";
+              await env.DB.prepare(queryOld).bind(novo_nome, novo_email, urlFotoSalva, email_atual).run();
+            }
+          }
+
+          // Resposta final de sucesso
+          return new Response(JSON.stringify({ success: true, foto_url: urlFotoSalva }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
         } catch (e) {
-
+          // Agora, se der algum erro real, você verá no log
           return new Response(JSON.stringify({ success: false, error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
         }
-
       }
 
 
@@ -2720,229 +2852,132 @@ export default {
 
 
 
-      // ==========================================
-
+// ==========================================
       // CADASTRO DE USUÁRIO
-
       // ==========================================
-
       if (path === "/cadastro") {
 
-
-
         const {
-
           nome_usuarios,
-
           email,
-
           senha,
-
           nivel_de_acesso
-
-        } = body;
-
-
+        } = body; //[cite: 2]
 
         if (!nome_usuarios || !email || !senha || nivel_de_acesso == null) {
-
           return new Response(
-
             JSON.stringify({
-
               success: false,
-
               error: "Preencha todos os campos."
-
             }),
-
             {
-
               status: 400,
-
               headers: {
-
                 ...corsHeaders,
-
                 "Content-Type": "application/json"
-
               }
-
             }
-
-          );
-
+          ); //[cite: 2]
         }
-
-
 
         try {
 
-
-
           // Verifica se o e-mail já existe
-
           const usuarioExistente = await env.DB.prepare(`
-
             SELECT id_cadastro
-
             FROM tb_cadastros
-
             WHERE email = ?
-
         `)
-
             .bind(email)
-
-            .first();
-
-
+            .first(); //[cite: 2]
 
           if (usuarioExistente) {
-
-
-
             return new Response(
-
               JSON.stringify({
-
                 success: false,
-
                 error: "Este e-mail já está cadastrado."
-
               }),
-
               {
-
                 status: 400,
-
                 headers: {
-
                   ...corsHeaders,
-
                   "Content-Type": "application/json"
-
                 }
-
               }
-
-            );
-
-
-
+            ); //[cite: 2]
           }
 
-
-
-          // Insere o usuário
-
-
-
+          // Insere o usuário na tb_cadastros
           await env.DB.prepare(`
-
             INSERT INTO tb_cadastros
-
             (
-
                 nome_usuarios,
-
                 senha,
-
-
-
                 email,
                 nivel_de_acesso
-
-
-
             )
-
             VALUES (?, ?, ?, ?)
-
         `)
-
             .bind(
-
               nome_usuarios,
-
               senha,
-
-
-
               email,
-               nivel_de_acesso
-
+              nivel_de_acesso
             )
+            .run(); //[cite: 2]
 
-            .run();
-
-
+          if (Number(nivel_de_acesso) === 4) {
+             await env.DB.prepare(`
+                INSERT INTO tb_empresas
+                (
+                    nome_empresa,
+		    email_contato,
+                    usuario
+                )
+                VALUES (?, ?, ?)
+             `)
+             .bind(
+                nome_usuarios,
+		email,
+                nome_usuarios
+             )
+             .run();
+          }
 
           return new Response(
-
             JSON.stringify({
-
               success: true,
-
               message: "Usuário cadastrado com sucesso."
-
             }),
-
             {
-
               status: 200,
-
               headers: {
-
                 ...corsHeaders,
-
                 "Content-Type": "application/json"
-
               }
-
             }
-
           );
-
-
 
         } catch (erro) {
 
-
-
           return new Response(
-
             JSON.stringify({
-
               success: false,
-
               error: erro.message
-
             }),
-
             {
-
               status: 500,
-
               headers: {
-
                 ...corsHeaders,
-
                 "Content-Type": "application/json"
-
               }
-
             }
-
           );
 
-
-
         }
-
-
-
       }
+
+
 
 
 
@@ -2976,31 +3011,6 @@ export default {
 
 
 
-      if (path === "/salvar-comentario") {
-
-        const { nome_equipe, comentario } = body;
-
-        if (!nome_equipe || !comentario) return new Response(JSON.stringify({ success: false, message: "Nome da equipe ou comentário ausente." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-
-
-        const info = await env.DB.prepare(`
-
-          UPDATE tb_acompanhamento_projeto
-
-          SET comentario_empresa = ?
-
-          WHERE usuario = ? OR usuario = (SELECT nome_usuarios FROM tb_cadastros WHERE email = ?)
-
-        `).bind(comentario, nome_equipe, nome_equipe).run();
-
-
-
-        if (info.meta.changes > 0) return new Response(JSON.stringify({ success: true, message: "Comentário salvo com sucesso!" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-        else return new Response(JSON.stringify({ success: false, message: "Equipe não encontrada na base de dados." }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-      }
 
 
 

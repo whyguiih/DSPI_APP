@@ -401,6 +401,26 @@
                         android:text="Abrir PDF do Relatório"
                         android:textColor="#FFFFFF"
                         android:visibility="gone" />
+
+                    <!-- Novo: Seção de Documentos Dinâmica -->
+                    <TextView
+                        android:id="@+id/tvTituloDocumentos"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Outros Documentos"
+                        android:textColor="#FFFFFF"
+                        android:textSize="18sp"
+                        android:fontFamily="@font/neo_sans"
+                        android:layout_marginTop="24dp"
+                        android:layout_marginBottom="8dp"
+                        android:visibility="gone" />
+
+                    <LinearLayout
+                        android:id="@+id/containerDocumentos"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
                 </LinearLayout>
 
                 <LinearLayout android:id="@+id/formFeedback" style="@style/FormContainerStyle" android:visibility="gone">

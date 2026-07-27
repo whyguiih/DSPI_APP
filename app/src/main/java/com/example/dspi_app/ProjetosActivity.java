@@ -148,23 +148,40 @@ public class ProjetosActivity extends AppCompatActivity {
                                         obj.optString("tarefas", ""),
                                         obj.optString("dificuldades_enxergadas", ""),
                                         obj.optString("empresa_vinculada", ""),
-                                        obj.optString("video_url", "")
+                                        obj.optString("video_url", ""),
+                                        obj.optString("nome_coorientador", ""),
+                                        obj.optString("usuario", "")
                                 );
 
                                 p.setComentarioEmpresa(obj.optString("comentario_empresa", ""));
 
                                 String empresaVinc = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
                                 String nomeEqp = p.getNomeEquipe() != null ? p.getNomeEquipe().trim() : "";
+                                String orientador = p.getOrientador() != null ? p.getOrientador().trim() : "";
+                                String coorientador = p.getNomeCoorientador() != null ? p.getNomeCoorientador().trim() : "";
+                                String integrantes = p.getIntegrantes() != null ? p.getIntegrantes().trim() : "";
+                                String donoEmail = p.getUsuario() != null ? p.getUsuario().trim() : "";
+
+                                boolean isMeuProjeto = false;
+                                if (!userLogado.isEmpty()) {
+                                    String userLower = userLogado.toLowerCase();
+                                    if (nomeEqp.toLowerCase().contains(userLower) || 
+                                        donoEmail.toLowerCase().contains(userLower) ||
+                                        orientador.toLowerCase().contains(userLower) ||
+                                        coorientador.toLowerCase().contains(userLower) ||
+                                        integrantes.toLowerCase().contains(userLower)) {
+                                        isMeuProjeto = true;
+                                    }
+                                }
 
                                 if ("4".equals(nivel)) {
-                                    // CORREÇÃO: Empresa compara com seu NOME (nomeUsuario agora tem o nome real)
                                     if (!userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado)) {
                                         todosMeusProjetos.add(p);
                                     } else if (empresaVinc.isEmpty() || empresaVinc.equalsIgnoreCase("null") || empresaVinc.equalsIgnoreCase("Nenhuma")) {
                                         todosOutrosProjetos.add(p);
                                     }
                                 } else {
-                                    if (!userLogado.isEmpty() && nomeEqp.equalsIgnoreCase(userLogado)) {
+                                    if (isMeuProjeto) {
                                         todosMeusProjetos.add(p);
                                     } else {
                                         todosOutrosProjetos.add(p);
@@ -267,18 +284,38 @@ public class ProjetosActivity extends AppCompatActivity {
     private void abrirPaginaDetalhes(Projeto projeto) {
         Intent intent;
         String userLogado = nomeUsuario.trim();
-        String nomeEqp = projeto.getNomeEquipe() != null ? projeto.getNomeEquipe().trim() : "";
-        String empresaVinc = projeto.getEmpresaVinculada() != null ? projeto.getEmpresaVinculada().trim() : "";
         
-        boolean isMeuProjeto = !userLogado.isEmpty() && nomeEqp.equalsIgnoreCase(userLogado);
+        String nomeEqp = projeto.getNomeEquipe() != null ? projeto.getNomeEquipe().trim() : "";
+        String orientador = projeto.getOrientador() != null ? projeto.getOrientador().trim() : "";
+        String coorientador = projeto.getNomeCoorientador() != null ? projeto.getNomeCoorientador().trim() : "";
+        String integrantes = projeto.getIntegrantes() != null ? projeto.getIntegrantes().trim() : "";
+        String donoEmail = projeto.getUsuario() != null ? projeto.getUsuario().trim() : "";
+        String empresaVinc = projeto.getEmpresaVinculada() != null ? projeto.getEmpresaVinculada().trim() : "";
+
+        boolean isMeuProjeto = false;
+        if (!userLogado.isEmpty()) {
+            String userLower = userLogado.toLowerCase();
+            if (nomeEqp.toLowerCase().contains(userLower) || 
+                donoEmail.toLowerCase().contains(userLower) ||
+                orientador.toLowerCase().contains(userLower) ||
+                coorientador.toLowerCase().contains(userLower) ||
+                integrantes.toLowerCase().contains(userLower)) {
+                isMeuProjeto = true;
+            }
+        }
+        
         boolean isEmpresaVinculada = "4".equals(nivel) && !userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado);
 
-        // Se for nível 1, 2, Empresa Vinculada ao projeto ou o próprio dono do projeto, abre o Formulário Completo
+        // Se for nível 1, 2, Empresa Vinculada ao projeto ou o próprio dono/integrante do projeto, abre o Formulário Completo (Tabelas)
         if ("2".equals(nivel) || "1".equals(nivel) || isEmpresaVinculada || isMeuProjeto) {
             intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
-            intent.putExtra("projeto_usuario", projeto.getNomeEquipe());
+            
+            // CORREÇÃO: Garante que o projeto_usuario seja o e-mail do DONO do projeto
+            String dono = (projeto.getUsuario() != null && !projeto.getUsuario().isEmpty()) ? projeto.getUsuario() : projeto.getNomeEquipe();
+            intent.putExtra("projeto_usuario", dono);
+            Log.d("PROJETOS", "Abrindo tabelas para: " + dono);
         } else {
-            // Outros níveis vendo projetos alheios (ou empresa vendo projeto não vinculado) vão para Detalhes resumido
+            // Outros níveis vendo projetos alheios vão para Detalhes resumido
             intent = new Intent(ProjetosActivity.this, ProjetoDetalhesActivity.class);
             intent.putExtra("projeto_selecionado", projeto);
         }

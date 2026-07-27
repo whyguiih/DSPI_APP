@@ -62,11 +62,11 @@ public class CadastroActivity extends AppCompatActivity {
 
         String[] niveis = {
                 "Avaliador",
-                "Dr/dh",
+                "DR/DN",
                 "Professor",
                 "Empresa",
                 "Aluno",
-                "Público Geral"
+                "Público Externo"
         };
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
@@ -99,7 +99,7 @@ public class CadastroActivity extends AppCompatActivity {
                 nivel_de_acesso = 1;
                 break;
 
-            case "Dr/dh":
+            case "DR/DN":
                 nivel_de_acesso = 2;
                 break;
 
@@ -115,7 +115,7 @@ public class CadastroActivity extends AppCompatActivity {
                 nivel_de_acesso = 5;
                 break;
 
-            case "Público Geral":
+            case "Público Externo":
                 nivel_de_acesso = 6;
                 break;
         }

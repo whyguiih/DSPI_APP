@@ -130,29 +130,27 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
+                        android:orientation="vertical"
                         android:layout_marginBottom="6dp">
 
                         <TextView
                             android:id="@+id/txtTelefone"
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
                             android:text="(54) 99999-9999"
                             android:textColor="#E6FFFFFF"
                             android:textSize="13sp"
-                            android:fontFamily="@font/neo_sans"/>
+                            android:fontFamily="@font/neo_sans"
+                            android:layout_marginBottom="4dp"/>
 
                         <TextView
                             android:id="@+id/txtEmail"
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
                             android:text="email@empresa.com"
                             android:textColor="#E6FFFFFF"
                             android:textSize="13sp"
-                            android:fontFamily="@font/neo_sans"
-                            android:gravity="end"/>
+                            android:fontFamily="@font/neo_sans"/>
                     </LinearLayout>
 
                     <TextView

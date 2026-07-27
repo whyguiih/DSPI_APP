@@ -1,8 +1,12 @@
 package com.example.dspi_app;
 
+import android.app.DownloadManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -10,17 +14,28 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.android.volley.Request;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ContaActivity extends AppCompatActivity {
 
@@ -65,6 +80,24 @@ public class ContaActivity extends AppCompatActivity {
         LinearLayout btnCadastro = findViewById(R.id.btnCadastrar);
         LinearLayout btnSair = findViewById(R.id.btnSair);
         LinearLayout btnNecessidades = findViewById(R.id.btnNecessidades);
+        LinearLayout btnVerificarCurriculo = findViewById(R.id.btnVerificarCurriculo);
+
+        // Esconder botões de Currículo se não for nível 5 (Candidato/Aluno)
+        if ("5".equals(nivel)) {
+            btnMeuCurriculo.setVisibility(View.VISIBLE);
+            if (btnVerificarCurriculo != null) {
+                btnVerificarCurriculo.setVisibility(View.VISIBLE);
+            }
+        } else {
+            btnMeuCurriculo.setVisibility(View.GONE);
+            if (btnVerificarCurriculo != null) {
+                btnVerificarCurriculo.setVisibility(View.GONE);
+            }
+        }
+
+        if (btnVerificarCurriculo != null) {
+            btnVerificarCurriculo.setOnClickListener(v -> gerarCurriculoPDF());
+        }
 
         if (usuarioEmpresa) {
             // Se for empresa, mostra o botão
@@ -92,11 +125,6 @@ public class ContaActivity extends AppCompatActivity {
             btnCadastro.setVisibility(View.VISIBLE);
         } else {
             btnCadastro.setVisibility(View.GONE);
-        }
-
-// Esconder o botão "Meu Currículo" se não for nível 5
-        if (!"5".equals(nivel)) {
-            btnMeuCurriculo.setVisibility(View.GONE);
         }
 
         // Configuração dos botões e subpáginas
@@ -150,6 +178,88 @@ public class ContaActivity extends AppCompatActivity {
                 finish();
             });
         }
+
+    private void gerarCurriculoPDF() {
+        Toast.makeText(this, "Sincronizando dados profissionais...", Toast.LENGTH_SHORT).show();
+        String url = "https://api-dspi.whyguiih.workers.dev/preencher-curriculo";
+
+        // Puxa os dados reais da conta do SharedPreferences
+        SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
+        String emailSessao = prefs.getString("email_logado", "");
+        String nomeSessao = prefs.getString("nome_usuario", "Usuário");
+
+        JSONObject jsonBody = new JSONObject();
+        try {
+            jsonBody.put("email_sessao", emailSessao); // Chave mestre para busca
+            jsonBody.put("nome_usuario", nomeSessao);
+            jsonBody.put("email_usuario", emailSessao);
+        } catch (JSONException e) { e.printStackTrace(); }
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
+                response -> {
+                    try {
+                        if (response.getBoolean("success")) {
+                            Toast.makeText(this, "Currículo pronto! Baixando...", Toast.LENGTH_SHORT).show();
+                            baixarCurriculoNoAndroid(emailSessao);
+                        } else {
+                            mostrarErroGrande("Aviso do Servidor", response.optString("message"));
+                        }
+                    } catch (JSONException e) {
+                        mostrarErroGrande("Erro de Processamento", "Houve uma falha ao ler a resposta do servidor.");
+                    }
+                },
+                error -> {
+                    String mensagemErro = "Não foi possível conectar ao servidor de nuvem.";
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
+                        try {
+                            String responseBody = new String(error.networkResponse.data, "utf-8");
+                            JSONObject data = new JSONObject(responseBody);
+                            mensagemErro = data.optString("message", mensagemErro);
+                        } catch (Exception e) { e.printStackTrace(); }
+                    }
+                    mostrarErroGrande("Aviso", mensagemErro);
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Content-Type", "application/json; charset=utf-8");
+                return headers;
+            }
+        };
+        Volley.newRequestQueue(this).add(request);
+    }
+
+    private void baixarCurriculoNoAndroid(String identificador) {
+        String codificado = Uri.encode(identificador);
+        String urlPython = "https://avell.tailfdec8e.ts.net:8443/download-curriculo/" + codificado;
+        android.util.Log.d("DOWNLOAD_DEBUG", "Solicitando PDF em: " + urlPython);
+
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
+        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
+        request.setTitle("Currículo Profissional");
+        request.setDescription("Baixando currículo...");
+        request.setMimeType("application/pdf");
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+        String nomeFinal = "Curriculo_" + System.currentTimeMillis() + ".pdf";
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, nomeFinal);
+
+        DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        if (manager != null) {
+            manager.enqueue(request);
+            Toast.makeText(this, "Download iniciado! Verifique sua pasta de Downloads.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void mostrarErroGrande(String titulo, String mensagem) {
+        new AlertDialog.Builder(this)
+                .setTitle(titulo)
+                .setMessage(mensagem)
+                .setPositiveButton("Entendido", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+    }
 
     @Override
     protected void onResume() {

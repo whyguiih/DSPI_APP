@@ -234,7 +234,9 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
                                         obj.optString("tarefas", ""),
                                         obj.optString("dificuldades_enxergadas", ""),
                                         obj.optString("empresa_vinculada", ""),
-                                        obj.optString("video_url", "")
+                                        obj.optString("video_url", ""),
+                                        obj.optString("nome_coorientador", ""),
+                                        obj.optString("usuario", "")
                                 );
 
                                 p.setComentarioEmpresa(obj.optString("comentario_empresa", ""));
