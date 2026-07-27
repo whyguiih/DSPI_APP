@@ -44,7 +44,7 @@ public class FormularioActivity extends AppCompatActivity {
             tabCanva, tabEmpresa, tabPitch,
             tabIA, tabPlanilha, tabComplementares, tabCompletude, tabRelatorio, tabFeedback;
 
-    private Button btnGerarRelatorio, btnVisualizarRelatorio, btnAtualizarFeedback;
+    private Button btnGerarRelatorio, btnAtualizarFeedback;
     private LinearLayout containerDocumentos;
     private TextView tvTituloDocumentos;
 
@@ -225,9 +225,18 @@ public class FormularioActivity extends AppCompatActivity {
 
 
         String nivelValidacao = getIntent().getStringExtra("nivel_de_acesso");
-        if (nivelValidacao != null && (nivelValidacao.trim().equals("5") || nivelValidacao.trim().equals("2") || nivelValidacao.trim().equals("1") || nivelValidacao.trim().equals("4"))) {
-            if (btnEditarDados != null) btnEditarDados.setVisibility(View.GONE);
-            if (btnUploadVideo != null) btnUploadVideo.setVisibility(View.GONE);
+        if (nivelValidacao != null) {
+            String nv = nivelValidacao.trim();
+            // Níveis que NÃO podem ver botão de editar dados/upload (Alunos, DR/DN, Avaliador, Empresa)
+            if (nv.equals("5") || nv.equals("2") || nv.equals("1") || nv.equals("4")) {
+                if (btnEditarDados != null) btnEditarDados.setVisibility(View.GONE);
+                if (btnUploadVideo != null) btnUploadVideo.setVisibility(View.GONE);
+            }
+            
+            // Botão de atualizar feedback só aparece para nível 4 (Empresa)
+            if (btnAtualizarFeedback != null) {
+                btnAtualizarFeedback.setVisibility(nv.equals("4") ? View.VISIBLE : View.GONE);
+            }
         }
 
         atualizarTodosFormularios(false);
@@ -555,7 +564,6 @@ public class FormularioActivity extends AppCompatActivity {
         tabFeedback = findViewById(R.id.tabFeedback);
 
         btnGerarRelatorio = findViewById(R.id.btnGerarRelatorio);
-        btnVisualizarRelatorio = findViewById(R.id.btnVisualizarRelatorio);
         btnAtualizarFeedback = findViewById(R.id.btnAtualizarFeedback);
         btnEditarDados = findViewById(R.id.btnEditarDados);
 
@@ -1098,361 +1106,194 @@ public class FormularioActivity extends AppCompatActivity {
 
             @Override
             public void onSucesso(JSONObject dados) {
+                if (dados == null) return;
 
                 if (tipo.equals("equipe")) {
-                    String nomeProjeto = dados.optString("nome_projeto");
+                    etNomeEquipe.setText(dados.optString("nome_equipe", ""));
+                    etNomeProjeto.setText(dados.optString("nome_projeto", ""));
+                    etEmail.setText(dados.optString("email", ""));
+                    etAreaCurso.setText(dados.optString("area_atuacao_curso", ""));
+                    etAreaProjeto.setText(dados.optString("area_atuacao_projeto", ""));
+                    etNomeOrientador.setText(dados.optString("nome_orientador", ""));
+                    etNomeCoorientador.setText(dados.optString("nome_coorientador", ""));
+                    etIntegrante1.setText(dados.optString("nome_integrante", ""));
+                    etIntegrante2.setText(dados.optString("nome_integrante2", ""));
+                    etIntegrante3.setText(dados.optString("nome_integrante3", ""));
+                    etIntegrante4.setText(dados.optString("nome_integrante4", ""));
+                    etIntegrante5.setText(dados.optString("nome_integrante5", ""));
+                    return;
+                }
 
-                    etNomeEquipe.setText(dados.optString("nome_equipe"));
-                    etNomeProjeto.setText(nomeProjeto);
-                    etEmail.setText(dados.optString("email"));
-                    etAreaCurso.setText(dados.optString("area_atuacao_curso"));
-                    etAreaProjeto.setText(dados.optString("area_atuacao_projeto"));
-                    etNomeOrientador.setText(dados.optString("nome_orientador"));
-                    etNomeCoorientador.setText(dados.optString("nome_coorientador"));
-                    etIntegrante1.setText(dados.optString("nome_integrante"));
-                    etIntegrante2.setText(dados.optString("nome_integrante2"));
-                    etIntegrante3.setText(dados.optString("nome_integrante3"));
-                    etIntegrante4.setText(dados.optString("nome_integrante4"));
-                    etIntegrante5.setText(dados.optString("nome_integrante5"));
+                if (tipo.equals("conhecimentos")) {
+                    etPlanoCurso.setText(dados.optString("plano_curso", ""));
+                    etConhecimentosAplicados.setText(dados.optString("conhecimentos_aplicados", ""));
+                    etCapacidadesAplicadas.setText(dados.optString("capacidades_aplicadas", ""));
+                    return;
+                }
 
-                } else if (tipo.equals("conhecimentos")) {
+                if (tipo.equals("recursos")) {
+                    etRecursosFerramentas.setText(dados.optString("ferramentas", ""));
+                    etRecursosEquipamentos.setText(dados.optString("equipamentos", ""));
+                    etRecursosDescricao.setText(dados.optString("descricao_produto", ""));
+                    etRecursosQtdComprada.setText(dados.optString("quant_comprada", ""));
+                    etRecursosQtdUtilizada.setText(dados.optString("quant_utilizada", ""));
+                    etRecursosPrecoEstimado.setText(dados.optString("preco_estimado", ""));
+                    etRecursosUnidadeMedida.setText(dados.optString("uni_medida", ""));
+                    etRecursosFornecedor.setText(dados.optString("fornecedor_principal", ""));
+                    etRecursosModoObtencao.setText(dados.optString("modo_obtencao", ""));
+                    etRecursosDisponibilidade.setText(dados.optString("disponibilidade", ""));
+                    etRecursosPagamento.setText(dados.optString("pagamento", ""));
+                    etRecursosAlternativas.setText(dados.optString("alternativas_consideradas", ""));
+                    etRecursosPrecoTotal.setText(dados.optString("preco_total", ""));
+                    return;
+                }
 
-                    etPlanoCurso.setText(
-                            dados.optString("plano_curso"));
+                if (tipo.equals("cronograma")) {
+                    etCronogramaProcesso.setText(dados.optString("processo", ""));
+                    etCronogramaEtapas.setText(dados.optString("etapas", ""));
+                    etCronogramaResponsavel.setText(dados.optString("responsavel", ""));
+                    etCronogramaDataInicio.setText(dados.optString("data_inicio", ""));
+                    etCronogramaDataFinal.setText(dados.optString("data_final", ""));
+                    etCronogramaObservacoes.setText(dados.optString("observacoes", ""));
+                    return;
+                }
 
-                    etConhecimentosAplicados.setText(
-                            dados.optString("conhecimentos_aplicados"));
+                if (tipo.equals("canva")) {
+                    etCanvaAtividadesChaves.setText(dados.optString("atividades_chaves", ""));
+                    etCanvaPropostaChave.setText(dados.optString("proposta_chave", ""));
+                    etCanvaRelacionamentos.setText(dados.optString("relacionamentos_clientes", ""));
+                    etCanvaSegmentos.setText(dados.optString("segmentos_clientes", ""));
+                    etCanvaRecursosChaves.setText(dados.optString("recursos_chaves", ""));
+                    etCanvaCanais.setText(dados.optString("canais", ""));
+                    etCanvaEstruturaCustos.setText(dados.optString("estrutura_custos", ""));
+                    etCanvaFluxoReceita.setText(dados.optString("fluxo_receita", ""));
+                    etCanvaParceirosChaves.setText(dados.optString("parceiros_chaves", ""));
+                    return;
+                }
 
-                    etCapacidadesAplicadas.setText(
-                            dados.optString("capacidades_aplicadas"));
+                if (tipo.equals("empresa")) {
+                    etEmpresaNome.setText(dados.optString("nome_empresa", ""));
+                    etEmpresaCnpj.setText(dados.optString("cnpj", ""));
+                    etEmpresaRegiao.setText(dados.optString("regiao", ""));
+                    etEmpresaTelefone.setText(dados.optString("telefone_contato", ""));
+                    etEmpresaEmail.setText(dados.optString("email_contato", ""));
+                    etEmpresaObjetivos.setText(dados.optString("objetivos", ""));
+                    etEmpresaProblema.setText(dados.optString("problema_projeto", ""));
+                    return;
+                }
 
-                } else if (tipo.equals("recursos")) {
-
-                    etRecursosFerramentas.setText(
-                            dados.optString("ferramentas"));
-
-                    etRecursosEquipamentos.setText(
-                            dados.optString("equipamentos"));
-
-                    etRecursosDescricao.setText(
-                            dados.optString("descricao_produto"));
-
-                    etRecursosQtdComprada.setText(
-                            dados.optString("quant_comprada"));
-
-                    etRecursosQtdUtilizada.setText(
-                            dados.optString("quant_utilizada"));
-
-                    etRecursosPrecoEstimado.setText(
-                            dados.optString("preco_estimado"));
-
-                    etRecursosUnidadeMedida.setText(
-                            dados.optString("uni_medida"));
-
-                    etRecursosFornecedor.setText(
-                            dados.optString("fornecedor_principal"));
-
-                    etRecursosModoObtencao.setText(
-                            dados.optString("modo_obtencao"));
-
-                    etRecursosDisponibilidade.setText(
-                            dados.optString("disponibilidade"));
-
-                    etRecursosPagamento.setText(
-                            dados.optString("pagamento"));
-
-                    etRecursosAlternativas.setText(
-                            dados.optString("alternativas_consideradas"));
-
-                    etRecursosPrecoTotal.setText(
-                            dados.optString("preco_total"));
-
-                } else if (tipo.equals("cronograma")) {
-
-                    etCronogramaProcesso.setText(
-                            dados.optString("processo"));
-
-                    etCronogramaEtapas.setText(
-                            dados.optString("etapas"));
-
-                    etCronogramaResponsavel.setText(
-                            dados.optString("responsavel"));
-
-                    etCronogramaDataInicio.setText(
-                            dados.optString("data_inicio"));
-
-                    etCronogramaDataFinal.setText(
-                            dados.optString("data_final"));
-
-                    etCronogramaObservacoes.setText(
-                            dados.optString("observacoes"));
-
-                } else if (tipo.equals("canva")) {
-
-                    etCanvaAtividadesChaves.setText(
-                            dados.optString("atividades_chaves"));
-
-                    etCanvaPropostaChave.setText(
-                            dados.optString("proposta_chave"));
-
-                    etCanvaRelacionamentos.setText(
-                            dados.optString("relacionamentos_clientes"));
-
-                    etCanvaSegmentos.setText(
-                            dados.optString("segmentos_clientes"));
-
-                    etCanvaRecursosChaves.setText(
-                            dados.optString("recursos_chaves"));
-
-                    etCanvaCanais.setText(
-                            dados.optString("canais"));
-
-                    etCanvaEstruturaCustos.setText(
-                            dados.optString("estrutura_custos"));
-
-                    etCanvaFluxoReceita.setText(
-                            dados.optString("fluxo_receita"));
-
-                    etCanvaParceirosChaves.setText(
-                            dados.optString("parceiros_chaves"));
-
-                } else if (tipo.equals("empresa")) {
-
-                    etEmpresaNome.setText(
-                            dados.optString("nome_empresa"));
-
-                    etEmpresaCnpj.setText(
-                            dados.optString("cnpj"));
-
-                    etEmpresaRegiao.setText(
-                            dados.optString("regiao"));
-
-                    etEmpresaTelefone.setText(
-                            dados.optString("telefone_contato"));
-
-                    etEmpresaEmail.setText(
-                            dados.optString("email_contato"));
-
-                    etEmpresaObjetivos.setText(
-                            dados.optString("objetivos"));
-
-                    etEmpresaProblema.setText(
-                            dados.optString("problema_projeto"));
-
-                } else if (tipo.equals("pitch")) {
-
-                    etPitchRoteiro.setText(
-                            dados.optString("roteiro"));
-
-                    String videoUrl = dados.optString("video_url");
-                    if (videoUrl != null && !videoUrl.isEmpty() && !videoUrl.equals("null")) {
+                if (tipo.equals("pitch")) {
+                    etPitchRoteiro.setText(dados.optString("roteiro", ""));
+                    String videoUrl = dados.optString("video_url", "");
+                    if (!videoUrl.isEmpty() && !videoUrl.equals("null")) {
                         configurarPlayerVideo(videoUrl);
                     }
+                    return;
+                }
 
-                } else if (tipo.equals("ia")) {
+                if (tipo.equals("ia")) {
+                    etIaNomeFerramenta.setText(dados.optString("nome_ferramenta", ""));
+                    etIaLinkAcesso.setText(dados.optString("link_acesso", ""));
+                    etIaTipoLicenca.setText(dados.optString("tipo_licenca", ""));
+                    etIaEtapaUso.setText(dados.optString("etapa_uso", ""));
+                    etIaCriacaoPrompt.setText(dados.optString("criacao_prompt", ""));
+                    etIaDescricaoUso.setText(dados.optString("descricao_uso", ""));
+                    return;
+                }
 
-                    etIaNomeFerramenta.setText(
-                            dados.optString("nome_ferramenta"));
-
-                    etIaLinkAcesso.setText(
-                            dados.optString("link_acesso"));
-
-                    etIaTipoLicenca.setText(
-                            dados.optString("tipo_licenca"));
-
-                    etIaEtapaUso.setText(
-                            dados.optString("etapa_uso"));
-
-                    etIaCriacaoPrompt.setText(
-                            dados.optString("criacao_prompt"));
-
-                    etIaDescricaoUso.setText(
-                            dados.optString("descricao_uso"));
-
-                } else if (tipo.equals("planilha")) {
-
-                    etPlanilhaTarefas.setText(
-                            dados.optString("tarefas"));
-
-                    etPlanilhaAlunoResponsavel.setText(
-                            dados.optString("aluno_responsavel"));
-
-                    etPlanilhaProfessorArea.setText(
-                            dados.optString("professor_da_area"));
-
-                    etPlanilhaInicioPrevisto.setText(
-                            dados.optString("inicio_previsto"));
-
-                    etPlanilhaFimPrevisto.setText(
-                            dados.optString("fim_previsto"));
-
-                    etPlanilhaInicioRealizado.setText(
-                            dados.optString("inicio_realizado"));
-
-                    etPlanilhaFimRealizado.setText(
-                            dados.optString("fim_realizado"));
-
-                    etPlanilhaDuracaoDias.setText(
-                            dados.optString("duracao"));
-
-                    String status = dados.optString("status");
-
+                if (tipo.equals("planilha")) {
+                    etPlanilhaTarefas.setText(dados.optString("tarefas", ""));
+                    etPlanilhaAlunoResponsavel.setText(dados.optString("aluno_responsavel", ""));
+                    etPlanilhaProfessorArea.setText(dados.optString("professor_da_area", ""));
+                    etPlanilhaInicioPrevisto.setText(dados.optString("inicio_previsto", ""));
+                    etPlanilhaFimPrevisto.setText(dados.optString("fim_previsto", ""));
+                    etPlanilhaInicioRealizado.setText(dados.optString("inicio_realizado", ""));
+                    etPlanilhaFimRealizado.setText(dados.optString("fim_realizado", ""));
+                    etPlanilhaDuracaoDias.setText(dados.optString("duracao", ""));
+                    String status = dados.optString("status", "");
                     ArrayAdapter adapter = (ArrayAdapter) spPlanilhaStatus.getAdapter();
-
                     for (int i = 0; i < adapter.getCount(); i++) {
                         if (adapter.getItem(i).toString().equals(status)) {
                             spPlanilhaStatus.setSelection(i);
                             break;
                         }
                     }
-
-                    etPlanilhaDescricao.setText(
-                            dados.optString("descricao_da_tarefa"));
-
-                    etPlanilhaDificuldades.setText(
-                            dados.optString("dificuldades_enxergadas"));
-
-                    etPlanilhaImpacto.setText(
-                            dados.optString("impacto_nas_outras"));
-                }else if (tipo.equals("complementares")) {
-                    etComplUnidade.setText(dados.optString("unidade_nome_comercial"));
-                    etComplCoordenador.setText(dados.optString("coordenador_pedagogico"));
-                    etComplGestor.setText(dados.optString("gestor"));
-                    etComplEmpresa.setText(dados.optString("empresa"));
-                    etComplProjeto.setText(dados.optString("projeto"));
-                    etComplDescricao.setText(dados.optString("descricao")); // ✅ corrigido
-                }
-                else if (tipo.equals("completude")) {
-
-                    etCompleQuantidade.setText(dados.optString("qtd"));
-                    etCompleIdentificacao.setText(dados.optString("equipe_unidade_empresa"));
-                    etCompleResponsavel.setText(dados.optString("responsavel_preenchimento"));
-
-                    selecionarValorSpinner(spCompleStatusEquipe, dados.optString("dados_equipe"));
-                    selecionarValorSpinner(spCompleStatusConhecimento, dados.optString("conhecimentos"));
-                    selecionarValorSpinner(spCompleStatusRecursos, dados.optString("recursos_aplicados"));
-                    selecionarValorSpinner(spCompleStatusCanvas, dados.optString("canvas_preencher"));
-                    selecionarValorSpinner(spCompleStatusPitchEscrito, dados.optString("pitch_escrito"));
-                    selecionarValorSpinner(spCompleStatusPitchVideo, dados.optString("pitch_video"));
-                    selecionarValorSpinner(spCompleStatusCronograma, dados.optString("cronograma"));
-                    selecionarValorSpinner(spCompleStatusFotoEquipe, dados.optString("foto_equipe"));
-                    selecionarValorSpinner(spCompleStatusFotosEtapa, dados.optString("fotos_etapa_projeto"));
-                }
-                else if (tipo.equals("relatorio")) {
-
-                    etRelNomeEmpresa.setText(
-                            dados.optString("nome_empresa"));
-
-                    etRelEmailEmpresa.setText(
-                            dados.optString("e_mail_empresa"));
-
-                    etRelSetorEmpresa.setText(
-                            dados.optString("setor_empresa"));
-
-                    etRelDescricao.setText(
-                            dados.optString("descricao"));
-
-                    etRelRoteiroPitch.setText(
-                            dados.optString("roteiro_pitch"));
-
-                    etRelIntegrante1.setText(
-                            dados.optString("integrante1"));
-
-                    etRelIntegrante2.setText(
-                            dados.optString("integrante2"));
-
-                    etRelIntegrante3.setText(
-                            dados.optString("integrante3"));
-
-                    etRelIntegrante4.setText(
-                            dados.optString("integrante4"));
-
-                    etRelIntegrante5.setText(
-                            dados.optString("integrante5"));
-
-                    etRelOrientador.setText(
-                            dados.optString("orientador"));
-
-                    etRelCoorientador.setText(
-                            dados.optString("coorientador"));
-
-                    etRelNomeProjeto.setText(
-                            dados.optString("nome_projeto"));
-
-                    etRelNomeEquipe.setText(
-                            dados.optString("nome_equipe"));
-
-                    etRelAreaAtuProjeto.setText(
-                            dados.optString("area_atuacao_projeto"));
-
-                    etRelAreaAtuCurso.setText(
-                            dados.optString("area_atuacao_curso"));
-
-                    etRelUnidadeSenai.setText(
-                            dados.optString("unidade_senai"));
-
-                    etRelGestor.setText(
-                            dados.optString("gestor"));
-
-                    etRelFerramentaIA.setText(
-                            dados.optString("ferramenta_ia"));
-
-                    etRelLinkAcesso.setText(
-                            dados.optString("link_acesso"));
-
-                    etRelLicenca.setText(
-                            dados.optString("licenca"));
-
-                    etRelEtapaUso.setText(
-                            dados.optString("etapa_de_usu"));
-
-                    etRelPrompt.setText(
-                            dados.optString("prompt"));
-
-                    etRelMotivoUso.setText(
-                            dados.optString("motivo_usu"));
-
-                    etRelFerramentasProj.setText(
-                            dados.optString("ferramentas_projeto"));
-
-                    etRelEquipamentosProj.setText(
-                            dados.optString("equipamentos_projeto"));
-
-                    etRelQuantCompra.setText(
-                            dados.optString("quant_compra"));
-
-                    etRelQuantUtilizada.setText(
-                            dados.optString("quant_utilizada"));
-
-                    etRelPreco.setText(
-                            dados.optString("preco"));
-
-                    etRelFornecedor.setText(
-                            dados.optString("fornecedor"));
-
-                    etRelModoObtencao.setText(
-                            dados.optString("modo_obtencao"));
-
-                    etRelProcessamento.setText(
-                            dados.optString("processamento"));
-
-                    etRelAlternativaUso.setText(
-                            dados.optString("alternativa_de_uso"));
-
-                    etRelQuantUtilizada2.setText(
-                            dados.optString("quant_utilizada_2"));
-
-                    etRelFormaPagamento.setText(
-                            dados.optString("forma_pagamento"));
-
-                    etRelPrecoTotal.setText(
-                            dados.optString("preco_total"));
-
-                } else if (tipo.equals("feedback")) {
-                    etFeedbackGeral.setText(dados.optString("comentario_empresa"));
+                    etPlanilhaDescricao.setText(dados.optString("descricao_da_tarefa", ""));
+                    etPlanilhaDificuldades.setText(dados.optString("dificuldades_enxergadas", ""));
+                    etPlanilhaImpacto.setText(dados.optString("impacto_nas_outras", ""));
+                    return;
                 }
 
+                if (tipo.equals("complementares")) {
+                    etComplUnidade.setText(dados.optString("unidade_nome_comercial", ""));
+                    etComplCoordenador.setText(dados.optString("coordenador_pedagogico", ""));
+                    etComplGestor.setText(dados.optString("gestor", ""));
+                    etComplEmpresa.setText(dados.optString("empresa", ""));
+                    etComplProjeto.setText(dados.optString("projeto", ""));
+                    etComplDescricao.setText(dados.optString("descricao", ""));
+                    return;
+                }
 
+                if (tipo.equals("completude")) {
+                    etCompleQuantidade.setText(dados.optString("qtd", ""));
+                    etCompleIdentificacao.setText(dados.optString("equipe_unidade_empresa", ""));
+                    etCompleResponsavel.setText(dados.optString("responsavel_preenchimento", ""));
+                    selecionarValorSpinner(spCompleStatusEquipe, dados.optString("dados_equipe", ""));
+                    selecionarValorSpinner(spCompleStatusConhecimento, dados.optString("conhecimentos", ""));
+                    selecionarValorSpinner(spCompleStatusRecursos, dados.optString("recursos_aplicados", ""));
+                    selecionarValorSpinner(spCompleStatusCanvas, dados.optString("canvas_preencher", ""));
+                    selecionarValorSpinner(spCompleStatusPitchEscrito, dados.optString("pitch_escrito", ""));
+                    selecionarValorSpinner(spCompleStatusPitchVideo, dados.optString("pitch_video", ""));
+                    selecionarValorSpinner(spCompleStatusCronograma, dados.optString("cronograma", ""));
+                    selecionarValorSpinner(spCompleStatusFotoEquipe, dados.optString("foto_equipe", ""));
+                    selecionarValorSpinner(spCompleStatusFotosEtapa, dados.optString("fotos_etapa_projeto", ""));
+                    return;
+                }
+
+                if (tipo.equals("relatorio")) {
+                    etRelNomeEmpresa.setText(dados.optString("nome_empresa", ""));
+                    etRelEmailEmpresa.setText(dados.optString("e_mail_empresa", ""));
+                    etRelSetorEmpresa.setText(dados.optString("setor_empresa", ""));
+                    etRelDescricao.setText(dados.optString("descricao", ""));
+                    etRelRoteiroPitch.setText(dados.optString("roteiro_pitch", ""));
+                    etRelIntegrante1.setText(dados.optString("integrante1", ""));
+                    etRelIntegrante2.setText(dados.optString("integrante2", ""));
+                    etRelIntegrante3.setText(dados.optString("integrante3", ""));
+                    etRelIntegrante4.setText(dados.optString("integrante4", ""));
+                    etRelIntegrante5.setText(dados.optString("integrante5", ""));
+                    etRelOrientador.setText(dados.optString("orientador", ""));
+                    etRelCoorientador.setText(dados.optString("coorientador", ""));
+                    etRelNomeProjeto.setText(dados.optString("nome_projeto", ""));
+                    etRelNomeEquipe.setText(dados.optString("nome_equipe", ""));
+                    etRelAreaAtuProjeto.setText(dados.optString("area_atuacao_projeto", ""));
+                    etRelAreaAtuCurso.setText(dados.optString("area_atuacao_curso", ""));
+                    etRelUnidadeSenai.setText(dados.optString("unidade_senai", ""));
+                    etRelGestor.setText(dados.optString("gestor", ""));
+                    etRelFerramentaIA.setText(dados.optString("ferramenta_ia", ""));
+                    etRelLinkAcesso.setText(dados.optString("link_acesso", ""));
+                    etRelLicenca.setText(dados.optString("licenca", ""));
+                    etRelEtapaUso.setText(dados.optString("etapa_de_usu", ""));
+                    etRelPrompt.setText(dados.optString("prompt", ""));
+                    etRelMotivoUso.setText(dados.optString("motivo_usu", ""));
+                    etRelFerramentasProj.setText(dados.optString("ferramentas_projeto", ""));
+                    etRelEquipamentosProj.setText(dados.optString("equipamentos_projeto", ""));
+                    etRelQuantCompra.setText(dados.optString("quant_compra", ""));
+                    etRelQuantUtilizada.setText(dados.optString("quant_utilizada", ""));
+                    etRelPreco.setText(dados.optString("preco", ""));
+                    etRelFornecedor.setText(dados.optString("fornecedor", ""));
+                    etRelModoObtencao.setText(dados.optString("modo_obtencao", ""));
+                    etRelProcessamento.setText(dados.optString("processamento", ""));
+                    etRelAlternativaUso.setText(dados.optString("alternative_de_uso", ""));
+                    etRelQuantUtilizada2.setText(dados.optString("quant_utilizada_2", ""));
+                    etRelFormaPagamento.setText(dados.optString("forma_pagamento", ""));
+                    etRelPrecoTotal.setText(dados.optString("preco_total", ""));
+                    return;
+                }
+
+                if (tipo.equals("feedback")) {
+                    etFeedbackGeral.setText(dados.optString("comentario_empresa", ""));
+                    return;
+                }
             }
 
             @Override
@@ -1641,7 +1482,7 @@ public class FormularioActivity extends AppCompatActivity {
                 view.setEnabled(habilitado);
                 view.setAlpha(habilitado ? 1.0f : 0.6f);
             } else if (view instanceof android.widget.Button && view.getId() != R.id.btnEditarDados) {
-                if (view.getId() == R.id.btnGerarRelatorio || view.getId() == R.id.btnVisualizarRelatorio || view.getId() == R.id.btnAcaoCanvaRelatorio) {
+                if (view.getId() == R.id.btnGerarRelatorio || view.getId() == R.id.btnAcaoCanvaRelatorio) {
                     view.setEnabled(true);
                     view.setAlpha(1.0f);
                 } else {
@@ -1673,8 +1514,8 @@ public class FormularioActivity extends AppCompatActivity {
         definirCamposEditaveis(formCompletude, isEmpresa ? false : habilitado);
         definirCamposEditaveis(formRelatorio, isEmpresa ? false : habilitado);
 
-        // Feedback é editável para empresas ou se o modo edição estiver ON
-        definirCamposEditaveis(formFeedback, isEmpresa || habilitado);
+        // Apenas empresas (nível 4) podem editar o feedback
+        definirCamposEditaveis(formFeedback, isEmpresa);
     }
 
     private void destacarAba(TextView tabAtiva) {
@@ -1688,7 +1529,6 @@ public class FormularioActivity extends AppCompatActivity {
     private void abrirPdf(String url) {
         if (url == null || url.isEmpty()) return;
         urlRelatorioPdf = url;
-        btnVisualizarRelatorio.setVisibility(View.VISIBLE);
 
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));

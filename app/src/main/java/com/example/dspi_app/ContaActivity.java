@@ -22,6 +22,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
@@ -200,7 +201,8 @@ public class ContaActivity extends AppCompatActivity {
                     try {
                         if (response.getBoolean("success")) {
                             Toast.makeText(this, "Currículo pronto! Baixando...", Toast.LENGTH_SHORT).show();
-                            baixarCurriculoNoAndroid(emailSessao);
+                            String fileUrl = response.optString("url", "");
+                            baixarCurriculoNoAndroid(emailSessao, fileUrl);
                         } else {
                             mostrarErroGrande("Aviso do Servidor", response.optString("message"));
                         }
@@ -227,15 +229,26 @@ public class ContaActivity extends AppCompatActivity {
                 return headers;
             }
         };
+
+        // Adicionar política de repetição e timeout (30 segundos)
+        request.setRetryPolicy(new DefaultRetryPolicy(
+                30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
         Volley.newRequestQueue(this).add(request);
     }
 
-    private void baixarCurriculoNoAndroid(String identificador) {
+    private void baixarCurriculoNoAndroid(String identificador, String remoteUrl) {
         String codificado = Uri.encode(identificador);
         String urlPython = "https://avell.tailfdec8e.ts.net:8443/download-curriculo/" + codificado;
-        android.util.Log.d("DOWNLOAD_DEBUG", "Solicitando PDF em: " + urlPython);
+        
+        // Use the remote URL from R2 if available, fallback to Python server
+        String urlFinal = (remoteUrl != null && !remoteUrl.isEmpty()) ? remoteUrl : urlPython;
+        
+        android.util.Log.d("DOWNLOAD_DEBUG", "Solicitando PDF em: " + urlFinal);
 
-        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlPython));
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(urlFinal));
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
         request.setTitle("Currículo Profissional");
         request.setDescription("Baixando currículo...");

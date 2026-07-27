@@ -37,10 +37,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DetalhesEmpresaActivity extends AppCompatActivity {
-
     private final int CURRENT_TAB_INDEX = 3;
     private String nivel;
     private String nomeUsuarioLogado;
+    private String emailUsuarioLogado;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,50 +55,24 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
             return WindowInsetsCompat.CONSUMED;
         });
 
-        // ===================================================================
-        // RECUPERAR SESSÃO DO USUÁRIO LOGADO (Quem está fuçando o app?)
-        // ===================================================================
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
-
-        // CORREÇÃO: Prioriza o nome de exibição para bater com 'empresa_vinculada' da API
         nomeUsuarioLogado = prefs.getString("nome_usuario", "");
-        if (nomeUsuarioLogado == null || nomeUsuarioLogado.trim().isEmpty()) {
-            nomeUsuarioLogado = prefs.getString("email_logado", "");
-        }
-
-        if (nomeUsuarioLogado == null || nomeUsuarioLogado.trim().isEmpty()) {
-            nomeUsuarioLogado = getIntent().getStringExtra("email_usuario");
-        }
-        if (nomeUsuarioLogado == null) {
-            nomeUsuarioLogado = "";
-        }
+        emailUsuarioLogado = prefs.getString("email_logado", "");
 
         ImageButton btnVoltar = findViewById(R.id.btnVoltar);
-        if (btnVoltar != null) {
-            btnVoltar.setOnClickListener(v -> finish());
-        }
+        if (btnVoltar != null) btnVoltar.setOnClickListener(v -> finish());
 
-        // ===================================================================
-        // RESGATE SEGURO DOS DADOS DA INTENT (Com chaves padronizadas)
-        // ===================================================================
         Intent intent = getIntent();
-        String nome = intent.hasExtra("nome") ? intent.getStringExtra("nome") : intent.getStringExtra("nome_empresa");
+        String nomeEmpresaPerfil = intent.hasExtra("nome") ? intent.getStringExtra("nome") : intent.getStringExtra("nome_empresa");
+        String emailEmpresaPerfil = intent.hasExtra("email") ? intent.getStringExtra("email") : intent.getStringExtra("email_contato");
         String cnpj = intent.getStringExtra("cnpj");
         String telefone = intent.hasExtra("telefone") ? intent.getStringExtra("telefone") : intent.getStringExtra("telefone_contato");
-        String email = intent.hasExtra("email") ? intent.getStringExtra("email") : intent.getStringExtra("email_contato");
         String endereco = intent.getStringExtra("endereco");
         String fotoPerfil = intent.getStringExtra("foto_perfil");
-        if ("BUSCAR_NO_PREFS".equals(fotoPerfil)) {
-            fotoPerfil = getSharedPreferences("TEMP_FOTO", MODE_PRIVATE).getString("foto_base64_temp", "");
-
-            // Limpa logo em seguida para não ocupar memória à toa no celular do usuário
-            getSharedPreferences("TEMP_FOTO", MODE_PRIVATE).edit().clear().apply();
-        }
         String descricao = intent.hasExtra("sobre") ? intent.getStringExtra("sobre") : intent.getStringExtra("descricao");
         String setor = intent.getStringExtra("setor");
 
-        // Vincula as Views
         TextView tvNomeEmpresa = findViewById(R.id.tvNomeEmpresa);
         TextView txtSetorEmpresa = findViewById(R.id.txtSetorEmpresa);
         TextView txtCnpjEmpresa = findViewById(R.id.txtCnpjEmpresa);
@@ -112,82 +86,27 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
 
         if (btnVerNecessidades != null) {
             btnVerNecessidades.setOnClickListener(v -> {
-                Intent intentListagem = new Intent(DetalhesEmpresaActivity.this, ListagemNecessidadesActivity.class);
-
-                // Passa o e-mail da empresa que está na tela para a próxima página
-                intentListagem.putExtra("email_empresa_alvo", email);
-
-                startActivity(intentListagem);
+                Intent intentList = new Intent(this, ListagemNecessidadesActivity.class);
+                intentList.putExtra("email_empresa_alvo", emailEmpresaPerfil);
+                startActivity(intentList);
             });
         }
 
-        // Preenchimentos básicos de texto
-        if (tvNomeEmpresa != null) tvNomeEmpresa.setText(nome != null ? nome : "Empresa");
+        if (tvNomeEmpresa != null) tvNomeEmpresa.setText(nomeEmpresaPerfil != null ? nomeEmpresaPerfil : "Empresa");
         if (txtSetorEmpresa != null) txtSetorEmpresa.setText(setor != null && !setor.isEmpty() ? "Setor: " + setor : "Setor: Não informado");
-        if (txtSobreEmpresa != null) txtSobreEmpresa.setText(descricao != null && !descricao.isEmpty() ? descricao : "Nenhuma descrição disponível ainda.");
+        if (txtSobreEmpresa != null) txtSobreEmpresa.setText(descricao != null && !descricao.isEmpty() ? descricao : "Nenhuma descrição disponível.");
+        if (txtEmail != null) txtEmail.setText(emailEmpresaPerfil != null ? emailEmpresaPerfil : "Sem e-mail");
+        if (txtEndereco != null) txtEndereco.setText(endereco != null ? endereco : "Endereço não informado");
 
-        String cnpjFormatado = cnpj != null ? cnpj : "";
-        String apenasNumerosCnpj = cnpjFormatado.replaceAll("\\D", "");
-        if (apenasNumerosCnpj.length() == 14) {
-            cnpjFormatado = String.format("%s.%s.%s/%s-%s",
-                    apenasNumerosCnpj.substring(0, 2), apenasNumerosCnpj.substring(2, 5),
-                    apenasNumerosCnpj.substring(5, 8), apenasNumerosCnpj.substring(8, 12), apenasNumerosCnpj.substring(12, 14));
-        }
-        if (txtCnpjEmpresa != null) txtCnpjEmpresa.setText(!cnpjFormatado.isEmpty() ? "CNPJ: " + cnpjFormatado : "CNPJ: Não informado");
-
-        String telefoneFormatado = telefone != null ? telefone : "";
-        String apenasNumeros = telefoneFormatado.replaceAll("\\D", "");
-        if (apenasNumeros.length() == 11) {
-            telefoneFormatado = String.format("(%s) %s %s-%s", apenasNumeros.substring(0, 2), apenasNumeros.substring(2, 3), apenasNumeros.substring(3, 7), apenasNumeros.substring(7, 11));
-        } else if (apenasNumeros.length() == 10) {
-            telefoneFormatado = String.format("(%s) %s-%s", apenasNumeros.substring(0, 2), apenasNumeros.substring(2, 6), apenasNumeros.substring(6, 10));
-        }
-        if (txtTelefone != null) txtTelefone.setText(!telefoneFormatado.isEmpty() ? telefoneFormatado : "Sem telefone");
-
-        String emailFormatado = email != null && !email.isEmpty() ? email : "Sem e-mail";
-        emailFormatado = emailFormatado.replace("@", "\u2060@\u2060").replace(".", "\u2060.\u2060");
-        if (txtEmail != null) txtEmail.setText(emailFormatado);
-
-        String enderecoFormatado = endereco != null ? endereco.trim() : "Endereço não informado";
-        if (txtEndereco != null) txtEndereco.setText(enderecoFormatado);
-
-        // ===================================================================
-        // LÓGICA DE FOTO ATUALIZADA E SEGURA (Com Glide e cantos arredondados)
-        // ===================================================================
         if (imgEmpresaLogo != null) {
-            int radiusPx = (int) (16 * getResources().getDisplayMetrics().density); // Raio de curvatura da foto
-
+            int radiusPx = (int) (16 * getResources().getDisplayMetrics().density);
             if (fotoPerfil != null && !fotoPerfil.isEmpty() && !fotoPerfil.equals("null")) {
                 if (fotoPerfil.startsWith("http")) {
-                    Glide.with(this)
-                            .load(fotoPerfil)
-                            .transform(new CenterCrop(), new RoundedCorners(radiusPx))
-                            .into(imgEmpresaLogo);
-                } else if (fotoPerfil.length() > 100) {
-                    try {
-                        byte[] decodedString = Base64.decode(fotoPerfil, Base64.DEFAULT);
-                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                        Glide.with(this)
-                                .load(decodedByte)
-                                .transform(new CenterCrop(), new RoundedCorners(radiusPx))
-                                .into(imgEmpresaLogo);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        // Fallback em caso de erro no Base64
-                        Glide.with(this).load(R.drawable.ic_empresas).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresaLogo);
-                    }
+                    Glide.with(this).load(fotoPerfil).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresaLogo);
                 } else {
-                    // É um nome de imagem na pasta drawable (se houver)
-                    String nomeImagem = fotoPerfil.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
-                    int resourceId = getResources().getIdentifier(nomeImagem, "drawable", getPackageName());
-                    if (resourceId != 0) {
-                        Glide.with(this).load(resourceId).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresaLogo);
-                    } else {
-                        Glide.with(this).load(R.drawable.ic_empresas).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresaLogo);
-                    }
+                    Glide.with(this).load(R.drawable.ic_empresas).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresaLogo);
                 }
             } else {
-                // Empresa não tem foto informada
                 Glide.with(this).load(R.drawable.ic_empresas).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgEmpresaLogo);
             }
         }
@@ -197,94 +116,81 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
 
         if (recyclerProjetosAfiliados != null) {
             recyclerProjetosAfiliados.setLayoutManager(new LinearLayoutManager(this));
-            if (nome != null && !nome.trim().isEmpty()) {
-                buscarProjetosDaEmpresa(nome, recyclerProjetosAfiliados);
-            }
+            buscarProjetosDaEmpresa(nomeEmpresaPerfil, emailEmpresaPerfil, recyclerProjetosAfiliados);
         }
     }
 
-    private void buscarProjetosDaEmpresa(String nomeEmpresaQueEstaSendoVisualizada, RecyclerView recyclerView) {
+    private void buscarProjetosDaEmpresa(String nomeEmpresa, String emailEmpresa, RecyclerView recyclerView) {
         String url = "https://api-dspi.whyguiih.workers.dev/listar-projetos";
-
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
                             JSONArray data = response.getJSONArray("data");
                             List<Projeto> projetosAfiliados = new ArrayList<>();
+                            String targetNome = (nomeEmpresa != null) ? nomeEmpresa.trim().toLowerCase() : "";
+                            String targetEmail = (emailEmpresa != null) ? emailEmpresa.trim().toLowerCase() : "";
 
                             for (int i = 0; i < data.length(); i++) {
                                 JSONObject obj = data.getJSONObject(i);
-
-                                Projeto p = new Projeto(
-                                        obj.optString("nome_projeto", "Projeto Sem Nome"),
-                                        obj.optString("nome_equipe", "Sem Equipe"),
-                                        obj.optString("status", "Não iniciado"),
-                                        obj.optString("nome_integrante", ""),
-                                        obj.optString("nome_orientador", ""),
-                                        obj.optString("proposta_chave", ""),
-                                        obj.optString("segmentos_clientes", ""),
-                                        obj.optString("atividades_chaves", ""),
-                                        obj.optString("recursos_chaves", ""),
-                                        obj.optString("relacionamentos_clientes", ""),
-                                        obj.optString("canais", ""),
-                                        obj.optString("estrutura_custos", ""),
-                                        obj.optString("fluxo_receita", ""),
-                                        obj.optString("parceiros_chaves", ""),
-                                        obj.optString("tarefas", ""),
-                                        obj.optString("dificuldades_enxergadas", ""),
-                                        obj.optString("empresa_vinculada", ""),
-                                        obj.optString("video_url", ""),
-                                        obj.optString("nome_coorientador", ""),
-                                        obj.optString("usuario", "")
-                                );
-
-                                p.setComentarioEmpresa(obj.optString("comentario_empresa", ""));
-
-                                String empresaVinc = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada() : "";
-
-                                if (!empresaVinc.trim().isEmpty() && empresaVinc.trim().equalsIgnoreCase(nomeEmpresaQueEstaSendoVisualizada.trim())) {
-                                    projetosAfiliados.add(p);
+                                String empresaVinc = obj.optString("empresa_vinculada", "").trim().toLowerCase();
+                                
+                                if (!empresaVinc.isEmpty()) {
+                                    if ((!targetNome.isEmpty() && empresaVinc.equals(targetNome)) || 
+                                        (!targetEmail.isEmpty() && empresaVinc.equals(targetEmail))) {
+                                        
+                                        Projeto p = new Projeto(
+                                                obj.optString("nome_projeto", "Sem Nome"),
+                                                obj.optString("nome_equipe", "Sem Equipe"),
+                                                obj.optString("status", "Não iniciado"),
+                                                obj.optString("nome_integrante", ""),
+                                                obj.optString("nome_orientador", ""),
+                                                obj.optString("proposta_chave", ""),
+                                                obj.optString("segmentos_clientes", ""),
+                                                obj.optString("atividades_chaves", ""),
+                                                obj.optString("recursos_chaves", ""),
+                                                obj.optString("relacionamentos_clientes", ""),
+                                                obj.optString("canais", ""),
+                                                obj.optString("estrutura_custos", ""),
+                                                obj.optString("fluxo_receita", ""),
+                                                obj.optString("parceiros_chaves", ""),
+                                                obj.optString("tarefas", ""),
+                                                obj.optString("dificuldades_enxergadas", ""),
+                                                obj.optString("empresa_vinculada", ""),
+                                                obj.optString("video_url", ""),
+                                                obj.optString("nome_coorientador", ""),
+                                                obj.optString("usuario", "")
+                                        );
+                                        p.setComentarioEmpresa(obj.optString("comentario_empresa", ""));
+                                        projetosAfiliados.add(p);
+                                    }
                                 }
                             }
 
                             if (!projetosAfiliados.isEmpty()) {
                                 recyclerView.setAdapter(new ProjetosActivity.ProjetoAdapter(projetosAfiliados, projeto -> {
+                                    boolean visualizandoPropriaEmpresa = 
+                                            targetNome.equalsIgnoreCase(nomeUsuarioLogado) || 
+                                            targetEmail.equalsIgnoreCase(emailUsuarioLogado);
 
-                                    if ("4".equals(nivel) && !nomeEmpresaQueEstaSendoVisualizada.trim().equalsIgnoreCase(nomeUsuarioLogado.trim())) {
-                                        Toast.makeText(DetalhesEmpresaActivity.this, "Acesso Negado: Você só pode acessar os detalhes dos seus próprios projetos afiliados.", Toast.LENGTH_LONG).show();
+                                    if ("4".equals(nivel) && !visualizandoPropriaEmpresa) {
+                                        Toast.makeText(this, "Acesso Restrito", Toast.LENGTH_SHORT).show();
                                         return;
                                     }
-
-                                    Intent intent = new Intent(DetalhesEmpresaActivity.this, ProjetoDetalhesActivity.class);
+                                    Intent intent = new Intent(this, ProjetoDetalhesActivity.class);
                                     intent.putExtra("projeto_selecionado", projeto);
                                     intent.putExtra("nivel_de_acesso", nivel);
-                                    intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
                                     startActivity(intent);
                                     overridePendingTransition(0, 0);
-                                }));
-                            } else {
-                                recyclerView.setVisibility(View.GONE);
+                                }, null, false));
                             }
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        Toast.makeText(this, "Erro ao carregar projetos afiliados", Toast.LENGTH_SHORT).show();
+                        Log.e("API_ERROR", "Erro ao carregar afiliados", e);
                     }
                 },
-                error -> {
-                    String erroMsg = "Falha na conexão com a API";
-                    if (error.networkResponse != null) {
-                        erroMsg += " (Status: " + error.networkResponse.statusCode + ")";
-                    }
-                    if (error.getMessage() != null) {
-                        erroMsg += ": " + error.getMessage();
-                    }
-                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
-                    Log.e("API_ERROR", erroMsg, error);
-                }
+                error -> Log.e("API_ERROR", "Falha na conexão", error)
         );
-
         Volley.newRequestQueue(this).add(request);
     }
 
@@ -292,7 +198,6 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
         int oldTabIndex = getIntent().getIntExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
         View activeBubble = findViewById(R.id.activeBubble);
         LinearLayout bottomNavLayout = findViewById(R.id.bottomNavLayout);
-
         if (activeBubble != null && bottomNavLayout != null) {
             bottomNavLayout.post(() -> {
                 float tabWidth = bottomNavLayout.getWidth() / 5f;
@@ -300,8 +205,7 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
                 activeBubble.requestLayout();
                 activeBubble.setTranslationX(oldTabIndex * tabWidth);
                 if (oldTabIndex != CURRENT_TAB_INDEX) {
-                    activeBubble.animate().translationX(CURRENT_TAB_INDEX * tabWidth)
-                            .setDuration(350).setInterpolator(new DecelerateInterpolator(1.5f)).start();
+                    activeBubble.animate().translationX(CURRENT_TAB_INDEX * tabWidth).setDuration(350).setInterpolator(new DecelerateInterpolator(1.5f)).start();
                 }
             });
         }

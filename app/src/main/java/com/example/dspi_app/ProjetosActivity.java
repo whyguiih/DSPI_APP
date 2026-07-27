@@ -39,6 +39,7 @@ public class ProjetosActivity extends AppCompatActivity {
     private final int CURRENT_TAB_INDEX = 1;
     private String nivel;
     private String nomeUsuario;
+    private String emailLogado;
     private List<Projeto> todosMeusProjetos = new ArrayList<>();
     private List<Projeto> todosOutrosProjetos = new ArrayList<>();
     private EditText etPesquisa;
@@ -61,24 +62,23 @@ public class ProjetosActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
         
-        // CORREÇÃO: Prioriza o nome de exibição em vez do e-mail
         nomeUsuario = prefs.getString("nome_usuario", "");
+        emailLogado = prefs.getString("email_logado", "");
+
         if (nomeUsuario == null || nomeUsuario.trim().isEmpty()) {
-            nomeUsuario = prefs.getString("email_logado", "");
+            nomeUsuario = emailLogado;
         }
 
         if (nomeUsuario == null || nomeUsuario.trim().isEmpty()) {
             nomeUsuario = getIntent().getStringExtra("email_usuario");
         }
         if (nomeUsuario == null) nomeUsuario = "";
+        if (emailLogado == null) emailLogado = "";
 
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         Button btnAbrirFormulario = findViewById(R.id.btnAbrirFormulario);
 
-        // =========================================================================
-        // TRAVA PARA ALUNO, EMPRESA E ORIENTADOR (5): Não veem o botão do formulário
-        // =========================================================================
         if ("4".equals(nivel) || "6".equals(nivel) || "1".equals(nivel) || "2".equals(nivel) || "5".equals(nivel)) {
             btnAbrirFormulario.setVisibility(View.GONE);
         }
@@ -125,7 +125,8 @@ public class ProjetosActivity extends AppCompatActivity {
                             todosMeusProjetos.clear();
                             todosOutrosProjetos.clear();
 
-                            String userLogado = nomeUsuario.trim();
+                            String userLower = nomeUsuario.trim().toLowerCase();
+                            String emailLower = emailLogado.trim().toLowerCase();
 
                             for (int i = 0; i < data.length(); i++) {
                                 JSONObject obj = data.getJSONObject(i);
@@ -163,8 +164,7 @@ public class ProjetosActivity extends AppCompatActivity {
                                 String donoEmail = p.getUsuario() != null ? p.getUsuario().trim() : "";
 
                                 boolean isMeuProjeto = false;
-                                if (!userLogado.isEmpty()) {
-                                    String userLower = userLogado.toLowerCase();
+                                if (!userLower.isEmpty()) {
                                     if (nomeEqp.toLowerCase().contains(userLower) || 
                                         donoEmail.toLowerCase().contains(userLower) ||
                                         orientador.toLowerCase().contains(userLower) ||
@@ -175,17 +175,17 @@ public class ProjetosActivity extends AppCompatActivity {
                                 }
 
                                 if ("4".equals(nivel)) {
-                                    if (!userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado)) {
-                                        todosMeusProjetos.add(p);
-                                    } else if (empresaVinc.isEmpty() || empresaVinc.equalsIgnoreCase("null") || empresaVinc.equalsIgnoreCase("Nenhuma")) {
-                                        todosOutrosProjetos.add(p);
+                                    boolean matchVinculo = (!userLower.isEmpty() && empresaVinc.equalsIgnoreCase(userLower)) ||
+                                                         (!emailLower.isEmpty() && empresaVinc.equalsIgnoreCase(emailLower));
+                                    if (matchVinculo) {
+                                        isMeuProjeto = true;
                                     }
+                                }
+
+                                if (isMeuProjeto) {
+                                    todosMeusProjetos.add(p);
                                 } else {
-                                    if (isMeuProjeto) {
-                                        todosMeusProjetos.add(p);
-                                    } else {
-                                        todosOutrosProjetos.add(p);
-                                    }
+                                    todosOutrosProjetos.add(p);
                                 }
                             }
                             configurarListasDeProjetos(todosMeusProjetos, todosOutrosProjetos);
@@ -198,15 +198,7 @@ public class ProjetosActivity extends AppCompatActivity {
                     }
                 },
                 error -> {
-                    String erroMsg = "Falha de Conexão com API";
-                    if (error.networkResponse != null) {
-                        erroMsg += " (Status: " + error.networkResponse.statusCode + ")";
-                    }
-                    if (error.getMessage() != null) {
-                        erroMsg += ": " + error.getMessage();
-                    }
-                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
-                    Log.e("API_ERROR", erroMsg, error);
+                    Log.e("API_ERROR", "Falha de Conexão", error);
                 }
         );
         Volley.newRequestQueue(this).add(request);
@@ -222,13 +214,11 @@ public class ProjetosActivity extends AppCompatActivity {
                 filtradosMeus.add(p);
             }
         }
-
         for (Projeto p : todosOutrosProjetos) {
             if (p.getNomeProjeto().toLowerCase().contains(termo) || p.getNomeEquipe().toLowerCase().contains(termo)) {
                 filtradosOutros.add(p);
             }
         }
-
         configurarListasDeProjetos(filtradosMeus, filtradosOutros);
     }
 
@@ -239,8 +229,7 @@ public class ProjetosActivity extends AppCompatActivity {
         TextView tvOutrosProjetos = findViewById(R.id.tvOutrosProjetos);
 
         tvSeusProjetos.setText("Meus Projetos");
-
-        boolean podeExcluir = podeExcluirProjetos();
+        boolean podeExcluir = "3".equals(nivel);
 
         if (meusProjetos.isEmpty()) {
             tvSeusProjetos.setVisibility(View.GONE);
@@ -257,20 +246,14 @@ public class ProjetosActivity extends AppCompatActivity {
         } else {
             tvOutrosProjetos.setVisibility(View.VISIBLE);
             rvOutrosProjetos.setVisibility(View.VISIBLE);
-            // AQUI: sempre false, ninguém pode excluir projetos da lista "Outros"
             rvOutrosProjetos.setAdapter(new ProjetoAdapter(outrosProjetos, this::abrirPaginaDetalhes, this::confirmarExclusaoProjeto, false));
         }
-    }
-
-    private boolean podeExcluirProjetos() {
-        return "3".equals(nivel);
     }
 
     private void configurarBolhaAnimada() {
         int oldTabIndex = getIntent().getIntExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
         View activeBubble = findViewById(R.id.activeBubble);
         LinearLayout bottomNavLayout = findViewById(R.id.bottomNavLayout);
-
         bottomNavLayout.post(() -> {
             float tabWidth = bottomNavLayout.getWidth() / 5f;
             activeBubble.getLayoutParams().width = (int) tabWidth;
@@ -284,57 +267,31 @@ public class ProjetosActivity extends AppCompatActivity {
 
     private void abrirPaginaDetalhes(Projeto projeto) {
         Intent intent;
-        String userLogado = nomeUsuario.trim();
-        
-        String nomeEqp = projeto.getNomeEquipe() != null ? projeto.getNomeEquipe().trim() : "";
-        String orientador = projeto.getOrientador() != null ? projeto.getOrientador().trim() : "";
-        String coorientador = projeto.getNomeCoorientador() != null ? projeto.getNomeCoorientador().trim() : "";
-        String integrantes = projeto.getIntegrantes() != null ? projeto.getIntegrantes().trim() : "";
-        String donoEmail = projeto.getUsuario() != null ? projeto.getUsuario().trim() : "";
-        String empresaVinc = projeto.getEmpresaVinculada() != null ? projeto.getEmpresaVinculada().trim() : "";
+        String userLogado = nomeUsuario.trim().toLowerCase();
+        String orientador = projeto.getOrientador() != null ? projeto.getOrientador().trim().toLowerCase() : "";
+        String coorientador = projeto.getNomeCoorientador() != null ? projeto.getNomeCoorientador().trim().toLowerCase() : "";
+        String integrantes = projeto.getIntegrantes() != null ? projeto.getIntegrantes().trim().toLowerCase() : "";
+        String donoEmail = projeto.getUsuario() != null ? projeto.getUsuario().trim().toLowerCase() : "";
+        String nomeEqp = projeto.getNomeEquipe() != null ? projeto.getNomeEquipe().trim().toLowerCase() : "";
+        String empresaVinc = projeto.getEmpresaVinculada() != null ? projeto.getEmpresaVinculada().trim().toLowerCase() : "";
 
-        boolean isMeuProjeto = false;
-        if (!userLogado.isEmpty()) {
-            String userLower = userLogado.toLowerCase();
-            if (nomeEqp.toLowerCase().contains(userLower) || 
-                donoEmail.toLowerCase().contains(userLower) ||
-                orientador.toLowerCase().contains(userLower) ||
-                coorientador.toLowerCase().contains(userLower) ||
-                integrantes.toLowerCase().contains(userLower)) {
-                isMeuProjeto = true;
-            }
-        }
-        
+        boolean isMeuProjeto = (!userLogado.isEmpty() && (nomeEqp.contains(userLogado) || donoEmail.contains(userLogado) || orientador.contains(userLogado) || coorientador.contains(userLogado) || integrantes.contains(userLogado)));
         boolean isEmpresaVinculada = "4".equals(nivel) && !userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado);
 
-        // Se for nível 1, 2, Empresa Vinculada ao projeto ou o próprio dono/integrante do projeto, abre o Formulário Completo (Tabelas)
         if ("2".equals(nivel) || "1".equals(nivel) || isEmpresaVinculada || isMeuProjeto) {
             intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
-            
-            // A MÁGICA PARA PUXAR OS DADOS:
-            // Se o projeto tem um 'usuario' (e-mail do dono) preenchido, enviamos ele.
-            // Caso contrário, enviamos o nome da equipe. Isso casa com o WHERE da sua API.
-            String identificadorBusca = (projeto.getUsuario() != null && !projeto.getUsuario().isEmpty() && !projeto.getUsuario().equals("null")) 
-                    ? projeto.getUsuario() 
-                    : projeto.getNomeEquipe();
-            
-            intent.putExtra("projeto_usuario", identificadorBusca);
-            if (!"5".equals(nivel)) {
-                Log.d("DEBUG_PROJETOS", "Abrindo formulário para: " + identificadorBusca);
-            }
+            String identifier = (projeto.getUsuario() != null && !projeto.getUsuario().isEmpty() && !projeto.getUsuario().equals("null")) 
+                    ? projeto.getUsuario() : projeto.getNomeEquipe();
+            intent.putExtra("projeto_usuario", identifier);
         } else {
-            // Outros níveis vendo projetos alheios vão para Detalhes resumido
             intent = new Intent(ProjetosActivity.this, ProjetoDetalhesActivity.class);
             intent.putExtra("projeto_selecionado", projeto);
         }
-
         intent.putExtra("nivel_de_acesso", nivel);
         intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
         startActivity(intent);
         overridePendingTransition(0, 0);
     }
-
-
 
     public static class ProjetoAdapter extends RecyclerView.Adapter<ProjetoAdapter.ViewHolder> {
         private final List<Projeto> projetos;
@@ -345,16 +302,11 @@ public class ProjetosActivity extends AppCompatActivity {
         public interface OnItemClickListener { void onItemClick(Projeto projeto); }
         public interface OnDeleteClickListener { void onDeleteClick(Projeto projeto); }
 
-        public ProjetoAdapter(List<Projeto> projetos, OnItemClickListener listener,
-                              OnDeleteClickListener deleteListener, boolean permitirExclusao) {
+        public ProjetoAdapter(List<Projeto> projetos, OnItemClickListener listener, OnDeleteClickListener deleteListener, boolean permitirExclusao) {
             this.projetos = projetos;
             this.listener = listener;
             this.deleteListener = deleteListener;
             this.permitirExclusao = permitirExclusao;
-        }
-
-        public ProjetoAdapter(List<Projeto> projetos, OnItemClickListener listener) {
-            this(projetos, listener, null, false);
         }
 
         @NonNull
@@ -371,16 +323,9 @@ public class ProjetosActivity extends AppCompatActivity {
             String st = projeto.getStatus();
             holder.tvStatus.setText("Status: " + (st == null || st.trim().isEmpty() || st.equals("null") ? "Não Iniciado" : st));
             holder.tvEquipe.setText("Equipe: " + projeto.getNomeEquipe());
-
-            if (projeto.getVideoUrl() != null && !projeto.getVideoUrl().isEmpty() && !projeto.getVideoUrl().equals("null")) {
-                holder.tvBadgePitch.setVisibility(View.VISIBLE);
-            } else {
-                holder.tvBadgePitch.setVisibility(View.GONE);
-            }
-
+            holder.tvBadgePitch.setVisibility((projeto.getVideoUrl() != null && !projeto.getVideoUrl().isEmpty() && !projeto.getVideoUrl().equals("null")) ? View.VISIBLE : View.GONE);
             holder.btnExcluir.setVisibility(permitirExclusao ? View.VISIBLE : View.GONE);
-            holder.btnExcluir.setOnClickListener(v -> deleteListener.onDeleteClick(projeto));
-
+            holder.btnExcluir.setOnClickListener(v -> { if (deleteListener != null) deleteListener.onDeleteClick(projeto); });
             holder.itemView.setOnClickListener(v -> listener.onItemClick(projeto));
         }
 
@@ -404,51 +349,19 @@ public class ProjetosActivity extends AppCompatActivity {
     private void confirmarExclusaoProjeto(Projeto projeto) {
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Excluir Projeto")
-                .setMessage("Tem certeza que deseja excluir o projeto \"" + projeto.getNomeProjeto()
-                        + "\" da equipe \"" + projeto.getNomeEquipe() + "\"?\n\n"
-                        + "Essa ação apaga TODOS os dados desse projeto (equipe, formulários, cronograma, canvas, pitch, relatório etc.) e não pode ser desfeita.")
+                .setMessage("Tem certeza que deseja excluir o projeto \"" + projeto.getNomeProjeto() + "\"?")
                 .setPositiveButton("Excluir", (dialog, which) -> excluirProjetoNaApi(projeto))
-                .setNegativeButton("Cancelar", null)
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .show();
+                .setNegativeButton("Cancelar", null).show();
     }
 
     private void excluirProjetoNaApi(Projeto projeto) {
         String url = "https://api-dspi.whyguiih.workers.dev/excluir-projeto";
-
         JSONObject body = new JSONObject();
-        try {
-            body.put("nome_equipe", projeto.getNomeEquipe());
-        } catch (Exception e) {
-            Toast.makeText(this, "Erro ao montar requisição.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        JsonObjectRequest request = new JsonObjectRequest(
-                Request.Method.POST,
-                url,
-                body,
-                response -> {
-                    try {
-                        if (response.getBoolean("success")) {
-                            Toast.makeText(this, "Projeto excluído com sucesso.", Toast.LENGTH_SHORT).show();
-                            buscarProjetosDaApi();
-                        } else {
-                            Toast.makeText(this, "Erro: " + response.optString("error"), Toast.LENGTH_LONG).show();
-                        }
-                    } catch (Exception e) {
-                        Toast.makeText(this, "Erro ao processar resposta.", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                error -> {
-                    String erroMsg = "Erro de conexão ao excluir.";
-                    if (error.networkResponse != null) {
-                        erroMsg += " Status: " + error.networkResponse.statusCode;
-                    }
-                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
-                }
+        try { body.put("nome_equipe", projeto.getNomeEquipe()); } catch (Exception e) {}
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
+                response -> { if (response.optBoolean("success")) { buscarProjetosDaApi(); } },
+                error -> {}
         );
-
         Volley.newRequestQueue(this).add(request);
     }
 }
