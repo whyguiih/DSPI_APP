@@ -311,10 +311,15 @@ public class ProjetosActivity extends AppCompatActivity {
         if ("2".equals(nivel) || "1".equals(nivel) || isEmpresaVinculada || isMeuProjeto) {
             intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
             
-            // CORREÇÃO: Garante que o projeto_usuario seja o e-mail do DONO do projeto
-            String dono = (projeto.getUsuario() != null && !projeto.getUsuario().isEmpty()) ? projeto.getUsuario() : projeto.getNomeEquipe();
-            intent.putExtra("projeto_usuario", dono);
-            Log.d("PROJETOS", "Abrindo tabelas para: " + dono);
+            // A MÁGICA PARA PUXAR OS DADOS:
+            // Se o projeto tem um 'usuario' (e-mail do dono) preenchido, enviamos ele.
+            // Caso contrário, enviamos o nome da equipe. Isso casa com o WHERE da sua API.
+            String identificadorBusca = (projeto.getUsuario() != null && !projeto.getUsuario().isEmpty() && !projeto.getUsuario().equals("null")) 
+                    ? projeto.getUsuario() 
+                    : projeto.getNomeEquipe();
+            
+            intent.putExtra("projeto_usuario", identificadorBusca);
+            Log.d("DEBUG_PROJETOS", "Abrindo formulário para: " + identificadorBusca);
         } else {
             // Outros níveis vendo projetos alheios vão para Detalhes resumido
             intent = new Intent(ProjetosActivity.this, ProjetoDetalhesActivity.class);

@@ -151,6 +151,8 @@ public class FormularioRepository {
             body.put("tipo", tipo);
             body.put("usuario", usuario);
 
+            android.util.Log.d("API_BUSCA_DEBUG", "Solicitando Tipo: " + tipo + " para o Usuário/Equipe: " + usuario);
+
             okhttp3.RequestBody requestBody = okhttp3.RequestBody.create(
                     body.toString(),
                     okhttp3.MediaType.parse("application/json")
@@ -165,7 +167,7 @@ public class FormularioRepository {
 
                 @Override
                 public void onFailure(okhttp3.Call call, java.io.IOException e) {
-
+                    android.util.Log.e("API_BUSCA_DEBUG", "Falha crítica de rede: " + e.getMessage());
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
                             listener.onErro(e.getMessage()));
 
@@ -175,8 +177,8 @@ public class FormularioRepository {
                 public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
 
                     String resposta = response.body() != null ? response.body().string() : "";
-
-                    android.util.Log.e("API_RESPOSTA", resposta);
+                    
+                    android.util.Log.d("API_BUSCA_DEBUG", "Resposta Bruta [" + tipo + "]: " + resposta);
 
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
 
@@ -203,6 +205,7 @@ public class FormularioRepository {
                             }
 
                         } catch (Exception e) {
+                            android.util.Log.e("API_BUSCA_DEBUG", "Erro ao processar JSON: " + e.getMessage());
                             listener.onErro("Erro de processamento: " + e.getMessage());
                         }
 

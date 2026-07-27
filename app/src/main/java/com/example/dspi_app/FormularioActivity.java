@@ -175,68 +175,21 @@ public class FormularioActivity extends AppCompatActivity {
 
         emailUsuario = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).getString("email_logado", "");
         targetEmail = getIntent().getStringExtra("projeto_usuario");
-        if (targetEmail == null || targetEmail.isEmpty()) {
+        if (targetEmail == null || targetEmail.trim().isEmpty()) {
             targetEmail = emailUsuario;
         }
 
         vincularComponentes();
 
-        // Lógica de visibilidade e nomes baseada no nível de acesso
-        Button btnAcaoCanvaRelatorio = findViewById(R.id.btnAcaoCanvaRelatorio);
-        if (btnAcaoCanvaRelatorio != null) {
-            btnAcaoCanvaRelatorio.setVisibility(View.VISIBLE);
-            btnAcaoCanvaRelatorio.setOnClickListener(v -> {
-                String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
-                fazerRequisicaoCanva(usuarioAtual);
-            });
-        }
+        // LOG DE ENTRADA
+        android.util.Log.d("DEBUG_FORM", "Iniciando formulário para: " + targetEmail);
+        Toast.makeText(this, "Carregando dados de: " + targetEmail, Toast.LENGTH_SHORT).show();
 
-        if ("1".equals(nivel)) {
-            tabRelatorio.setText("Arquivos");
-            tabRelatorio.setVisibility(View.VISIBLE);
-            tabFeedback.setVisibility(View.GONE);
-            // Ocultar campos de texto do relatório para o nível 1
-            for (int i = 0; i < formRelatorio.getChildCount(); i++) {
-                View child = formRelatorio.getChildAt(i);
-                if (child instanceof EditText) {
-                    child.setVisibility(View.GONE);
-                }
-            }
-        } else if ("4".equals(nivel)) {
-            // Nível 4: Empresa
-            if (tabRelatorio != null) tabRelatorio.setVisibility(View.GONE);
-            if (tabFeedback != null) tabFeedback.setVisibility(View.VISIBLE);
-            
-            // Empresa não pode editar nada, exceto feedback
-            modoEdicao = false;
-            if (btnEditarDados != null) btnEditarDados.setVisibility(View.GONE);
-            if (btnUploadVideo != null) btnUploadVideo.setVisibility(View.GONE);
-        } else {
-            // Se não for nível 1 ou 4
-            tabRelatorio.setVisibility(View.GONE);
-            formRelatorio.setVisibility(View.GONE);
-            tabFeedback.setVisibility(View.GONE);
-        }
+        // Lógica de visibilidade baseada no nível
+        configurarInterfacePorNivel(nivel);
 
-        // Restrição de Edição: Apenas nível 3 (Professor) pode editar as tabelas
-        if (!"3".equals(nivel)) {
-            if (btnEditarDados != null) btnEditarDados.setVisibility(View.GONE);
-            if (btnUploadVideo != null) btnUploadVideo.setVisibility(View.GONE);
-        }
-
-        buscarFormularioNoBanco("equipe");
-        buscarFormularioNoBanco("conhecimentos");
-        buscarFormularioNoBanco("recursos");
-        buscarFormularioNoBanco("cronograma");
-        buscarFormularioNoBanco("canva");
-        buscarFormularioNoBanco("empresa");
-        buscarFormularioNoBanco("pitch");
-        buscarFormularioNoBanco("ia");
-        buscarFormularioNoBanco("planilha");
-        buscarFormularioNoBanco("complementares");
-        buscarFormularioNoBanco("completude");
-        buscarFormularioNoBanco("relatorio");
-        buscarFormularioNoBanco("feedback");
+        // DISPARO DO CARREGAMENTO
+        carregarTodosOsDados();
 
         configurarControlesVideo();
 
@@ -683,6 +636,61 @@ public class FormularioActivity extends AppCompatActivity {
         });
     }
 
+    private void configurarInterfacePorNivel(String nivel) {
+        Button btnAcaoCanvaRelatorio = findViewById(R.id.btnAcaoCanvaRelatorio);
+        if (btnAcaoCanvaRelatorio != null) {
+            btnAcaoCanvaRelatorio.setVisibility(View.VISIBLE);
+            btnAcaoCanvaRelatorio.setOnClickListener(v -> {
+                String usuarioAtual = (targetEmail != null && !targetEmail.isEmpty()) ? targetEmail : emailUsuario;
+                fazerRequisicaoCanva(usuarioAtual);
+            });
+        }
+
+        if ("1".equals(nivel) || "2".equals(nivel)) {
+            tabRelatorio.setText("Arquivos");
+            if (tabRelatorio != null) tabRelatorio.setVisibility(View.VISIBLE);
+            if (tabFeedback != null) tabFeedback.setVisibility(View.VISIBLE);
+
+            if (formRelatorio != null) {
+                for (int i = 0; i < formRelatorio.getChildCount(); i++) {
+                    View child = formRelatorio.getChildAt(i);
+                    if (child instanceof EditText) child.setVisibility(View.GONE);
+                }
+            }
+        } else if ("4".equals(nivel)) {
+            if (tabRelatorio != null) tabRelatorio.setVisibility(View.GONE);
+            if (tabFeedback != null) tabFeedback.setVisibility(View.VISIBLE);
+            modoEdicao = false;
+            if (btnEditarDados != null) btnEditarDados.setVisibility(View.GONE);
+            if (btnUploadVideo != null) btnUploadVideo.setVisibility(View.GONE);
+        } else {
+            if (tabRelatorio != null) tabRelatorio.setVisibility(View.GONE);
+            if (formRelatorio != null) formRelatorio.setVisibility(View.GONE);
+            if (tabFeedback != null) tabFeedback.setVisibility(View.VISIBLE);
+        }
+
+        if (!"3".equals(nivel) && !"5".equals(nivel)) {
+            if (btnEditarDados != null) btnEditarDados.setVisibility(View.GONE);
+            if (btnUploadVideo != null) btnUploadVideo.setVisibility(View.GONE);
+        }
+    }
+
+    private void carregarTodosOsDados() {
+        buscarFormularioNoBanco("equipe");
+        buscarFormularioNoBanco("conhecimentos");
+        buscarFormularioNoBanco("recursos");
+        buscarFormularioNoBanco("cronograma");
+        buscarFormularioNoBanco("canva");
+        buscarFormularioNoBanco("empresa");
+        buscarFormularioNoBanco("pitch");
+        buscarFormularioNoBanco("ia");
+        buscarFormularioNoBanco("planilha");
+        buscarFormularioNoBanco("complementares");
+        buscarFormularioNoBanco("completude");
+        buscarFormularioNoBanco("relatorio");
+        buscarFormularioNoBanco("feedback");
+    }
+
     private void configurarSpinnerCompletude(Spinner spinner) {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
@@ -1113,16 +1121,21 @@ public class FormularioActivity extends AppCompatActivity {
 
         FormularioRepository repository = new FormularioRepository(this);
 
+        // A API usa 'usuario' para buscar. Aqui passamos o targetEmail (que é o nome da equipe ou e-mail do aluno)
         repository.buscarFormulario(tipo, targetEmail, new FormularioRepository.OnBuscaListener() {
 
             @Override
             public void onSucesso(JSONObject dados) {
 
-                if (tipo.equals("equipe")) {
+                    if (tipo.equals("equipe")) {
+                        String nomeProjeto = dados.optString("nome_projeto");
+                        if (nomeProjeto.isEmpty() || nomeProjeto.equals("null")) {
+                            mostrarMensagemFeedback("Aviso de Dados", "A API retornou um objeto vazio para 'equipe'. Verifique se o identificador '" + targetEmail + "' está correto no banco.", false);
+                        }
 
-                    etNomeEquipe.setText(dados.optString("nome_equipe"));
-                    etNomeProjeto.setText(dados.optString("nome_projeto"));
-                    etEmail.setText(dados.optString("email"));
+                        etNomeEquipe.setText(dados.optString("nome_equipe"));
+                        etNomeProjeto.setText(nomeProjeto);
+                        etEmail.setText(dados.optString("email"));
                     etAreaCurso.setText(dados.optString("area_atuacao_curso"));
                     etAreaProjeto.setText(dados.optString("area_atuacao_projeto"));
                     etNomeOrientador.setText(dados.optString("nome_orientador"));
