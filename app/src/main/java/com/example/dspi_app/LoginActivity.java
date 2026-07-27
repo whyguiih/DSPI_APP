@@ -105,9 +105,10 @@ public class LoginActivity extends AppCompatActivity {
                             getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit()
                                     .putInt("id_usuario", idUsuario)
                                     .putString("email_logado", email)
-                                    .putString("nome_usuario", nomeExibicao) // Salva o nome real que veio do banco
+                                    .putString("nome_usuario", nomeExibicao)
                                     .putString("foto_usuario", foto)
                                     .putString("nivel_de_acesso", nivel)
+                                    .putString("senha", senhaDigitada) // SALVA A SENHA AQUI
                                     .putBoolean("empresa_verificador", empresa)
                                     .apply();
 
