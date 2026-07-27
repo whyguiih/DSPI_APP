@@ -141,6 +141,72 @@
                     android:inputType="textEmailAddress"
                     android:fontFamily="@font/neo_sans" />
 
+                <!-- CONTAINER DE DADOS DA EMPRESA (Inicia oculto) -->
+                <LinearLayout
+                    android:id="@+id/containerEmpresa"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <EditText
+                        android:id="@+id/editCnpj"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:hint="CNPJ"
+                        android:inputType="number"
+                        android:padding="12dp"
+                        android:textColorHint="#A0A0A0" />
+
+                    <EditText
+                        android:id="@+id/editSetor"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:hint="Setor de Atuação"
+                        android:inputType="text"
+                        android:padding="12dp"
+                        android:textColorHint="#A0A0A0" />
+
+                    <EditText
+                        android:id="@+id/editTelefone"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:hint="Telefone de Contato"
+                        android:inputType="phone"
+                        android:padding="12dp"
+                        android:textColorHint="#A0A0A0" />
+
+                    <EditText
+                        android:id="@+id/editEndereco"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:hint="Endereço Completo"
+                        android:inputType="textPostalAddress"
+                        android:padding="12dp"
+                        android:textColorHint="#A0A0A0" />
+
+                    <EditText
+                        android:id="@+id/editDescricao"
+                        android:layout_width="match_parent"
+                        android:layout_height="100dp"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_input_glass"
+                        android:gravity="top|start"
+                        android:hint="Descrição da Empresa"
+                        android:inputType="textMultiLine"
+                        android:padding="12dp"
+                        android:textColorHint="#A0A0A0" />
+
+                </LinearLayout>
+
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnSalvar"
                     android:layout_width="match_parent"
@@ -154,6 +220,8 @@
                     android:fontFamily="@font/neo_sans" />
 
             </LinearLayout>
+
+
         </ScrollView>
     </androidx.constraintlayout.widget.ConstraintLayout>
 

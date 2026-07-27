@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
@@ -42,6 +43,9 @@ import java.util.Map;
 import androidx.appcompat.app.AlertDialog;
 
 public class PerfilActivity extends AppCompatActivity {
+
+    LinearLayout containerEmpresa;
+    EditText editCnpj, editSetor, editTelefone, editEndereco, editDescricao;
 
     private final int CURRENT_TAB_INDEX = 3;
     private String nivel;
@@ -102,6 +106,18 @@ public class PerfilActivity extends AppCompatActivity {
         View btnSalvar = findViewById(R.id.btnSalvar);
         View btnAlterarFoto = findViewById(R.id.btnAlterarFoto);
         TextView btnRemoverFoto = findViewById(R.id.btnRemoverFoto);
+        containerEmpresa = findViewById(R.id.containerEmpresa);
+        editCnpj = findViewById(R.id.editCnpj);
+        editSetor = findViewById(R.id.editSetor);
+        editTelefone = findViewById(R.id.editTelefone);
+        editEndereco = findViewById(R.id.editEndereco);
+        editDescricao = findViewById(R.id.editDescricao);
+
+        if ("4".equals(nivel)) {
+            containerEmpresa.setVisibility(View.VISIBLE);
+        } else {
+            containerEmpresa.setVisibility(View.GONE);
+        }
 
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         emailAntigo = prefs.getString("email_logado", "email@exemplo.com");
@@ -211,6 +227,14 @@ public class PerfilActivity extends AppCompatActivity {
             jsonBody.put("novo_nome", nome);
             jsonBody.put("novo_email", email);
             jsonBody.put("foto_perfil", foto);
+
+            if ("4".equals(nivel)) {
+                jsonBody.put("cnpj", editCnpj.getText().toString().trim());
+                jsonBody.put("endereco", editEndereco.getText().toString().trim());
+                jsonBody.put("setor", editSetor.getText().toString().trim());
+                jsonBody.put("descricao", editDescricao.getText().toString().trim());
+                jsonBody.put("telefone_contato", editTelefone.getText().toString().trim());
+            }
         } catch (JSONException e) { e.printStackTrace(); }
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, jsonBody,
