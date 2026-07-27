@@ -182,7 +182,9 @@ public class FormularioActivity extends AppCompatActivity {
         vincularComponentes();
 
         // LOG DE ENTRADA
-        android.util.Log.d("DEBUG_FORM", "Iniciando formulário para: " + targetEmail);
+        if (!"5".equals(nivel)) {
+            android.util.Log.d("DEBUG_FORM", "Iniciando formulário para: " + targetEmail);
+        }
 
         // Lógica de visibilidade baseada no nível
         configurarInterfacePorNivel(nivel);
@@ -1241,6 +1243,11 @@ public class FormularioActivity extends AppCompatActivity {
 
                     etPitchRoteiro.setText(
                             dados.optString("roteiro"));
+
+                    String videoUrl = dados.optString("video_url");
+                    if (videoUrl != null && !videoUrl.isEmpty() && !videoUrl.equals("null")) {
+                        configurarPlayerVideo(videoUrl);
+                    }
 
                 } else if (tipo.equals("ia")) {
 

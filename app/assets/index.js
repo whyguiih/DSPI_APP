@@ -2338,7 +2338,8 @@ export default {
 
           const pitch = await env.DB.prepare(`
     SELECT
-      roteiro
+      roteiro,
+      video_url
     FROM tb_pitch
     WHERE usuario = ?
   `).bind(equipe.nome_equipe).first();

@@ -319,7 +319,9 @@ public class ProjetosActivity extends AppCompatActivity {
                     : projeto.getNomeEquipe();
             
             intent.putExtra("projeto_usuario", identificadorBusca);
-            Log.d("DEBUG_PROJETOS", "Abrindo formulário para: " + identificadorBusca);
+            if (!"5".equals(nivel)) {
+                Log.d("DEBUG_PROJETOS", "Abrindo formulário para: " + identificadorBusca);
+            }
         } else {
             // Outros níveis vendo projetos alheios vão para Detalhes resumido
             intent = new Intent(ProjetosActivity.this, ProjetoDetalhesActivity.class);
