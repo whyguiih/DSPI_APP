@@ -265,12 +265,13 @@ export default {
               e.nome_orientador, e.nome_coorientador,
               a.status, a.tarefas, a.dificuldades_enxergadas, a.comentario_empresa,
               c.proposta_chave, c.segmentos_clientes, c.atividades_chaves, c.recursos_chaves, c.relacionamentos_clientes, c.canais, c.estrutura_custos, c.fluxo_receita, c.parceiros_chaves,
-              ic.empresa AS empresa_vinculada,
+              COALESCE(NULLIF(ic.empresa, ''), NULLIF(ef.nome_empresa, '')) AS empresa_vinculada,
               p.video_url
             FROM tb_equipe e
             LEFT JOIN tb_acompanhamento_projeto a ON e.usuario = a.usuario
             LEFT JOIN tb_canva c ON e.usuario = c.usuario
             LEFT JOIN tb_informacoes_complementares ic ON e.usuario = ic.usuario
+            LEFT JOIN tb_empresas_formulario ef ON e.id_equipe = ef.id_empresa_formulario
             LEFT JOIN tb_pitch p ON (e.nome_equipe = p.usuario OR e.usuario = p.usuario)
           `).all();
 
@@ -286,7 +287,7 @@ export default {
               projeto.nome_integrante3,
               projeto.nome_integrante4,
               projeto.nome_integrante5
-            ].filter(n => n && n.trim() !== "").join(", ");
+            ].filter(n => n && typeof n === 'string' && n.trim() !== "").join(", ");
 
             projeto.nome_integrante = lista || "Sem integrantes";
 
@@ -297,6 +298,7 @@ export default {
               if (empresaEncontrada && empresaEncontrada.nome_empresa) {
                 projeto.empresa_vinculada = empresaEncontrada.nome_empresa;
               }
+              // Se não encontrou tradução, mantém o valor original que veio de ic.empresa
             }
             return projeto;
           });
@@ -446,26 +448,24 @@ export default {
         const garantirEquipe = async (userEmail) => {
           const existe = await env.DB.prepare("SELECT id_equipe FROM tb_equipe WHERE usuario = ?").bind(userEmail).first();
           if (!existe) {
+            // nome_integrante é NOT NULL no banco, por isso passamos ""
             await env.DB.prepare(`
-              INSERT INTO tb_equipe (usuario, nome_equipe, nome_projeto, email, area_atuacao_curso, area_atuacao_projeto)
-              VALUES (?, ?, ?, ?, ?, ?)
-            `).bind(userEmail, "Equipe " + userEmail, "Novo Projeto", userEmail, "", "").run();
+              INSERT OR IGNORE INTO tb_equipe (usuario, nome_equipe, nome_projeto, email, area_atuacao_curso, area_atuacao_projeto, nome_integrante)
+              VALUES (?, ?, ?, ?, ?, ?, ?)
+            `).bind(userEmail, "Equipe " + userEmail, "Novo Projeto", userEmail, "", "", "").run();
 
             // Inicializa a tabela de completude também
             await env.DB.prepare(`
-              INSERT INTO tb_informacoes_completude (usuario, qtd) VALUES (?, 0)
+              INSERT OR IGNORE INTO tb_informacoes_completude (usuario, qtd) VALUES (?, 0)
             `).bind(userEmail).run();
 
             // Inicializa a tabela de acompanhamento para permitir feedback
             await env.DB.prepare(`
-              INSERT INTO tb_acompanhamento_projeto (usuario, tarefas, aluno_responsavel, professor_da_area, inicio_previsto, fim_previsto, descricao_da_tarefa)
+              INSERT OR IGNORE INTO tb_acompanhamento_projeto (usuario, tarefas, aluno_responsavel, professor_da_area, inicio_previsto, fim_previsto, descricao_da_tarefa)
               VALUES (?, '', '', '', '', '', '')
             `).bind(userEmail).run();
           }
         };
-
-        //===============TB_EQUIPE===============
-        if (tipo === "equipe") {
 
         //===============TB_EQUIPE===============
         if (tipo === "equipe") {
@@ -484,11 +484,6 @@ export default {
             nome_integrante4,
             nome_integrante5
           } = campos;
-
-          // Verifica o nível de acesso do usuário
-          const userRecord = await env.DB.prepare("SELECT nivel_de_acesso FROM tb_cadastros WHERE email = ? OR nome_usuarios = ?")
-            .bind(usuario, usuario).first();
-          const nivelAcesso = userRecord ? userRecord.nivel_de_acesso : 0;
 
           const equipe = await env.DB.prepare(`
         SELECT id_equipe
@@ -569,9 +564,15 @@ export default {
 
             // Inicializa a tabela de completude para o novo projeto
             await env.DB.prepare(`
-              INSERT INTO tb_informacoes_completude
+              INSERT OR IGNORE INTO tb_informacoes_completude
               (usuario, qtd, dados_equipe, conhecimentos, recursos_aplicados, canvas_preencher, pitch_escrito, pitch_video, cronograma, foto_equipe, fotos_etapa_projeto)
               VALUES (?, 0, 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada')
+            `).bind(usuario).run();
+
+            // Inicializa a tabela de acompanhamento para permitir feedback
+            await env.DB.prepare(`
+              INSERT OR IGNORE INTO tb_acompanhamento_projeto (usuario, tarefas, aluno_responsavel, professor_da_area, inicio_previsto, fim_previsto, descricao_da_tarefa)
+              VALUES (?, '', '', '', '', '', '')
             `).bind(usuario).run();
           }
 
@@ -2592,23 +2593,34 @@ export default {
 
   try {
     // Tenta atualizar na tb_acompanhamento_projeto
+    // nome_equipe aqui pode ser o e-mail ou o nome da equipe
     let info = await env.DB.prepare(`
       UPDATE tb_acompanhamento_projeto
       SET comentario_empresa = ?
-      WHERE usuario = ? OR usuario = (SELECT nome_usuarios FROM tb_cadastros WHERE email = ?)
-    `).bind(comentario, nome_equipe, nome_equipe).run();
+      WHERE usuario = ?
+         OR usuario = (SELECT nome_usuarios FROM tb_cadastros WHERE email = ?)
+         OR usuario = (SELECT nome_equipe FROM tb_equipe WHERE usuario = ? OR email = ?)
+    `).bind(comentario, nome_equipe, nome_equipe, nome_equipe, nome_equipe).run();
+
+    if (!info.success) {
+        throw new Error("Erro ao executar UPDATE no banco.");
+    }
 
     if (info.meta.changes === 0) {
-       // Se não alterou nada, pode ser que o registro não exista. Vamos tentar um INSERT.
-       // Primeiro tentamos descobrir se o 'nome_equipe' é na verdade um e-mail de usuário
+       // Tenta resolver o identificador real (e-mail) para o INSERT
        const userRecord = await env.DB.prepare("SELECT email FROM tb_cadastros WHERE email = ? OR nome_usuarios = ?")
          .bind(nome_equipe, nome_equipe).first();
        const identificador = userRecord ? userRecord.email : nome_equipe;
 
        await env.DB.prepare(`
-         INSERT INTO tb_acompanhamento_projeto (usuario, comentario_empresa, tarefas, aluno_responsavel, professor_da_area, inicio_previsto, fim_previsto, descricao_da_tarefa)
+         INSERT OR IGNORE INTO tb_acompanhamento_projeto (usuario, comentario_empresa, tarefas, aluno_responsavel, professor_da_area, inicio_previsto, fim_previsto, descricao_da_tarefa)
          VALUES (?, ?, '', '', '', '', '', '')
        `).bind(identificador, comentario).run();
+
+       // Se o INSERT OR IGNORE não funcionou (já existia mas o update falhou no WHERE), tentamos um UPDATE direto pelo identificador resolvido
+       await env.DB.prepare(`
+         UPDATE tb_acompanhamento_projeto SET comentario_empresa = ? WHERE usuario = ?
+       `).bind(comentario, identificador).run();
     }
 
     return new Response(JSON.stringify({ success: true, message: "Feedback salvo com sucesso!" }),

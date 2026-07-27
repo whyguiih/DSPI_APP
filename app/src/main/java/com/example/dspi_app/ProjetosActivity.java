@@ -303,7 +303,11 @@ public class ProjetosActivity extends AppCompatActivity {
         // Se for nível 1, 2, Empresa Vinculada ao projeto ou o próprio dono/integrante do projeto, abre o Formulário Completo (Tabelas)
         if ("2".equals(nivel) || "1".equals(nivel) || isEmpresaVinculada || isMeuProjeto) {
             intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
-            intent.putExtra("projeto_usuario", projeto.getUsuario()); // Passa o e-mail do dono para carregar os dados corretos
+            
+            // CORREÇÃO: Garante que o projeto_usuario seja o e-mail do DONO do projeto
+            String dono = (projeto.getUsuario() != null && !projeto.getUsuario().isEmpty()) ? projeto.getUsuario() : projeto.getNomeEquipe();
+            intent.putExtra("projeto_usuario", dono);
+            Log.d("PROJETOS", "Abrindo tabelas para: " + dono);
         } else {
             // Outros níveis vendo projetos alheios vão para Detalhes resumido
             intent = new Intent(ProjetosActivity.this, ProjetoDetalhesActivity.class);
