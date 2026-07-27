@@ -555,7 +555,7 @@ public class FormularioActivity extends AppCompatActivity {
         tabFeedback = findViewById(R.id.tabFeedback);
 
         btnGerarRelatorio = findViewById(R.id.btnGerarRelatorio);
-        btnVisualizarRelatorio = findViewById(R.id.btnVisualizarRelatorio);
+
         btnAtualizarFeedback = findViewById(R.id.btnAtualizarFeedback);
         btnEditarDados = findViewById(R.id.btnEditarDados);
 
@@ -1641,13 +1641,7 @@ public class FormularioActivity extends AppCompatActivity {
                 view.setEnabled(habilitado);
                 view.setAlpha(habilitado ? 1.0f : 0.6f);
             } else if (view instanceof android.widget.Button && view.getId() != R.id.btnEditarDados) {
-                if (view.getId() == R.id.btnGerarRelatorio || view.getId() == R.id.btnVisualizarRelatorio || view.getId() == R.id.btnAcaoCanvaRelatorio) {
-                    view.setEnabled(true);
-                    view.setAlpha(1.0f);
-                } else {
-                    view.setEnabled(habilitado);
-                    view.setAlpha(habilitado ? 1.0f : 0.5f);
-                }
+
             } else if (view instanceof android.widget.FrameLayout || view instanceof android.widget.LinearLayout) {
                 // Se houver containers internos (ex: controles de vídeo), pode ser necessário tratar recursivamente ou desabilitar o container
                 view.setEnabled(habilitado);
