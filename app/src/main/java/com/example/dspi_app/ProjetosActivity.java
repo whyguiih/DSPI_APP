@@ -136,7 +136,9 @@ public class ProjetosActivity extends AppCompatActivity {
                                 // 2. Lógica específica para Empresas (Nível 4)
                                 if ("4".equals(nivel)) {
                                     String emailVinc = obj.optString("empresa_vinculada_email", "").trim().toLowerCase();
-                                    if (!emailVinc.isEmpty() && emailVinc.equals(emailLower)) {
+                                    boolean match = !emailVinc.isEmpty() && emailVinc.equals(emailLower);
+                                    Log.d("PROJETOS", "Projeto [" + p.getNomeProjeto() + "] - Empresa Vinculada: " + emailVinc + " | Usuário: " + emailLower + " | Match: " + match);
+                                    if (match) {
                                         isMeu = true;
                                     }
                                 }

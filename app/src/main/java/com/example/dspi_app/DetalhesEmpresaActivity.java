@@ -123,8 +123,10 @@ public class DetalhesEmpresaActivity extends AppCompatActivity {
                             for (int i = 0; i < data.length(); i++) {
                                 JSONObject obj = data.getJSONObject(i);
                                 String vincEmail = obj.optString("empresa_vinculada_email", "").trim().toLowerCase();
+                                boolean match = !vincEmail.isEmpty() && vincEmail.equals(targetE);
+                                Log.d("PROJETOS", "Projeto [" + obj.optString("nome_projeto") + "] - Empresa Vinculada: " + vincEmail + " | Alvo: " + targetE + " | Match: " + match);
                                 // Filtra projetos usando o e-mail da empresa vinculada
-                                if (!vincEmail.isEmpty() && vincEmail.equals(targetE)) {
+                                if (match) {
                                     list.add(parseProjeto(obj));
                                 }
                             }

@@ -87,7 +87,7 @@ export default {
       }
       if (path === "/listar-projetos") {
         try {
-          const { results: projetos } = await env.DB.prepare(`SELECT e.nome_projeto, e.nome_equipe, e.nome_integrante, e.nome_integrante2, e.nome_integrante3, e.nome_integrante4, e.nome_integrante5, e.nome_orientador, e.nome_coorientador, e.usuario, a.status, a.tarefas, a.dificuldades_enxergadas, a.comentario_empresa, c.proposta_chave, c.segmentos_clientes, c.atividades_chaves, c.recursos_chaves, c.relacionamentos_clientes, c.canais, c.estrutura_custos, c.fluxo_receita, c.parceiros_chaves, COALESCE(NULLIF(ic.empresa, ''), NULLIF(ef.nome_empresa, ''), (SELECT empresa_vinculado FROM tb_curriculo_alunos WHERE (nome IN (e.nome_integrante, e.nome_integrante2, e.nome_integrante3, e.nome_integrante4, e.nome_integrante5) OR usuario = e.usuario OR email = e.usuario) AND empresa_vinculado IS NOT NULL AND empresa_vinculado != '' LIMIT 1)) AS empresa_vinculada, p.video_url FROM tb_equipe e LEFT JOIN tb_acompanhamento_projeto a ON (e.usuario = a.usuario OR e.nome_equipe = a.usuario) LEFT JOIN tb_canva c ON (e.usuario = c.usuario OR e.nome_equipe = c.usuario) LEFT JOIN tb_informacoes_complementares ic ON (e.usuario = ic.usuario OR e.nome_equipe = ic.usuario) LEFT JOIN tb_empresas_formulario ef ON (e.id_equipe = ef.id_empresa_formulario) LEFT JOIN tb_pitch p ON (e.nome_equipe = p.usuario OR e.usuario = p.usuario)`).all();
+          const { results: projetos } = await env.DB.prepare(`SELECT e.nome_projeto, e.nome_equipe, e.nome_integrante, e.nome_integrante2, e.nome_integrante3, e.nome_integrante4, e.nome_integrante5, e.nome_orientador, e.nome_coorientador, e.usuario, a.status, a.tarefas, a.dificuldades_enxergadas, a.comentario_empresa, c.proposta_chave, c.segmentos_clientes, c.atividades_chaves, c.recursos_chaves, c.relacionamentos_clientes, c.canais, c.estrutura_custos, c.fluxo_receita, c.parceiros_chaves, ef.nome_empresa AS ef_nome, ef.email_contato AS ef_email, p.video_url FROM tb_equipe e LEFT JOIN tb_acompanhamento_projeto a ON (e.usuario = a.usuario OR e.nome_equipe = a.usuario) LEFT JOIN tb_canva c ON (e.usuario = c.usuario OR e.nome_equipe = c.usuario) LEFT JOIN tb_informacoes_complementares ic ON (e.usuario = ic.usuario OR e.nome_equipe = ic.usuario) LEFT JOIN tb_empresas_formulario ef ON (e.id_equipe = ef.id_empresa_formulario) LEFT JOIN tb_pitch p ON (e.nome_equipe = p.usuario OR e.usuario = p.usuario)`).all();
           const { results: empresas } = await env.DB.prepare(`SELECT id_empresa, nome_empresa, email_contato FROM tb_empresas`).all();
           const { results: cadastros } = await env.DB.prepare(`SELECT nome_usuarios, email FROM tb_cadastros`).all();
           const userMap = new Map();
@@ -100,18 +100,23 @@ export default {
             const listaTraduzida = listaRaw.map(n => translate(n)).filter(n => n && n.trim() !== "" && n.toLowerCase() !== "null");
             projeto.nome_integrante = listaTraduzida.join(", ") || "Sem integrantes";
 
-            projeto.empresa_vinculada_email = "";
-            if (projeto.empresa_vinculada) {
+            // Source of truth: tb_empresas_formulario
+            projeto.empresa_vinculada = projeto.ef_nome || "";
+            projeto.empresa_vinculada_email = (projeto.ef_email || "").trim().toLowerCase();
+
+            // Fallback: if email is missing but we have a name, try to resolve from tb_empresas
+            if (!projeto.empresa_vinculada_email && projeto.empresa_vinculada) {
+              const searchKey = String(projeto.empresa_vinculada).trim().toLowerCase();
               const emp = empresas.find(e =>
-                (e.nome_empresa && String(e.nome_empresa).toLowerCase() === String(projeto.empresa_vinculada).toLowerCase()) ||
-                (e.email_contato && String(e.email_contato).toLowerCase() === String(projeto.empresa_vinculada).toLowerCase()) ||
-                (e.id_empresa && String(e.id_empresa) === String(projeto.empresa_vinculada))
+                (e.nome_empresa && String(e.nome_empresa).trim().toLowerCase() === searchKey) ||
+                (e.email_contato && String(e.email_contato).trim().toLowerCase() === searchKey)
               );
               if (emp) {
-                projeto.empresa_vinculada = emp.nome_empresa;
-                projeto.empresa_vinculada_email = emp.email_contato;
+                projeto.empresa_vinculada_email = (emp.email_contato || "").trim().toLowerCase();
               }
             }
+
+            console.log(`[DEBUG] Projeto "${projeto.nome_projeto}" - Empresa: ${projeto.empresa_vinculada} (${projeto.empresa_vinculada_email})`);
             return projeto;
           });
           return new Response(JSON.stringify({ success: true, data: projetosTraduzidos }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
