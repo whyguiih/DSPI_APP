@@ -278,18 +278,34 @@ public class ProjetosActivity extends AppCompatActivity {
     private void abrirPaginaDetalhes(Projeto projeto) {
         Intent intent;
         String userLogado = nomeUsuario.trim();
-        String nomeEqp = projeto.getNomeEquipe() != null ? projeto.getNomeEquipe().trim() : "";
-        String empresaVinc = projeto.getEmpresaVinculada() != null ? projeto.getEmpresaVinculada().trim() : "";
         
-        boolean isMeuProjeto = !userLogado.isEmpty() && nomeEqp.equalsIgnoreCase(userLogado);
+        String nomeEqp = projeto.getNomeEquipe() != null ? projeto.getNomeEquipe().trim() : "";
+        String orientador = projeto.getOrientador() != null ? projeto.getOrientador().trim() : "";
+        String coorientador = projeto.getNomeCoorientador() != null ? projeto.getNomeCoorientador().trim() : "";
+        String integrantes = projeto.getIntegrantes() != null ? projeto.getIntegrantes().trim() : "";
+        String donoEmail = projeto.getUsuario() != null ? projeto.getUsuario().trim() : "";
+        String empresaVinc = projeto.getEmpresaVinculada() != null ? projeto.getEmpresaVinculada().trim() : "";
+
+        boolean isMeuProjeto = false;
+        if (!userLogado.isEmpty()) {
+            String userLower = userLogado.toLowerCase();
+            if (nomeEqp.toLowerCase().contains(userLower) || 
+                donoEmail.toLowerCase().contains(userLower) ||
+                orientador.toLowerCase().contains(userLower) ||
+                coorientador.toLowerCase().contains(userLower) ||
+                integrantes.toLowerCase().contains(userLower)) {
+                isMeuProjeto = true;
+            }
+        }
+        
         boolean isEmpresaVinculada = "4".equals(nivel) && !userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado);
 
-        // Se for nível 1, 2, Empresa Vinculada ao projeto ou o próprio dono do projeto, abre o Formulário Completo
+        // Se for nível 1, 2, Empresa Vinculada ao projeto ou o próprio dono/integrante do projeto, abre o Formulário Completo (Tabelas)
         if ("2".equals(nivel) || "1".equals(nivel) || isEmpresaVinculada || isMeuProjeto) {
             intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
-            intent.putExtra("projeto_usuario", projeto.getNomeEquipe());
+            intent.putExtra("projeto_usuario", projeto.getUsuario()); // Passa o e-mail do dono para carregar os dados corretos
         } else {
-            // Outros níveis vendo projetos alheios (ou empresa vendo projeto não vinculado) vão para Detalhes resumido
+            // Outros níveis vendo projetos alheios vão para Detalhes resumido
             intent = new Intent(ProjetosActivity.this, ProjetoDetalhesActivity.class);
             intent.putExtra("projeto_selecionado", projeto);
         }

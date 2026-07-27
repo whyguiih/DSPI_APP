@@ -217,6 +217,13 @@ public class FormularioActivity extends AppCompatActivity {
             formRelatorio.setVisibility(View.GONE);
             tabFeedback.setVisibility(View.GONE);
         }
+
+        // Restrição de Edição: Apenas nível 3 (Professor) pode editar as tabelas
+        if (!"3".equals(nivel)) {
+            if (btnEditarDados != null) btnEditarDados.setVisibility(View.GONE);
+            if (btnUploadVideo != null) btnUploadVideo.setVisibility(View.GONE);
+        }
+
         buscarFormularioNoBanco("equipe");
         buscarFormularioNoBanco("conhecimentos");
         buscarFormularioNoBanco("recursos");
@@ -716,7 +723,7 @@ public class FormularioActivity extends AppCompatActivity {
 
         try {
 
-            String usuarioParaSalvar = (tipo.equals("feedback")) ? targetEmail : emailUsuario;
+            String usuarioParaSalvar = targetEmail;
 
             if (tipo.equals("equipe")) {
 

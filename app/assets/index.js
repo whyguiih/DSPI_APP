@@ -455,6 +455,12 @@ export default {
             await env.DB.prepare(`
               INSERT INTO tb_informacoes_completude (usuario, qtd) VALUES (?, 0)
             `).bind(userEmail).run();
+
+            // Inicializa a tabela de acompanhamento para permitir feedback
+            await env.DB.prepare(`
+              INSERT INTO tb_acompanhamento_projeto (usuario, tarefas, aluno_responsavel, professor_da_area, inicio_previsto, fim_previsto, descricao_da_tarefa)
+              VALUES (?, '', '', '', '', '', '')
+            `).bind(userEmail).run();
           }
         };
 
@@ -2586,19 +2592,28 @@ export default {
 
   try {
     // Tenta atualizar na tb_acompanhamento_projeto
-    const info = await env.DB.prepare(`
+    let info = await env.DB.prepare(`
       UPDATE tb_acompanhamento_projeto
       SET comentario_empresa = ?
       WHERE usuario = ? OR usuario = (SELECT nome_usuarios FROM tb_cadastros WHERE email = ?)
     `).bind(comentario, nome_equipe, nome_equipe).run();
 
-    if (info.meta.changes > 0) {
-      return new Response(JSON.stringify({ success: true, message: "Feedback salvo com sucesso!" }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    } else {
-      return new Response(JSON.stringify({ success: false, message: "Projeto não encontrado para esta equipe." }),
-      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (info.meta.changes === 0) {
+       // Se não alterou nada, pode ser que o registro não exista. Vamos tentar um INSERT.
+       // Primeiro tentamos descobrir se o 'nome_equipe' é na verdade um e-mail de usuário
+       const userRecord = await env.DB.prepare("SELECT email FROM tb_cadastros WHERE email = ? OR nome_usuarios = ?")
+         .bind(nome_equipe, nome_equipe).first();
+       const identificador = userRecord ? userRecord.email : nome_equipe;
+
+       await env.DB.prepare(`
+         INSERT INTO tb_acompanhamento_projeto (usuario, comentario_empresa, tarefas, aluno_responsavel, professor_da_area, inicio_previsto, fim_previsto, descricao_da_tarefa)
+         VALUES (?, ?, '', '', '', '', '', '')
+       `).bind(identificador, comentario).run();
     }
+
+    return new Response(JSON.stringify({ success: true, message: "Feedback salvo com sucesso!" }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (e) {
     return new Response(JSON.stringify({ success: false, error: e.message }),
     { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
