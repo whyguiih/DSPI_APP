@@ -1,6 +1,7 @@
 package com.example.dspi_app;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.ArrayAdapter;
@@ -60,14 +61,23 @@ public class CadastroActivity extends AppCompatActivity {
 
         inputNivelAcesso = findViewById(R.id.inputNivelAcesso);
 
-        String[] niveis = {
-                "Avaliador",
-                "DR/DN",
-                "Professor",
-                "Empresa",
-                "Aluno",
-                "Público Externo"
-        };
+        SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
+        String nivelLogado = prefs.getString("nivel_de_acesso", "");
+
+        String[] niveis;
+        if ("3".equals(nivelLogado)) {
+            niveis = new String[]{"Aluno"};
+            inputNivelAcesso.setText("Aluno", false);
+        } else {
+            niveis = new String[]{
+                    "Avaliador",
+                    "DR/DN",
+                    "Professor",
+                    "Empresa",
+                    "Aluno",
+                    "Público Externo"
+            };
+        }
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
@@ -77,8 +87,11 @@ public class CadastroActivity extends AppCompatActivity {
 
         inputNivelAcesso.setAdapter(adapter);
 
-        inputNivelAcesso.setOnClickListener(v ->
-                inputNivelAcesso.showDropDown());
+        inputNivelAcesso.setOnClickListener(v -> {
+            if (!"3".equals(nivelLogado)) {
+                inputNivelAcesso.showDropDown();
+            }
+        });
 
         cadastroRepository = new CadastroRepository(this);
     }
