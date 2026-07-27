@@ -49,10 +49,11 @@ public class PerfilActivity extends AppCompatActivity {
 
     private final int CURRENT_TAB_INDEX = 3;
     private String nivel;
-    private EditText inputNome, inputEmail;
+    private EditText inputNome, inputEmail, editTextTextPassword;
     private ImageView imgPerfil;
     private String fotoBase64 = "";
     private String emailAntigo = "";
+    private String senhaAntiga = "";
 
     private final ActivityResultLauncher<Intent> pickImageLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -101,8 +102,22 @@ public class PerfilActivity extends AppCompatActivity {
 
         inputNome = findViewById(R.id.inputNome);
         inputEmail = findViewById(R.id.inputEmail);
+        editTextTextPassword = findViewById(R.id.editTextTextPassword);
         imgPerfil = findViewById(R.id.imgPerfil);
         ImageButton btnBack = findViewById(R.id.btnBack);
+        ImageButton btnVerSenha = findViewById(R.id.btnVerSenha);
+
+        btnVerSenha.setOnClickListener(v -> {
+            if (editTextTextPassword.getInputType() == (android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD)) {
+                editTextTextPassword.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                btnVerSenha.setImageResource(android.R.drawable.ic_menu_close_clear_cancel); // Ícone de "esconder"
+            } else {
+                editTextTextPassword.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                btnVerSenha.setImageResource(android.R.drawable.ic_menu_view); // Ícone de "olho"
+            }
+            // Move o cursor para o final do texto
+            editTextTextPassword.setSelection(editTextTextPassword.getText().length());
+        });
         View btnSalvar = findViewById(R.id.btnSalvar);
         View btnAlterarFoto = findViewById(R.id.btnAlterarFoto);
         TextView btnRemoverFoto = findViewById(R.id.btnRemoverFoto);
@@ -121,8 +136,12 @@ public class PerfilActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         emailAntigo = prefs.getString("email_logado", "email@exemplo.com");
+        senhaAntiga = prefs.getString("senha", "");
+        
         inputNome.setText(prefs.getString("nome_usuario", "Nome do Usuário"));
         inputEmail.setText(emailAntigo);
+        editTextTextPassword.setText(senhaAntiga);
+        editTextTextPassword.setHint("Digite para alterar sua senha");
 
         // Se for nível 5, não permite alteração no e-mail
         if ("5".equals(nivel)) {
@@ -172,17 +191,21 @@ public class PerfilActivity extends AppCompatActivity {
         btnSalvar.setOnClickListener(v -> {
             String novoNome = inputNome.getText().toString().trim();
             String novoEmail = inputEmail.getText().toString().trim();
+            String novaSenhaRaw = editTextTextPassword.getText().toString().trim();
 
             if (novoNome.isEmpty() || novoEmail.isEmpty()) {
-                mostrarErroGrande("Aviso", "Preencha todos os campos!");
+                mostrarErroGrande("Aviso", "Preencha todos os campos obrigatórios!");
                 return;
             }
+
+            // Se a senha estiver vazia, enviamos a senha antiga para o banco manter a mesma
+            String senhaParaEnviar = novaSenhaRaw.isEmpty() ? senhaAntiga : novaSenhaRaw;
 
             new AlertDialog.Builder(this)
                     .setTitle("Confirmar Alterações")
                     .setMessage("Deseja realmente salvar as alterações no seu perfil?")
                     .setPositiveButton("Sim", (dialog, which) -> {
-                        enviarParaAPI(novoNome, novoEmail, fotoBase64);
+                        enviarParaAPI(novoNome, novoEmail, senhaParaEnviar, fotoBase64);
                     })
                     .setNegativeButton("Não", null)
                     .show();
@@ -219,13 +242,14 @@ public class PerfilActivity extends AppCompatActivity {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
-    private void enviarParaAPI(String nome, String email, String foto) {
+    private void enviarParaAPI(String nome, String email, String senha, String foto) {
         String url = "https://api-dspi.whyguiih.workers.dev/atualizar-perfil";
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("email_atual", emailAntigo);
             jsonBody.put("novo_nome", nome);
             jsonBody.put("novo_email", email);
+            jsonBody.put("nova_senha", senha );
             jsonBody.put("foto_perfil", foto);
 
             if ("4".equals(nivel)) {
@@ -245,6 +269,7 @@ public class PerfilActivity extends AppCompatActivity {
                             SharedPreferences.Editor editor = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit();
                             editor.putString("nome_usuario", nome);
                             editor.putString("email_logado", email);
+                            editor.putString("senha", senha); // Atualiza com a senha enviada
                             editor.putString("foto_usuario", urlFotoR2);
                             editor.apply();
                             Toast.makeText(this, "Perfil atualizado com sucesso!", Toast.LENGTH_SHORT).show();
@@ -253,7 +278,9 @@ public class PerfilActivity extends AppCompatActivity {
                         }
                     } catch (JSONException e) { e.printStackTrace(); }
                 },
-                error -> Toast.makeText(this, "Erro de conexão", Toast.LENGTH_SHORT).show()
+                error -> {
+                    // Erro de conexão silenciado
+                }
         ) {
             @Override
             public Map<String, String> getHeaders() {
