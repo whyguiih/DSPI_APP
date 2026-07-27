@@ -47,45 +47,30 @@ async function handleUploadVideo(request, env, corsHeaders) {
 
 
     // 3. Atualizar o Banco de Dados (D1)
-
     if (env.DB) {
+      // Buscamos o nome da equipe associado ao e-mail/identificador ou nome_equipe
+      const equipeRecord = await env.DB.prepare("SELECT id_equipe, nome_equipe FROM tb_equipe WHERE usuario = ? OR email = ? OR nome_equipe = ?").bind(usuario, usuario, usuario).first();
 
-      // Atualiza o status na tabela de completude respeitando a CHECK constraint ('Concluido')
+      if (equipeRecord) {
+        const idUsuario = equipeRecord.nome_equipe;
 
-      await env.DB.prepare(
+        // Atualiza o status na tabela de completude
+        const completudeRecord = await env.DB.prepare("SELECT id_informacoes_completude FROM tb_informacoes_completude WHERE usuario = ?").bind(idUsuario).first();
+        if (completudeRecord) {
+          await env.DB.prepare(
+            "UPDATE tb_informacoes_completude SET pitch_video = ? WHERE id_informacoes_completude = ?"
+          ).bind("Concluido", completudeRecord.id_informacoes_completude).run();
+        }
 
-        "UPDATE tb_informacoes_completude SET pitch_video = ? WHERE usuario = ?"
-
-      ).bind("Concluido", usuario).run();
-
-
-
-      // Salvar a URL na tabela de pitch
-
-      // Nota: O campo 'usuario' na tb_pitch é uma Foreign Key para tb_equipe(nome_equipe)
-
-      // Buscamos o nome da equipe associado ao e-mail/identificador
-
-      const equipeRecord = await env.DB.prepare("SELECT nome_equipe FROM tb_equipe WHERE usuario = ? OR email = ?").bind(usuario, usuario).first();
-
-      const idUsuario = equipeRecord ? equipeRecord.nome_equipe : usuario;
-
-
-
-      const pitchExists = await env.DB.prepare("SELECT 1 FROM tb_pitch WHERE usuario = ?").bind(idUsuario).first();
-
-      if (pitchExists) {
-
-        await env.DB.prepare("UPDATE tb_pitch SET video_url = ? WHERE usuario = ?").bind(videoUrl, idUsuario).run();
-
-      } else {
-
-        await env.DB.prepare("INSERT INTO tb_pitch (usuario, video_url, roteiro) VALUES (?, ?, ?)")
-
-          .bind(idUsuario, videoUrl, "").run();
-
+        // Salvar a URL na tabela de pitch
+        const pitchRecord = await env.DB.prepare("SELECT id_pitch FROM tb_pitch WHERE usuario = ?").bind(idUsuario).first();
+        if (pitchRecord) {
+          await env.DB.prepare("UPDATE tb_pitch SET video_url = ? WHERE id_pitch = ?").bind(videoUrl, pitchRecord.id_pitch).run();
+        } else {
+          await env.DB.prepare("INSERT INTO tb_pitch (id_pitch, usuario, video_url, roteiro) VALUES (?, ?, ?, ?)")
+            .bind(equipeRecord.id_equipe, idUsuario, videoUrl, "").run();
+        }
       }
-
     }
 
 
@@ -455,8 +440,8 @@ export default {
           const equipe = await env.DB.prepare(`
         SELECT id_equipe
         FROM tb_equipe
-        WHERE usuario = ?
-    `).bind(usuario).first();
+        WHERE usuario = ? OR email = ? OR nome_equipe = ?
+    `).bind(usuario, usuario, usuario).first();
 
           if (equipe) {
 
@@ -475,7 +460,7 @@ export default {
                 nome_integrante3 = ?,
                 nome_integrante4 = ?,
                 nome_integrante5 = ?
-            WHERE usuario = ?
+            WHERE id_equipe = ?
         `).bind(
               nome_equipe,
               nome_projeto,
@@ -489,7 +474,7 @@ export default {
               nome_integrante3,
               nome_integrante4,
               nome_integrante5,
-              usuario
+              equipe.id_equipe
             ).run();
 
           } else {
@@ -534,7 +519,7 @@ export default {
               INSERT INTO tb_informacoes_completude
               (usuario, qtd, dados_equipe, conhecimentos, recursos_aplicados, canvas_preencher, pitch_escrito, pitch_video, cronograma, foto_equipe, fotos_etapa_projeto)
               VALUES (?, 0, 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada', 'Não iniciada')
-            `).bind(usuario).run();
+            `).bind(nome_equipe).run();
           }
 
           return new Response(JSON.stringify({
@@ -558,10 +543,10 @@ export default {
           } = campos;
 
           const equipe = await env.DB.prepare(`
-    SELECT nome_equipe
+    SELECT id_equipe, nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-`).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+`).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -592,12 +577,12 @@ export default {
                 plano_curso = ?,
                 conhecimentos_aplicados = ?,
                 capacidades_aplicadas = ?
-            WHERE usuario = ?
+            WHERE id_conhecimentos = ?
         `).bind(
               plano_curso,
               conhecimentos_aplicados,
               capacidades_aplicadas,
-              usuarioEquipe
+              conhecimento.id_conhecimentos
             ).run();
 
           } else {
@@ -605,14 +590,16 @@ export default {
             await env.DB.prepare(`
             INSERT INTO tb_conhecimentos
             (
+                id_conhecimentos,
                 plano_curso,
                 conhecimentos_aplicados,
                 capacidades_aplicadas,
                 usuario
             )
             VALUES
-            (?, ?, ?, ?)
+            (?, ?, ?, ?, ?)
         `).bind(
+              equipe.id_equipe,
               plano_curso,
               conhecimentos_aplicados,
               capacidades_aplicadas,
@@ -655,8 +642,8 @@ export default {
           const equipe = await env.DB.prepare(`
         SELECT id_equipe, nome_equipe
         FROM tb_equipe
-        WHERE usuario = ?
-    `).bind(usuario).first();
+        WHERE usuario = ? OR email = ? OR nome_equipe = ?
+    `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -696,7 +683,7 @@ export default {
                 pagamento = ?,
                 alternativas_consideradas = ?,
                 preco_total = ?
-            WHERE usuario = ?
+            WHERE id_recursos = ?
         `).bind(
               ferramentas,
               equipamentos,
@@ -711,7 +698,7 @@ export default {
               pagamento,
               alternativas_consideradas,
               preco_total,
-              equipe.nome_equipe
+              recursos.id_recursos
             ).run();
 
           } else {
@@ -784,8 +771,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT id_equipe, nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -818,7 +805,7 @@ export default {
         data_inicio = ?,
         data_final = ?,
         observacoes = ?
-      WHERE usuario = ?
+      WHERE id_cronograma = ?
     `).bind(
               processo,
               etapas,
@@ -826,7 +813,7 @@ export default {
               data_inicio,
               data_final,
               observacoes,
-              equipe.nome_equipe
+              cronograma.id_cronograma
             ).run();
 
           } else {
@@ -891,8 +878,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -927,7 +914,7 @@ export default {
         estrutura_custos = ?,
         fluxo_receita = ?,
         parceiros_chaves = ?
-      WHERE usuario = ?
+      WHERE id_canva = ?
     `).bind(
               atividades_chaves,
               proposta_chave,
@@ -938,7 +925,7 @@ export default {
               estrutura_custos,
               fluxo_receita,
               parceiros_chaves,
-              equipe.nome_equipe
+              canva.id_canva
             ).run();
 
           } else {
@@ -946,6 +933,7 @@ export default {
             await env.DB.prepare(`
       INSERT INTO tb_canva
       (
+        id_canva,
         atividades_chaves,
         proposta_chave,
         relacionamentos_clientes,
@@ -958,8 +946,9 @@ export default {
         usuario
       )
       VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
+              equipe.id_equipe,
               atividades_chaves,
               proposta_chave,
               relacionamentos_clientes,
@@ -1003,8 +992,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT id_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -1101,8 +1090,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT id_equipe, nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -1129,10 +1118,10 @@ export default {
       UPDATE tb_pitch
       SET
         roteiro = ?
-      WHERE usuario = ?
+      WHERE id_pitch = ?
     `).bind(
               roteiro,
-              equipe.nome_equipe
+              pitch.id_pitch
             ).run();
 
           } else {
@@ -1182,8 +1171,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -1215,7 +1204,7 @@ export default {
         etapa_uso = ?,
         criacao_prompt = ?,
         descricao_uso = ?
-      WHERE usuario = ?
+      WHERE id_uso_ia = ?
     `).bind(
               nome_ferramenta,
               link_acesso,
@@ -1223,7 +1212,7 @@ export default {
               etapa_uso,
               criacao_prompt,
               descricao_uso,
-              equipe.nome_equipe
+              ia.id_uso_ia
             ).run();
 
           } else {
@@ -1231,6 +1220,7 @@ export default {
             await env.DB.prepare(`
       INSERT INTO tb_uso_ia
       (
+        id_uso_ia,
         usuario,
         nome_ferramenta,
         link_acesso,
@@ -1239,8 +1229,9 @@ export default {
         criacao_prompt,
         descricao_uso
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
+              equipe.id_equipe,
               equipe.nome_equipe,
               nome_ferramenta,
               link_acesso,
@@ -1286,8 +1277,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -1310,21 +1301,6 @@ export default {
 
           if (planilha) {
 
-            console.log({
-              tarefas,
-              aluno_responsavel,
-              professor_da_area,
-              inicio_previsto,
-              fim_previsto,
-              inicio_realizado,
-              fim_realizado,
-              duracao,
-              status,
-              descricao_da_tarefa,
-              dificuldades_enxergadas,
-              impacto_nas_outras
-            });
-
             await env.DB.prepare(`
       UPDATE tb_acompanhamento_projeto
       SET
@@ -1340,7 +1316,7 @@ export default {
         descricao_da_tarefa = ?,
         dificuldades_enxergadas = ?,
         impacto_nas_outras = ?
-      WHERE usuario = ?
+      WHERE id_acompanhamento_projeto = ?
     `).bind(
               tarefas,
               aluno_responsavel,
@@ -1354,7 +1330,7 @@ export default {
               descricao_da_tarefa,
               dificuldades_enxergadas,
               impacto_nas_outras,
-              equipe.nome_equipe
+              planilha.id_acompanhamento_projeto
             ).run();
 
           } else {
@@ -1362,6 +1338,7 @@ export default {
             await env.DB.prepare(`
       INSERT INTO tb_acompanhamento_projeto
       (
+        id_acompanhamento_projeto,
         tarefas,
         aluno_responsavel,
         professor_da_area,
@@ -1377,8 +1354,9 @@ export default {
         usuario
       )
       VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
+              equipe.id_equipe,
               tarefas,
               aluno_responsavel,
               professor_da_area,
@@ -1423,8 +1401,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -1456,7 +1434,7 @@ export default {
         empresa = ?,
         projeto = ?,
         descricao = ?
-      WHERE usuario = ?
+      WHERE id_informacoes_complementares = ?
     `).bind(
               unidade_nome_comercial,
               coordenador_pedagogico,
@@ -1464,7 +1442,7 @@ export default {
               empresa,
               projeto,
               descricao,
-              equipe.nome_equipe
+              complemento.id_informacoes_complementares
             ).run();
 
           } else {
@@ -1472,6 +1450,7 @@ export default {
             await env.DB.prepare(`
       INSERT INTO tb_informacoes_complementares
       (
+        id_informacoes_complementares,
         unidade_nome_comercial,
         coordenador_pedagogico,
         gestor,
@@ -1481,8 +1460,9 @@ export default {
         usuario
       )
       VALUES
-      (?, ?, ?, ?, ?, ?, ?)
+      (?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
+              equipe.id_equipe,
               unidade_nome_comercial,
               coordenador_pedagogico,
               gestor,
@@ -1527,8 +1507,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -1566,7 +1546,7 @@ export default {
         cronograma = ?,
         foto_equipe = ?,
         fotos_etapa_projeto = ?
-      WHERE usuario = ?
+      WHERE id_informacoes_completude = ?
     `).bind(
               qtd || 0,
               equipe_unidade_empresa,
@@ -1580,7 +1560,7 @@ export default {
               cronograma,
               foto_equipe,
               fotos_etapa_projeto,
-              equipe.nome_equipe
+              completude.id_informacoes_completude
             ).run();
 
           } else {
@@ -1588,6 +1568,7 @@ export default {
             await env.DB.prepare(`
       INSERT INTO tb_informacoes_completude
       (
+        id_informacoes_completude,
         qtd,
         equipe_unidade_empresa,
         responsavel_preenchimento,
@@ -1603,8 +1584,9 @@ export default {
         usuario
       )
       VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
+              equipe.id_equipe,
               qtd || 0,
               equipe_unidade_empresa,
               responsavel_preenchimento,
@@ -1676,11 +1658,17 @@ export default {
             preco_total
           } = campos;
 
+          const equipeRecord = await env.DB.prepare(`
+            SELECT id_equipe, nome_equipe, usuario FROM tb_equipe WHERE usuario = ? OR email = ? OR nome_equipe = ?
+          `).bind(usuario, usuario, usuario).first();
+
+          if (!equipeRecord) {
+            return new Response(JSON.stringify({ success: false, error: "Equipe não encontrada." }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+
           const relatorio = await env.DB.prepare(`
-    SELECT id_relatorio
-    FROM tb_relatorio
-    WHERE usuario = ?
-  `).bind(usuario).first();
+            SELECT id_relatorio FROM tb_relatorio WHERE usuario = ? OR usuario = ?
+          `).bind(equipeRecord.usuario, equipeRecord.nome_equipe).first();
 
           if (relatorio) {
 
@@ -1723,7 +1711,7 @@ export default {
         quant_utilizada_2 = ?,
         forma_pagamento = ?,
         preco_total = ?
-      WHERE usuario = ?
+      WHERE id_relatorio = ?
     `).bind(
               nome_empresa,
               e_mail_empresa,
@@ -1761,7 +1749,7 @@ export default {
               quant_utilizada_2,
               forma_pagamento,
               preco_total,
-              usuario
+              relatorio.id_relatorio
             ).run();
 
           } else {
@@ -1769,6 +1757,7 @@ export default {
             await env.DB.prepare(`
       INSERT INTO tb_relatorio
       (
+        id_relatorio,
         nome_empresa,
         e_mail_empresa,
         setor_empresa,
@@ -1808,8 +1797,9 @@ export default {
         usuario
       )
       VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
+              equipeRecord.id_equipe,
               nome_empresa,
               e_mail_empresa,
               setor_empresa,
@@ -1846,7 +1836,7 @@ export default {
               quant_utilizada_2,
               forma_pagamento,
               preco_total,
-              usuario
+              equipeRecord.nome_equipe
             ).run();
 
           }
@@ -1868,8 +1858,8 @@ export default {
           const { results } = await env.DB.prepare(`
     SELECT id_aluno
     FROM tb_curriculo_alunos
-    WHERE usuario = ?
-  `).bind(usuario).all();
+    WHERE usuario = ? OR email = ?
+  `).bind(usuario, usuario).all();
 
           const existe = results && results.length > 0;
 
@@ -1976,8 +1966,8 @@ export default {
 
       if (tipo === "feedback") {
     const record = await env.DB.prepare(`
-      SELECT comentario_empresa FROM tb_acompanhamento_projeto WHERE usuario = ?
-    `).bind(usuario).first();
+      SELECT comentario_empresa FROM tb_acompanhamento_projeto WHERE usuario = ? OR usuario IN (SELECT nome_equipe FROM tb_equipe WHERE usuario = ? OR email = ? OR nome_equipe = ?)
+    `).bind(usuario, usuario, usuario, usuario).first();
 
     return new Response(JSON.stringify({
       success: true,
@@ -2004,8 +1994,8 @@ export default {
                 nome_integrante4,
                 nome_integrante5
             FROM tb_equipe
-            WHERE usuario = ?
-        `).bind(usuario).first();
+            WHERE usuario = ? OR email = ? OR nome_equipe = ?
+        `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
 
@@ -2068,8 +2058,8 @@ export default {
           const equipe = await env.DB.prepare(`
         SELECT nome_equipe
         FROM tb_equipe
-        WHERE usuario = ?
-    `).bind(usuario).first();
+        WHERE usuario = ? OR email = ? OR nome_equipe = ?
+    `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -2116,8 +2106,8 @@ export default {
           const equipe = await env.DB.prepare(`
         SELECT nome_equipe
         FROM tb_equipe
-        WHERE usuario = ?
-    `).bind(usuario).first();
+        WHERE usuario = ? OR email = ? OR nome_equipe = ?
+    `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -2171,8 +2161,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -2219,8 +2209,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -2271,8 +2261,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT id_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -2320,8 +2310,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -2361,8 +2351,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -2408,8 +2398,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -2460,8 +2450,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -2507,8 +2497,8 @@ export default {
           const equipe = await env.DB.prepare(`
     SELECT nome_equipe
     FROM tb_equipe
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR email = ? OR nome_equipe = ?
+  `).bind(usuario, usuario, usuario).first();
 
           if (!equipe) {
             return new Response(JSON.stringify({
@@ -2596,8 +2586,8 @@ export default {
       forma_pagamento,
       preco_total
     FROM tb_relatorio
-    WHERE usuario = ?
-  `).bind(usuario).first();
+    WHERE usuario = ? OR usuario IN (SELECT nome_equipe FROM tb_equipe WHERE usuario = ? OR email = ? OR nome_equipe = ?)
+  `).bind(usuario, usuario, usuario, usuario).first();
 
           return new Response(JSON.stringify({
             success: true,
@@ -2674,18 +2664,28 @@ export default {
   }
 
   try {
-    // Tenta atualizar na tb_acompanhamento_projeto
-    const info = await env.DB.prepare(`
-      UPDATE tb_acompanhamento_projeto
-      SET comentario_empresa = ?
-      WHERE usuario = ? OR usuario = (SELECT nome_usuarios FROM tb_cadastros WHERE email = ?)
-    `).bind(comentario, nome_equipe, nome_equipe).run();
+    const equipeRecord = await env.DB.prepare("SELECT id_equipe, nome_equipe FROM tb_equipe WHERE usuario = ? OR email = ? OR nome_equipe = ?").bind(nome_equipe, nome_equipe, nome_equipe).first();
 
-    if (info.meta.changes > 0) {
+    if (!equipeRecord) {
+      return new Response(JSON.stringify({ success: false, message: "Projeto não encontrado para esta equipe." }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const idEquipe = equipeRecord.nome_equipe;
+
+    const acompanhamento = await env.DB.prepare("SELECT id_acompanhamento_projeto FROM tb_acompanhamento_projeto WHERE usuario = ?").bind(idEquipe).first();
+
+    if (acompanhamento) {
+      await env.DB.prepare(`
+        UPDATE tb_acompanhamento_projeto
+        SET comentario_empresa = ?
+        WHERE id_acompanhamento_projeto = ?
+      `).bind(comentario, acompanhamento.id_acompanhamento_projeto).run();
+
       return new Response(JSON.stringify({ success: true, message: "Feedback salvo com sucesso!" }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     } else {
-      return new Response(JSON.stringify({ success: false, message: "Projeto não encontrado para esta equipe." }),
+      return new Response(JSON.stringify({ success: false, message: "Acompanhamento não iniciado para este projeto." }),
       { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   } catch (e) {
@@ -3479,9 +3479,9 @@ if (path === "/salvar-curriculo") {
 
 if (path === "/excluir-projeto") {
   try {
-    const { nome_equipe } = body;
+    const { nome_equipe: inputIdentifier } = body;
 
-    if (!nome_equipe) {
+    if (!inputIdentifier) {
       return new Response(JSON.stringify({
         success: false,
         error: "Nome da equipe não fornecido."
@@ -3489,8 +3489,8 @@ if (path === "/excluir-projeto") {
     }
 
     const equipe = await env.DB.prepare(`
-      SELECT id_equipe, usuario FROM tb_equipe WHERE nome_equipe = ?
-    `).bind(nome_equipe).first();
+      SELECT id_equipe, nome_equipe, usuario FROM tb_equipe WHERE nome_equipe = ? OR usuario = ? OR email = ?
+    `).bind(inputIdentifier, inputIdentifier, inputIdentifier).first();
 
     if (!equipe) {
       return new Response(JSON.stringify({
@@ -3499,7 +3499,7 @@ if (path === "/excluir-projeto") {
       }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { id_equipe, usuario } = equipe;
+    const { id_equipe, nome_equipe, usuario } = equipe;
 
     const batchQueries = [
       env.DB.prepare(`DELETE FROM tb_conhecimentos WHERE usuario = ?`).bind(nome_equipe),
@@ -3512,7 +3512,7 @@ if (path === "/excluir-projeto") {
       env.DB.prepare(`DELETE FROM tb_acompanhamento_projeto WHERE usuario = ?`).bind(nome_equipe),
       env.DB.prepare(`DELETE FROM tb_informacoes_complementares WHERE usuario = ?`).bind(nome_equipe),
       env.DB.prepare(`DELETE FROM tb_informacoes_completude WHERE usuario = ?`).bind(nome_equipe),
-      env.DB.prepare(`DELETE FROM tb_relatorio WHERE usuario = ?`).bind(usuario),
+      env.DB.prepare(`DELETE FROM tb_relatorio WHERE usuario = ? OR usuario = ?`).bind(usuario, nome_equipe),
       env.DB.prepare(`DELETE FROM tb_equipe WHERE id_equipe = ?`).bind(id_equipe),
     ];
 
