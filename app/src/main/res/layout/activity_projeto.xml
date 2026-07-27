@@ -47,6 +47,17 @@
         android:textStyle="bold"
         android:visibility="gone" />
 
-
+    <Button
+        android:id="@+id/btnExcluirProjeto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_gravity="end"
+        android:background="@drawable/bg_button_glass"
+        android:fontFamily="@font/neo_sans"
+        android:text="Excluir"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
 
 </LinearLayout>

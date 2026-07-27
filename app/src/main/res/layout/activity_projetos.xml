@@ -65,26 +65,13 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/etPesquisa" />
 
-        <Button
-            android:id="@+id/btnExcluirProjeto"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_button_glass"
-            android:fontFamily="@font/neo_sans"
-            android:text="Excluir Projeto"
-            android:textColor="#FFFFFF"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnAbrirFormulario" />
-
         <androidx.core.widget.NestedScrollView
             android:id="@+id/scrollViewProjetos"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginTop="16dp"
             android:clipToPadding="false"
-            app:layout_constraintTop_toBottomOf="@+id/btnExcluirProjeto"
+            app:layout_constraintTop_toBottomOf="@+id/btnAbrirFormulario"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">

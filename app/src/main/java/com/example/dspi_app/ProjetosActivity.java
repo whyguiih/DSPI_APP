@@ -257,7 +257,8 @@ public class ProjetosActivity extends AppCompatActivity {
         } else {
             tvOutrosProjetos.setVisibility(View.VISIBLE);
             rvOutrosProjetos.setVisibility(View.VISIBLE);
-            rvOutrosProjetos.setAdapter(new ProjetoAdapter(outrosProjetos, this::abrirPaginaDetalhes, this::confirmarExclusaoProjeto, podeExcluir));
+            // AQUI: sempre false, ninguém pode excluir projetos da lista "Outros"
+            rvOutrosProjetos.setAdapter(new ProjetoAdapter(outrosProjetos, this::abrirPaginaDetalhes, this::confirmarExclusaoProjeto, false));
         }
     }
 
@@ -343,6 +344,10 @@ public class ProjetosActivity extends AppCompatActivity {
             this.listener = listener;
             this.deleteListener = deleteListener;
             this.permitirExclusao = permitirExclusao;
+        }
+
+        public ProjetoAdapter(List<Projeto> projetos, OnItemClickListener listener) {
+            this(projetos, listener, null, false);
         }
 
         @NonNull
