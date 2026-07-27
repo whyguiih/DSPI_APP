@@ -42,7 +42,6 @@ public class ProjetosActivity extends AppCompatActivity {
     private String emailLogado;
     private List<Projeto> todosMeusProjetos = new ArrayList<>();
     private List<Projeto> todosOutrosProjetos = new ArrayList<>();
-    private EditText etPesquisa;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,55 +59,38 @@ public class ProjetosActivity extends AppCompatActivity {
         configurarBolhaAnimada();
 
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
-        nivel = prefs.getString("nivel_de_acesso", getIntent().getStringExtra("nivel_de_acesso"));
-        
+        nivel = prefs.getString("nivel_de_acesso", "6");
         nomeUsuario = prefs.getString("nome_usuario", "");
         emailLogado = prefs.getString("email_logado", "");
 
-        if (nomeUsuario == null || nomeUsuario.trim().isEmpty()) {
-            nomeUsuario = emailLogado;
-        }
-
-        if (nomeUsuario == null || nomeUsuario.trim().isEmpty()) {
-            nomeUsuario = getIntent().getStringExtra("email_usuario");
-        }
         if (nomeUsuario == null) nomeUsuario = "";
         if (emailLogado == null) emailLogado = "";
 
         ConfiguradorMenu.ativar(this, nivel, CURRENT_TAB_INDEX);
 
         Button btnAbrirFormulario = findViewById(R.id.btnAbrirFormulario);
-
+        // Regra: Alunos, DR/DN, Avaliador e Empresa não criam projetos por aqui.
         if ("4".equals(nivel) || "6".equals(nivel) || "1".equals(nivel) || "2".equals(nivel) || "5".equals(nivel)) {
             btnAbrirFormulario.setVisibility(View.GONE);
         }
 
         btnAbrirFormulario.setOnClickListener(v -> {
-            Intent intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
+            Intent intent = new Intent(this, FormularioActivity.class);
             intent.putExtra("nivel_de_acesso", nivel);
-            intent.putExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
-            intent.putExtra("email_usuario", nomeUsuario);
+            intent.putExtra("email_usuario", emailLogado);
             startActivity(intent);
-            overridePendingTransition(0, 0);
         });
 
-        RecyclerView rvMeusProjetos = findViewById(R.id.rvMeusProjetos);
-        RecyclerView rvOutrosProjetos = findViewById(R.id.rvOutrosProjetos);
-        rvMeusProjetos.setLayoutManager(new LinearLayoutManager(this));
-        rvOutrosProjetos.setLayoutManager(new LinearLayoutManager(this));
+        RecyclerView rvMeus = findViewById(R.id.rvMeusProjetos);
+        RecyclerView rvOutros = findViewById(R.id.rvOutrosProjetos);
+        rvMeus.setLayoutManager(new LinearLayoutManager(this));
+        rvOutros.setLayoutManager(new LinearLayoutManager(this));
 
-        etPesquisa = findViewById(R.id.etPesquisa);
+        EditText etPesquisa = findViewById(R.id.etPesquisa);
         etPesquisa.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filtrarProjetos(s.toString());
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { filtrarProjetos(s.toString()); }
+            @Override public void afterTextChanged(Editable s) {}
         });
 
         buscarProjetosDaApi();
@@ -116,11 +98,10 @@ public class ProjetosActivity extends AppCompatActivity {
 
     private void buscarProjetosDaApi() {
         String url = "https://api-dspi.whyguiih.workers.dev/listar-projetos";
-
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {
                     try {
-                        if (response.getBoolean("success")) {
+                        if (response.optBoolean("success")) {
                             JSONArray data = response.getJSONArray("data");
                             todosMeusProjetos.clear();
                             todosOutrosProjetos.clear();
@@ -130,161 +111,111 @@ public class ProjetosActivity extends AppCompatActivity {
 
                             for (int i = 0; i < data.length(); i++) {
                                 JSONObject obj = data.getJSONObject(i);
+                                Projeto p = parseProjeto(obj);
+                                
+                                String nomeEqp = p.getNomeEquipe() != null ? p.getNomeEquipe().trim().toLowerCase() : "";
+                                String integrante = p.getIntegrantes() != null ? p.getIntegrantes().trim().toLowerCase() : "";
+                                String orientador = p.getOrientador() != null ? p.getOrientador().trim().toLowerCase() : "";
+                                String coorientador = p.getNomeCoorientador() != null ? p.getNomeCoorientador().trim().toLowerCase() : "";
+                                String donoEmail = p.getUsuario() != null ? p.getUsuario().trim().toLowerCase() : "";
 
-                                Projeto p = new Projeto(
-                                        obj.optString("nome_projeto", "Projeto Sem Nome"),
-                                        obj.optString("nome_equipe", "Sem Equipe"),
-                                        obj.optString("status", "Não iniciado"),
-                                        obj.optString("nome_integrante", ""),
-                                        obj.optString("nome_orientador", ""),
-                                        obj.optString("proposta_chave", ""),
-                                        obj.optString("segmentos_clientes", ""),
-                                        obj.optString("atividades_chaves", ""),
-                                        obj.optString("recursos_chaves", ""),
-                                        obj.optString("relacionamentos_clientes", ""),
-                                        obj.optString("canais", ""),
-                                        obj.optString("estrutura_custos", ""),
-                                        obj.optString("fluxo_receita", ""),
-                                        obj.optString("parceiros_chaves", ""),
-                                        obj.optString("tarefas", ""),
-                                        obj.optString("dificuldades_enxergadas", ""),
-                                        obj.optString("empresa_vinculada", ""),
-                                        obj.optString("video_url", ""),
-                                        obj.optString("nome_coorientador", ""),
-                                        obj.optString("usuario", "")
-                                );
+                                boolean isMeu = false;
 
-                                p.setComentarioEmpresa(obj.optString("comentario_empresa", ""));
-
-                                String empresaVinc = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
-                                String nomeEqp = p.getNomeEquipe() != null ? p.getNomeEquipe().trim() : "";
-                                String orientador = p.getOrientador() != null ? p.getOrientador().trim() : "";
-                                String coorientador = p.getNomeCoorientador() != null ? p.getNomeCoorientador().trim() : "";
-                                String integrantes = p.getIntegrantes() != null ? p.getIntegrantes().trim() : "";
-                                String donoEmail = p.getUsuario() != null ? p.getUsuario().trim() : "";
-
-                                boolean isMeuProjeto = false;
+                                // 1. Lógica para Integrantes/Donos (Alunos e Professores)
                                 if (!userLower.isEmpty()) {
-                                    if (nomeEqp.toLowerCase().contains(userLower) || 
-                                        donoEmail.toLowerCase().contains(userLower) ||
-                                        orientador.toLowerCase().contains(userLower) ||
-                                        coorientador.toLowerCase().contains(userLower) ||
-                                        integrantes.toLowerCase().contains(userLower)) {
-                                        isMeuProjeto = true;
+                                    if (nomeEqp.contains(userLower) || integrante.contains(userLower) || 
+                                        orientador.contains(userLower) || coorientador.contains(userLower) || 
+                                        donoEmail.contains(userLower)) {
+                                        isMeu = true;
                                     }
                                 }
+                                if (!emailLower.isEmpty() && donoEmail.contains(emailLower)) {
+                                    isMeu = true;
+                                }
 
+                                // 2. Lógica específica para Empresas (Nível 4)
                                 if ("4".equals(nivel)) {
-                                    boolean matchVinculo = (!userLower.isEmpty() && empresaVinc.equalsIgnoreCase(userLower)) ||
-                                                         (!emailLower.isEmpty() && empresaVinc.equalsIgnoreCase(emailLower));
-                                    if (matchVinculo) {
-                                        isMeuProjeto = true;
+                                    String emailVinc = obj.optString("empresa_vinculada_email", "").trim().toLowerCase();
+                                    if (!emailVinc.isEmpty() && emailVinc.equals(emailLower)) {
+                                        isMeu = true;
                                     }
                                 }
 
-                                if (isMeuProjeto) {
+                                if (isMeu) {
                                     todosMeusProjetos.add(p);
                                 } else {
                                     todosOutrosProjetos.add(p);
                                 }
                             }
                             configurarListasDeProjetos(todosMeusProjetos, todosOutrosProjetos);
-                        } else {
-                            Toast.makeText(this, "Erro da API: " + response.optString("error"), Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        Toast.makeText(this, "Erro ao processar dados", Toast.LENGTH_SHORT).show();
+                        Log.e("PROJETOS", "Erro ao processar JSON", e);
                     }
-                },
-                error -> {
-                    Log.e("API_ERROR", "Falha de Conexão", error);
-                }
+                }, error -> Log.e("API", "Erro de rede ao listar projetos")
         );
         Volley.newRequestQueue(this).add(request);
     }
 
-    private void filtrarProjetos(String query) {
-        String termo = query.toLowerCase().trim();
-        List<Projeto> filtradosMeus = new ArrayList<>();
-        List<Projeto> filtradosOutros = new ArrayList<>();
-
-        for (Projeto p : todosMeusProjetos) {
-            if (p.getNomeProjeto().toLowerCase().contains(termo) || p.getNomeEquipe().toLowerCase().contains(termo)) {
-                filtradosMeus.add(p);
-            }
-        }
-        for (Projeto p : todosOutrosProjetos) {
-            if (p.getNomeProjeto().toLowerCase().contains(termo) || p.getNomeEquipe().toLowerCase().contains(termo)) {
-                filtradosOutros.add(p);
-            }
-        }
-        configurarListasDeProjetos(filtradosMeus, filtradosOutros);
+    private Projeto parseProjeto(JSONObject obj) {
+        Projeto p = new Projeto(
+                obj.optString("nome_projeto", ""), obj.optString("nome_equipe", ""),
+                obj.optString("status", ""), obj.optString("nome_integrante", ""),
+                obj.optString("nome_orientador", ""), obj.optString("proposta_chave", ""),
+                obj.optString("segmentos_clientes", ""), obj.optString("atividades_chaves", ""),
+                obj.optString("recursos_chaves", ""), obj.optString("relacionamentos_clientes", ""),
+                obj.optString("canais", ""), obj.optString("estrutura_custos", ""),
+                obj.optString("fluxo_receita", ""), obj.optString("parceiros_chaves", ""),
+                obj.optString("tarefas", ""), obj.optString("dificuldades_enxergadas", ""),
+                obj.optString("empresa_vinculada", ""), obj.optString("video_url", ""),
+                obj.optString("nome_coorientador", ""), obj.optString("usuario", ""),
+                obj.optString("empresa_vinculada_email", "")
+        );
+        p.setComentarioEmpresa(obj.optString("comentario_empresa", ""));
+        return p;
     }
 
-    private void configurarListasDeProjetos(List<Projeto> meusProjetos, List<Projeto> outrosProjetos) {
-        RecyclerView rvMeusProjetos = findViewById(R.id.rvMeusProjetos);
-        RecyclerView rvOutrosProjetos = findViewById(R.id.rvOutrosProjetos);
-        TextView tvSeusProjetos = findViewById(R.id.tvSeusProjetos);
-        TextView tvOutrosProjetos = findViewById(R.id.tvOutrosProjetos);
+    private void configurarListasDeProjetos(List<Projeto> meus, List<Projeto> outros) {
+        RecyclerView rvMeus = findViewById(R.id.rvMeusProjetos);
+        RecyclerView rvOutros = findViewById(R.id.rvOutrosProjetos);
+        TextView tvMeus = findViewById(R.id.tvSeusProjetos);
+        TextView tvOutros = findViewById(R.id.tvOutrosProjetos);
 
-        tvSeusProjetos.setText("Meus Projetos");
-        boolean podeExcluir = "3".equals(nivel);
+        tvMeus.setVisibility(meus.isEmpty() ? View.GONE : View.VISIBLE);
+        rvMeus.setVisibility(meus.isEmpty() ? View.GONE : View.VISIBLE);
+        rvMeus.setAdapter(new ProjetoAdapter(meus, this::abrirPaginaDetalhes, this::confirmarExclusaoProjeto, "3".equals(nivel)));
 
-        if (meusProjetos.isEmpty()) {
-            tvSeusProjetos.setVisibility(View.GONE);
-            rvMeusProjetos.setVisibility(View.GONE);
-        } else {
-            tvSeusProjetos.setVisibility(View.VISIBLE);
-            rvMeusProjetos.setVisibility(View.VISIBLE);
-            rvMeusProjetos.setAdapter(new ProjetoAdapter(meusProjetos, this::abrirPaginaDetalhes, this::confirmarExclusaoProjeto, podeExcluir));
-        }
-
-        if (outrosProjetos.isEmpty()) {
-            tvOutrosProjetos.setVisibility(View.GONE);
-            rvOutrosProjetos.setVisibility(View.GONE);
-        } else {
-            tvOutrosProjetos.setVisibility(View.VISIBLE);
-            rvOutrosProjetos.setVisibility(View.VISIBLE);
-            rvOutrosProjetos.setAdapter(new ProjetoAdapter(outrosProjetos, this::abrirPaginaDetalhes, this::confirmarExclusaoProjeto, false));
-        }
-    }
-
-    private void configurarBolhaAnimada() {
-        int oldTabIndex = getIntent().getIntExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
-        View activeBubble = findViewById(R.id.activeBubble);
-        LinearLayout bottomNavLayout = findViewById(R.id.bottomNavLayout);
-        bottomNavLayout.post(() -> {
-            float tabWidth = bottomNavLayout.getWidth() / 5f;
-            activeBubble.getLayoutParams().width = (int) tabWidth;
-            activeBubble.requestLayout();
-            activeBubble.setTranslationX(oldTabIndex * tabWidth);
-            if (oldTabIndex != CURRENT_TAB_INDEX) {
-                activeBubble.animate().translationX(CURRENT_TAB_INDEX * tabWidth).setDuration(350).setInterpolator(new DecelerateInterpolator(1.5f)).start();
-            }
-        });
+        tvOutros.setVisibility(outros.isEmpty() ? View.GONE : View.VISIBLE);
+        rvOutros.setVisibility(outros.isEmpty() ? View.GONE : View.VISIBLE);
+        rvOutros.setAdapter(new ProjetoAdapter(outros, this::abrirPaginaDetalhes, null, false));
     }
 
     private void abrirPaginaDetalhes(Projeto projeto) {
-        Intent intent;
-        String userLogado = nomeUsuario.trim().toLowerCase();
+        String userLower = nomeUsuario.trim().toLowerCase();
+        String emailLower = emailLogado.trim().toLowerCase();
+        String nomeEqp = projeto.getNomeEquipe() != null ? projeto.getNomeEquipe().trim().toLowerCase() : "";
+        String integrante = projeto.getIntegrantes() != null ? projeto.getIntegrantes().trim().toLowerCase() : "";
         String orientador = projeto.getOrientador() != null ? projeto.getOrientador().trim().toLowerCase() : "";
         String coorientador = projeto.getNomeCoorientador() != null ? projeto.getNomeCoorientador().trim().toLowerCase() : "";
-        String integrantes = projeto.getIntegrantes() != null ? projeto.getIntegrantes().trim().toLowerCase() : "";
         String donoEmail = projeto.getUsuario() != null ? projeto.getUsuario().trim().toLowerCase() : "";
-        String nomeEqp = projeto.getNomeEquipe() != null ? projeto.getNomeEquipe().trim().toLowerCase() : "";
-        String empresaVinc = projeto.getEmpresaVinculada() != null ? projeto.getEmpresaVinculada().trim().toLowerCase() : "";
 
-        boolean isMeuProjeto = (!userLogado.isEmpty() && (nomeEqp.contains(userLogado) || donoEmail.contains(userLogado) || orientador.contains(userLogado) || coorientador.contains(userLogado) || integrantes.contains(userLogado)));
-        boolean isEmpresaVinculada = "4".equals(nivel) && !userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado);
+        // Verifica se o usuário logado é dono ou integrante do projeto
+        boolean isMeu = (!userLower.isEmpty() && (nomeEqp.contains(userLower) || integrante.contains(userLower) || orientador.contains(userLower) || coorientador.contains(userLower) || donoEmail.contains(userLower)));
+        if (!emailLower.isEmpty() && donoEmail.contains(emailLower)) isMeu = true;
+        
+        // Verifica se o usuário logado é a Empresa vinculada ao projeto
+        String emailVinc = projeto.getEmpresaVinculadaEmail() != null ? projeto.getEmpresaVinculadaEmail().trim().toLowerCase() : "";
+        boolean isVinc = "4".equals(nivel) && !emailVinc.isEmpty() && emailVinc.equals(emailLower);
 
-        if ("2".equals(nivel) || "1".equals(nivel) || isEmpresaVinculada || isMeuProjeto) {
-            intent = new Intent(ProjetosActivity.this, FormularioActivity.class);
-            String identifier = (projeto.getUsuario() != null && !projeto.getUsuario().isEmpty() && !projeto.getUsuario().equals("null")) 
-                    ? projeto.getUsuario() : projeto.getNomeEquipe();
-            intent.putExtra("projeto_usuario", identifier);
+        Intent intent;
+        // Se for ADM (1), DR/DN (2), Integrante (isMeu) ou Empresa Vinculada (isVinc), abre o Formulário Completo
+        if ("1".equals(nivel) || "2".equals(nivel) || isMeu || isVinc) {
+            intent = new Intent(this, FormularioActivity.class);
+            String id = (projeto.getUsuario() != null && !projeto.getUsuario().isEmpty() && !projeto.getUsuario().equals("null")) ? projeto.getUsuario() : projeto.getNomeEquipe();
+            intent.putExtra("projeto_usuario", id);
         } else {
-            intent = new Intent(ProjetosActivity.this, ProjetoDetalhesActivity.class);
+            // Caso contrário, abre apenas os Detalhes resumidos
+            intent = new Intent(this, ProjetoDetalhesActivity.class);
             intent.putExtra("projeto_selecionado", projeto);
         }
         intent.putExtra("nivel_de_acesso", nivel);
@@ -293,75 +224,69 @@ public class ProjetosActivity extends AppCompatActivity {
         overridePendingTransition(0, 0);
     }
 
+    private void filtrarProjetos(String query) {
+        String t = query.toLowerCase().trim();
+        List<Projeto> fMeus = new ArrayList<>();
+        List<Projeto> fOutros = new ArrayList<>();
+        for (Projeto p : todosMeusProjetos) { if (p.getNomeProjeto().toLowerCase().contains(t) || p.getNomeEquipe().toLowerCase().contains(t)) fMeus.add(p); }
+        for (Projeto p : todosOutrosProjetos) { if (p.getNomeProjeto().toLowerCase().contains(t) || p.getNomeEquipe().toLowerCase().contains(t)) fOutros.add(p); }
+        configurarListasDeProjetos(fMeus, fOutros);
+    }
+
     public static class ProjetoAdapter extends RecyclerView.Adapter<ProjetoAdapter.ViewHolder> {
         private final List<Projeto> projetos;
         private final OnItemClickListener listener;
         private final OnDeleteClickListener deleteListener;
-        private final boolean permitirExclusao;
+        private final boolean podeExcluir;
+        public interface OnItemClickListener { void onItemClick(Projeto p); }
+        public interface OnDeleteClickListener { void onDeleteClick(Projeto p); }
 
-        public interface OnItemClickListener { void onItemClick(Projeto projeto); }
-        public interface OnDeleteClickListener { void onDeleteClick(Projeto projeto); }
-
-        public ProjetoAdapter(List<Projeto> projetos, OnItemClickListener listener, OnDeleteClickListener deleteListener, boolean permitirExclusao) {
-            this.projetos = projetos;
-            this.listener = listener;
-            this.deleteListener = deleteListener;
-            this.permitirExclusao = permitirExclusao;
+        public ProjetoAdapter(List<Projeto> p, OnItemClickListener l, OnDeleteClickListener d, boolean pe) {
+            this.projetos = p; this.listener = l; this.deleteListener = d; this.podeExcluir = pe;
         }
 
-        @NonNull
-        @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.activity_projeto, parent, false);
-            return new ViewHolder(view);
+        @NonNull @Override public ViewHolder onCreateViewHolder(@NonNull ViewGroup p, int vt) {
+            return new ViewHolder(LayoutInflater.from(p.getContext()).inflate(R.layout.activity_projeto, p, false));
         }
 
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            Projeto projeto = projetos.get(position);
-            holder.tvNome.setText(projeto.getNomeProjeto());
-            String st = projeto.getStatus();
-            holder.tvStatus.setText("Status: " + (st == null || st.trim().isEmpty() || st.equals("null") ? "Não Iniciado" : st));
-            holder.tvEquipe.setText("Equipe: " + projeto.getNomeEquipe());
-            holder.tvBadgePitch.setVisibility((projeto.getVideoUrl() != null && !projeto.getVideoUrl().isEmpty() && !projeto.getVideoUrl().equals("null")) ? View.VISIBLE : View.GONE);
-            holder.btnExcluir.setVisibility(permitirExclusao ? View.VISIBLE : View.GONE);
-            holder.btnExcluir.setOnClickListener(v -> { if (deleteListener != null) deleteListener.onDeleteClick(projeto); });
-            holder.itemView.setOnClickListener(v -> listener.onItemClick(projeto));
+        @Override public void onBindViewHolder(@NonNull ViewHolder h, int pos) {
+            Projeto p = projetos.get(pos);
+            h.tvNome.setText(p.getNomeProjeto());
+            h.tvStatus.setText("Status: " + p.getStatus());
+            h.tvEquipe.setText("Equipe: " + p.getNomeEquipe());
+            h.tvBadge.setVisibility((p.getVideoUrl() != null && !p.getVideoUrl().isEmpty() && !p.getVideoUrl().equals("null")) ? View.VISIBLE : View.GONE);
+            h.btnDel.setVisibility(podeExcluir ? View.VISIBLE : View.GONE);
+            h.btnDel.setOnClickListener(v -> { if (deleteListener != null) deleteListener.onDeleteClick(p); });
+            h.itemView.setOnClickListener(v -> listener.onItemClick(p));
         }
-
-        @Override
-        public int getItemCount() { return projetos.size(); }
-
+        @Override public int getItemCount() { return projetos.size(); }
         public static class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvNome, tvStatus, tvEquipe, tvBadgePitch;
-            Button btnExcluir;
-            public ViewHolder(View itemView) {
-                super(itemView);
-                tvNome = itemView.findViewById(R.id.tvItemNomeProjeto);
-                tvStatus = itemView.findViewById(R.id.tvItemStatus);
-                tvEquipe = itemView.findViewById(R.id.tvItemEquipe);
-                tvBadgePitch = itemView.findViewById(R.id.tvBadgePitch);
-                btnExcluir = itemView.findViewById(R.id.btnExcluirProjeto);
-            }
+            TextView tvNome, tvStatus, tvEquipe, tvBadge; Button btnDel;
+            public ViewHolder(View iv) { super(iv); tvNome = iv.findViewById(R.id.tvItemNomeProjeto); tvStatus = iv.findViewById(R.id.tvItemStatus); tvEquipe = iv.findViewById(R.id.tvItemEquipe); tvBadge = iv.findViewById(R.id.tvBadgePitch); btnDel = iv.findViewById(R.id.btnExcluirProjeto); }
         }
     }
 
-    private void confirmarExclusaoProjeto(Projeto projeto) {
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Excluir Projeto")
-                .setMessage("Tem certeza que deseja excluir o projeto \"" + projeto.getNomeProjeto() + "\"?")
-                .setPositiveButton("Excluir", (dialog, which) -> excluirProjetoNaApi(projeto))
-                .setNegativeButton("Cancelar", null).show();
+    private void confirmarExclusaoProjeto(Projeto p) {
+        new androidx.appcompat.app.AlertDialog.Builder(this).setTitle("Excluir").setMessage("Apagar projeto?").setPositiveButton("Sim", (d, w) -> {
+            String url = "https://api-dspi.whyguiih.workers.dev/excluir-projeto";
+            JSONObject body = new JSONObject();
+            try { body.put("nome_equipe", p.getNomeEquipe()); } catch (Exception e) {}
+            Volley.newRequestQueue(this).add(new JsonObjectRequest(Request.Method.POST, url, body, r -> buscarProjetosDaApi(), null));
+        }).setNegativeButton("Não", null).show();
     }
 
-    private void excluirProjetoNaApi(Projeto projeto) {
-        String url = "https://api-dspi.whyguiih.workers.dev/excluir-projeto";
-        JSONObject body = new JSONObject();
-        try { body.put("nome_equipe", projeto.getNomeEquipe()); } catch (Exception e) {}
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, body,
-                response -> { if (response.optBoolean("success")) { buscarProjetosDaApi(); } },
-                error -> {}
-        );
-        Volley.newRequestQueue(this).add(request);
+    private void configurarBolhaAnimada() {
+        int old = getIntent().getIntExtra("OLD_TAB_INDEX", CURRENT_TAB_INDEX);
+        View b = findViewById(R.id.activeBubble);
+        LinearLayout n = findViewById(R.id.bottomNavLayout);
+        if (n != null) {
+            n.post(() -> {
+                float tw = n.getWidth() / 5f;
+                b.getLayoutParams().width = (int) tw;
+                b.requestLayout();
+                b.setTranslationX(old * tw);
+                if (old != CURRENT_TAB_INDEX) b.animate().translationX(CURRENT_TAB_INDEX * tw).setDuration(350).setInterpolator(new DecelerateInterpolator(1.5f)).start();
+            });
+        }
     }
 }

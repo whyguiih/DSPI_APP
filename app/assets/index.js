@@ -99,9 +99,18 @@ export default {
             const listaRaw = [projeto.nome_integrante, projeto.nome_integrante2, projeto.nome_integrante3, projeto.nome_integrante4, projeto.nome_integrante5];
             const listaTraduzida = listaRaw.map(n => translate(n)).filter(n => n && n.trim() !== "" && n.toLowerCase() !== "null");
             projeto.nome_integrante = listaTraduzida.join(", ") || "Sem integrantes";
+
+            projeto.empresa_vinculada_email = "";
             if (projeto.empresa_vinculada) {
-              const emp = empresas.find(e => (e.nome_empresa && String(e.nome_empresa).toLowerCase() === String(projeto.empresa_vinculada).toLowerCase()) || (e.email_contato && String(e.email_contato).toLowerCase() === String(projeto.empresa_vinculada).toLowerCase()) || (e.id_empresa && String(e.id_empresa) === String(projeto.empresa_vinculada)));
-              if (emp) projeto.empresa_vinculada = emp.nome_empresa;
+              const emp = empresas.find(e =>
+                (e.nome_empresa && String(e.nome_empresa).toLowerCase() === String(projeto.empresa_vinculada).toLowerCase()) ||
+                (e.email_contato && String(e.email_contato).toLowerCase() === String(projeto.empresa_vinculada).toLowerCase()) ||
+                (e.id_empresa && String(e.id_empresa) === String(projeto.empresa_vinculada))
+              );
+              if (emp) {
+                projeto.empresa_vinculada = emp.nome_empresa;
+                projeto.empresa_vinculada_email = emp.email_contato;
+              }
             }
             return projeto;
           });

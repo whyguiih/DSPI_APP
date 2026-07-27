@@ -557,6 +557,14 @@ public class FormularioActivity extends AppCompatActivity {
         btnGerarRelatorio = findViewById(R.id.btnGerarRelatorio);
         btnVisualizarRelatorio = findViewById(R.id.btnVisualizarRelatorio);
         btnAtualizarFeedback = findViewById(R.id.btnAtualizarFeedback);
+
+        if (btnVisualizarRelatorio != null) {
+            btnVisualizarRelatorio.setOnClickListener(v -> {
+                if (urlRelatorioPdf != null && !urlRelatorioPdf.isEmpty()) {
+                    abrirPdf(urlRelatorioPdf);
+                }
+            });
+        }
         btnEditarDados = findViewById(R.id.btnEditarDados);
 
         containerDocumentos = findViewById(R.id.containerDocumentos);

@@ -9,6 +9,7 @@ public class Projeto implements Serializable {
     private String tarefas, dificuldadesEnxergadas;
 
     private String empresaVinculada;
+    private String empresaVinculadaEmail;
     private String comentarioEmpresa;
     private String videoUrl;
 
@@ -16,7 +17,7 @@ public class Projeto implements Serializable {
                    String propostaChave, String segmentosClientes, String atividadesChaves, String recursosChaves,
                    String relacionamentosClientes, String canais, String estruturaCustos, String fluxoReceita,
                    String parceirosChaves, String tarefas, String dificuldadesEnxergadas, String empresaVinculada,
-                   String videoUrl, String nomeCoorientador, String usuario) {
+                   String videoUrl, String nomeCoorientador, String usuario, String empresaVinculadaEmail) {
         this.nomeProjeto = nomeProjeto;
         this.nomeEquipe = nomeEquipe;
         this.status = status;
@@ -37,6 +38,7 @@ public class Projeto implements Serializable {
         this.videoUrl = videoUrl;
         this.nomeCoorientador = nomeCoorientador;
         this.usuario = usuario;
+        this.empresaVinculadaEmail = empresaVinculadaEmail;
     }
 
     public String getNomeProjeto() { return nomeProjeto; }
@@ -58,6 +60,7 @@ public class Projeto implements Serializable {
     public String getTarefas() { return tarefas; }
     public String getDificuldadesEnxergadas() { return dificuldadesEnxergadas; }
     public String getEmpresaVinculada() { return empresaVinculada; }
+    public String getEmpresaVinculadaEmail() { return empresaVinculadaEmail; }
     public String getVideoUrl() { return videoUrl; }
 
     public String getComentarioEmpresa() {

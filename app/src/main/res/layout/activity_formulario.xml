@@ -391,6 +391,16 @@
                         android:textColor="#FFFFFF"
                         android:visibility="gone" />
 
+                    <Button
+                        android:id="@+id/btnVisualizarRelatorio"
+                        style="@style/InputGlassStyle"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:text="Visualizar Relatório"
+                        android:textColor="#FFFFFF"
+                        android:visibility="gone" />
+
 
                     <!-- Novo: Seção de Documentos Dinâmica -->
                     <TextView
