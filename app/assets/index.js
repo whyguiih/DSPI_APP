@@ -119,77 +119,45 @@ async function handleUploadVideo(request, env, corsHeaders) {
 
 
 // ==========================================
-
 // FUNÇÃO PARA SALVAR IMAGEM NO CLOUDFLARE R2
-
 // ==========================================
-
 async function uploadBase64ToR2(base64String, identificador, env) {
-
-  if (!base64String || base64String.startsWith('http') || base64String.length < 100) {
-
+  if (!base64String || typeof base64String !== 'string' || base64String.startsWith('http') || base64String.length < 100) {
     return base64String;
-
   }
-
-
 
   try {
-
-    const cleanBase64 = base64String.replace(/^data:image\/\w+;base64,/, "").replace(/\s/g, "");
+    let cleanBase64 = base64String;
+    if (base64String.includes('base64,')) {
+      cleanBase64 = base64String.split('base64,')[1];
+    }
+    cleanBase64 = cleanBase64.replace(/\s/g, "");
 
     const binaryString = atob(cleanBase64);
-
     const bytes = new Uint8Array(binaryString.length);
-
     for (let i = 0; i < binaryString.length; i++) {
-
       bytes[i] = binaryString.charCodeAt(i);
-
     }
 
-
-
-    const safeName = identificador.replace(/[^a-zA-Z0-9]/g, '_');
-
-    const fileName = `img_${safeName}_${Date.now()}.jpg`;
-
-
-
-    // Atualizado com a Public Development URL do bucket 'dspi'
-
+    const safeName = (identificador || 'anon').replace(/[^a-zA-Z0-9]/g, '_');
+    const fileName = `avatares/img_${safeName}_${Date.now()}.jpg`;
     const R2_PUBLIC_URL = "https://pub-8b39c2fa88234341ac68682a11d82f77.r2.dev";
 
+    const bucket = env.BUCKET_AVATARES || env.BUCKET_VIDEOS;
 
-
-    if (env.BUCKET_AVATARES) {
-
-      await env.BUCKET_AVATARES.put(fileName, bytes.buffer, {
-
+    if (bucket) {
+      await bucket.put(fileName, bytes, {
         httpMetadata: { contentType: 'image/jpeg' }
-
       });
-
       return `${R2_PUBLIC_URL}/${fileName}`;
-
     } else {
-
-      console.warn("ALERTA: BUCKET_AVATARES não foi configurado no Cloudflare.");
-
-      return base64String;
-
+      return base64String.length > 300 ? null : base64String;
     }
 
-
-
   } catch (error) {
-
     console.error("Erro ao converter/salvar a imagem no R2:", error);
-
-    return base64String;
-
+    return base64String.length > 300 ? null : base64String;
   }
-
 }
 
 
@@ -262,37 +230,65 @@ export default {
             SELECT
               e.nome_projeto, e.nome_equipe,
               e.nome_integrante, e.nome_integrante2, e.nome_integrante3, e.nome_integrante4, e.nome_integrante5,
-              e.nome_orientador,
+              e.nome_orientador, e.nome_coorientador, e.usuario,
               a.status, a.tarefas, a.dificuldades_enxergadas, a.comentario_empresa,
               c.proposta_chave, c.segmentos_clientes, c.atividades_chaves, c.recursos_chaves, c.relacionamentos_clientes, c.canais, c.estrutura_custos, c.fluxo_receita, c.parceiros_chaves,
-              ic.empresa AS empresa_vinculada,
+              COALESCE(
+                NULLIF(ic.empresa, ''),
+                NULLIF(ef.nome_empresa, ''),
+                (SELECT empresa_vinculado FROM tb_curriculo_alunos WHERE (nome IN (e.nome_integrante, e.nome_integrante2, e.nome_integrante3, e.nome_integrante4, e.nome_integrante5) OR usuario = e.usuario OR email = e.usuario) AND empresa_vinculado IS NOT NULL AND empresa_vinculado != '' LIMIT 1)
+              ) AS empresa_vinculada,
               p.video_url
             FROM tb_equipe e
-            LEFT JOIN tb_acompanhamento_projeto a ON e.usuario = a.usuario
-            LEFT JOIN tb_canva c ON e.usuario = c.usuario
-            LEFT JOIN tb_informacoes_complementares ic ON e.usuario = ic.usuario
+            LEFT JOIN tb_acompanhamento_projeto a ON (e.usuario = a.usuario OR e.nome_equipe = a.usuario)
+            LEFT JOIN tb_canva c ON (e.usuario = c.usuario OR e.nome_equipe = c.usuario)
+            LEFT JOIN tb_informacoes_complementares ic ON (e.usuario = ic.usuario OR e.nome_equipe = ic.usuario)
+            LEFT JOIN tb_empresas_formulario ef ON (e.id_equipe = ef.id_empresa_formulario)
             LEFT JOIN tb_pitch p ON (e.nome_equipe = p.usuario OR e.usuario = p.usuario)
           `).all();
 
           const { results: empresas } = await env.DB.prepare(`
-            SELECT nome_empresa, email_contato FROM tb_empresas
+            SELECT id_empresa, nome_empresa, email_contato FROM tb_empresas
           `).all();
 
+          const { results: cadastros } = await env.DB.prepare(`
+            SELECT nome_usuarios, email FROM tb_cadastros
+          `).all();
+
+          const userMap = new Map();
+          cadastros.forEach(u => {
+            if (u.email) userMap.set(u.email.toLowerCase(), u.nome_usuarios);
+          });
+
+          const translate = (val) => {
+            if (!val) return val;
+            return userMap.get(val.toLowerCase()) || val;
+          };
+
           const projetosTraduzidos = projetos.map(projeto => {
+            // Tradução de orientadores se forem emails
+            projeto.nome_orientador = translate(projeto.nome_orientador);
+            projeto.nome_coorientador = translate(projeto.nome_coorientador);
+
             // Concatena todos os integrantes em um único campo para o App
-            const lista = [
+            const listaRaw = [
               projeto.nome_integrante,
               projeto.nome_integrante2,
               projeto.nome_integrante3,
               projeto.nome_integrante4,
               projeto.nome_integrante5
-            ].filter(n => n && n.trim() !== "").join(", ");
+            ];
 
-            projeto.nome_integrante = lista || "Sem integrantes";
+            const listaTraduzida = listaRaw.map(n => translate(n))
+              .filter(n => n && n.trim() !== "" && n.toLowerCase() !== "null");
+
+            projeto.nome_integrante = listaTraduzida.join(", ") || "Sem integrantes";
 
             if (projeto.empresa_vinculada) {
               const empresaEncontrada = empresas.find(
-                emp => emp.nome_empresa === projeto.empresa_vinculada || emp.email_contato === projeto.empresa_vinculada
+                emp => (emp.nome_empresa && projeto.empresa_vinculada && String(emp.nome_empresa).toLowerCase() === String(projeto.empresa_vinculada).toLowerCase()) ||
+                       (emp.email_contato && projeto.empresa_vinculada && String(emp.email_contato).toLowerCase() === String(projeto.empresa_vinculada).toLowerCase()) ||
+                       (emp.id_empresa && String(emp.id_empresa) === String(projeto.empresa_vinculada))
               );
               if (empresaEncontrada && empresaEncontrada.nome_empresa) {
                 projeto.empresa_vinculada = empresaEncontrada.nome_empresa;
@@ -2992,11 +2988,8 @@ if (path === "/atualizar-perfil") {
 
 
       if (path === "/login") {
-
         const { email, senha } = body;
-
-        const stmt = env.DB.prepare("SELECT nome_usuarios, nivel_de_acesso, email, foto_perfil FROM tb_cadastros WHERE email = ? AND senha = ?").bind(email, senha);
-
+        const stmt = env.DB.prepare("SELECT nome_usuarios, nivel_de_acesso, email, foto_perfil FROM tb_cadastros WHERE (email = ? OR nome_usuarios = ?) AND senha = ?").bind(email, email, senha);
         const { results } = await stmt.all();
 
 
@@ -3087,7 +3080,7 @@ if (path === "/atualizar-perfil") {
             LEFT JOIN tb_uso_ia ia ON (eq.usuario = ia.usuario OR eq.nome_equipe = ia.usuario)
 
             LEFT JOIN tb_recursos_aplicados ra ON (eq.usuario = ra.usuario OR eq.nome_equipe = ra.usuario)
-            WHERE eq.nome_equipe = ?
+            WHERE eq.usuario = ? OR eq.nome_equipe = ?
 
           `;
 
@@ -3095,7 +3088,7 @@ if (path === "/atualizar-perfil") {
 
           // Passamos o usuarioSolicitante no bind()
 
-          const { results } = await env.DB.prepare(queryBusca).bind(usuarioSolicitante).all();
+          const { results } = await env.DB.prepare(queryBusca).bind(usuarioSolicitante, usuarioSolicitante).all();
 
 
 

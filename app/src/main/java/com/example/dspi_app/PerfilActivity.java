@@ -154,20 +154,26 @@ public class PerfilActivity extends AppCompatActivity {
         int radiusPx = (int) (16 * getResources().getDisplayMetrics().density);
 
         if (!fotoBase64.isEmpty()) {
-            if (fotoBase64.startsWith("http")) {
-                Glide.with(this)
-                        .load(fotoBase64)
-                        .transform(new CenterCrop(), new RoundedCorners(radiusPx))
-                        .into(imgPerfil);
-                imgPerfil.setPadding(0, 0, 0, 0);
-            } else {
-                byte[] decodedString = Base64.decode(fotoBase64, Base64.DEFAULT);
-                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                Glide.with(this)
-                        .load(decodedByte)
-                        .transform(new CenterCrop(), new RoundedCorners(radiusPx))
-                        .into(imgPerfil);
-                imgPerfil.setPadding(0, 0, 0, 0);
+            try {
+                if (fotoBase64.startsWith("http")) {
+                    Glide.with(this)
+                            .load(fotoBase64)
+                            .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                            .into(imgPerfil);
+                    imgPerfil.setPadding(0, 0, 0, 0);
+                } else {
+                    byte[] decodedString = Base64.decode(fotoBase64, Base64.DEFAULT);
+                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                    if (decodedByte != null) {
+                        Glide.with(this)
+                                .load(decodedByte)
+                                .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                                .into(imgPerfil);
+                        imgPerfil.setPadding(0, 0, 0, 0);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 

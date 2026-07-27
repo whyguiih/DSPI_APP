@@ -280,22 +280,32 @@ public class ContaActivity extends AppCompatActivity {
         int radiusPx = (int) (16 * getResources().getDisplayMetrics().density);
 
         if (!foto.isEmpty()) {
-            if (foto.startsWith("http")) {
-                Glide.with(this)
-                        .load(foto)
-                        .transform(new CenterCrop(), new RoundedCorners(radiusPx)) // Modificado aqui
-                        .into(imgAvatar);
-                imgAvatar.setPadding(0, 0, 0, 0);
-            } else {
-                byte[] decodedString = android.util.Base64.decode(foto, android.util.Base64.DEFAULT);
-                android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+            try {
+                if (foto.startsWith("http")) {
+                    Glide.with(this)
+                            .load(foto)
+                            .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                            .into(imgAvatar);
+                    imgAvatar.setPadding(0, 0, 0, 0);
+                } else {
+                    byte[] decodedString = android.util.Base64.decode(foto, android.util.Base64.DEFAULT);
+                    android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
 
-                Glide.with(this)
-                        .load(decodedByte)
-                        .transform(new CenterCrop(), new RoundedCorners(radiusPx)) // Modificado aqui
-                        .into(imgAvatar);
-
-                imgAvatar.setPadding(0, 0, 0, 0);
+                    if (decodedByte != null) {
+                        Glide.with(this)
+                                .load(decodedByte)
+                                .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                                .into(imgAvatar);
+                        imgAvatar.setPadding(0, 0, 0, 0);
+                    } else {
+                        throw new Exception("Erro ao decodificar Bitmap");
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                Glide.with(this).load(R.drawable.ic_conta).transform(new CenterCrop(), new RoundedCorners(radiusPx)).into(imgAvatar);
+                int innerPadding = (int) (14 * getResources().getDisplayMetrics().density);
+                imgAvatar.setPadding(innerPadding, innerPadding, innerPadding, innerPadding);
             }
         } else {
             Glide.with(this)
