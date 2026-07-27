@@ -203,23 +203,19 @@ export default {
     if (method === "GET") {
 
       if (path === "/listar-empresas") {
-
         try {
-
           const { results } = await env.DB.prepare(
-
-            "SELECT id_empresa, nome_empresa, cnpj, telefone_contato, email_contato, endereco, foto_perfil, descricao, setor FROM tb_empresas"
-
+            `SELECT
+              e.id_empresa, e.nome_empresa, e.cnpj, e.telefone_contato, e.email_contato, e.endereco,
+              COALESCE(c.foto_perfil, e.foto_perfil) as foto_perfil,
+              e.descricao, e.setor
+            FROM tb_empresas e
+            LEFT JOIN tb_cadastros c ON (e.email_contato = c.email OR e.usuario = c.nome_usuarios)`
           ).all();
-
           return new Response(JSON.stringify({ success: true, data: results }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
         } catch (erro) {
-
           return new Response(JSON.stringify({ success: false, error: erro.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
         }
-
       }
 
 
