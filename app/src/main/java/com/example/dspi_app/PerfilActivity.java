@@ -136,12 +136,20 @@ public class PerfilActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences("SESSAO_USER", MODE_PRIVATE);
         emailAntigo = prefs.getString("email_logado", "email@exemplo.com");
+        
+        // Tenta buscar a senha em três chaves comuns para garantir o preenchimento
         senhaAntiga = prefs.getString("senha", "");
+        if (senhaAntiga.isEmpty()) senhaAntiga = prefs.getString("senha_usuario", "");
+        if (senhaAntiga.isEmpty()) senhaAntiga = prefs.getString("senha_logado", "");
+        
+        android.util.Log.d("PERFIL_DEBUG", "Senha carregada para o campo: " + senhaAntiga);
         
         inputNome.setText(prefs.getString("nome_usuario", "Nome do Usuário"));
         inputEmail.setText(emailAntigo);
+        
+        // Colocamos a senha antiga diretamente no campo de texto
         editTextTextPassword.setText(senhaAntiga);
-        editTextTextPassword.setHint("Digite para alterar sua senha");
+        editTextTextPassword.setHint("Senha atual");
 
         // Se for nível 5, não permite alteração no e-mail
         if ("5".equals(nivel)) {
@@ -197,15 +205,20 @@ public class PerfilActivity extends AppCompatActivity {
         btnSalvar.setOnClickListener(v -> {
             String novoNome = inputNome.getText().toString().trim();
             String novoEmail = inputEmail.getText().toString().trim();
-            String novaSenhaRaw = editTextTextPassword.getText().toString().trim();
+            
+            // Pega o valor que está exatamente agora dentro da caixa de texto
+            String senhaNoCampo = editTextTextPassword.getText().toString().trim();
 
             if (novoNome.isEmpty() || novoEmail.isEmpty()) {
                 mostrarErroGrande("Aviso", "Preencha todos os campos obrigatórios!");
                 return;
             }
 
-            // Se a senha estiver vazia, enviamos a senha antiga para o banco manter a mesma
-            String senhaParaEnviar = novaSenhaRaw.isEmpty() ? senhaAntiga : novaSenhaRaw;
+            // Se o campo estiver vazio (ex: usuário apagou manualmente), 
+            // ainda assim usamos a senhaAntiga para proteger o banco.
+            String senhaParaEnviar = senhaNoCampo.isEmpty() ? senhaAntiga : senhaNoCampo;
+            
+            android.util.Log.d("PERFIL_DEBUG", "Valor enviado para API: " + senhaParaEnviar);
 
             new AlertDialog.Builder(this)
                     .setTitle("Confirmar Alterações")
@@ -248,14 +261,17 @@ public class PerfilActivity extends AppCompatActivity {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
-    private void enviarParaAPI(String nome, String email, String senha, String foto) {
+    private void enviarParaAPI(String nome, String email, String senhaParaEnviar, String foto) {
         String url = "https://api-dspi.whyguiih.workers.dev/atualizar-perfil";
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("email_atual", emailAntigo);
             jsonBody.put("novo_nome", nome);
             jsonBody.put("novo_email", email);
-            jsonBody.put("nova_senha", senha );
+            
+            // CORREÇÃO CRÍTICA: O nome da chave deve ser "nova_senha" para o Worker reconhecer
+            jsonBody.put("nova_senha", senhaParaEnviar); 
+
             jsonBody.put("foto_perfil", foto);
 
             if ("4".equals(nivel)) {
@@ -275,7 +291,7 @@ public class PerfilActivity extends AppCompatActivity {
                             SharedPreferences.Editor editor = getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit();
                             editor.putString("nome_usuario", nome);
                             editor.putString("email_logado", email);
-                            editor.putString("senha", senha); // Atualiza com a senha enviada
+                            editor.putString("senha", senhaParaEnviar); // Atualiza com a senha enviada
                             editor.putString("foto_usuario", urlFotoR2);
                             editor.apply();
                             Toast.makeText(this, "Perfil atualizado com sucesso!", Toast.LENGTH_SHORT).show();
