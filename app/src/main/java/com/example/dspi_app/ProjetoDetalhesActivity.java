@@ -92,7 +92,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         adicionarCampo("Integrantes:", p.getIntegrantes());
         adicionarCampo("Orientador:", p.getOrientador());
 
-        adicionarCabecalho("Canvas do Projeto (tb_canva)");
+        adicionarCabecalho("Canvas do Projeto");
         adicionarCampo("Proposta Chave:", p.getPropostaChave());
         adicionarCampo("Segmentos de Clientes:", p.getSegmentosClientes());
         adicionarCampo("Atividades Chaves:", p.getAtividadesChaves());
@@ -103,7 +103,7 @@ public class ProjetoDetalhesActivity extends AppCompatActivity {
         adicionarCampo("Fluxo de Receita:", p.getFluxoReceita());
         adicionarCampo("Parceiros Chaves:", p.getParceirosChaves());
 
-        adicionarCabecalho("Acompanhamento (tb_acompanhamento)");
+        adicionarCabecalho("Acompanhamento");
         adicionarCampo("Tarefas Atuais:", p.getTarefas());
         adicionarCampo("Dificuldades Enxergadas:", p.getDificuldadesEnxergadas());
 
