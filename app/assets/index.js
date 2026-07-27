@@ -2719,78 +2719,88 @@ export default {
 
 
 
-
 if (path === "/atualizar-perfil") {
-        const {
-            email_atual,
-            novo_nome,
-            novo_email,
-            foto_perfil,
-            cnpj,
-            endereco,
-            setor,
-            descricao,
-            telefone_contato
-        } = body;
+  const {
+    email_atual,
+    novo_nome,
+    novo_email,
+    foto_perfil,
+    cnpj,
+    endereco,
+    setor,
+    descricao,
+    telefone_contato,
+    nova_senha
+  } = body;
 
-        try {
-          const urlFotoSalva = await uploadBase64ToR2(foto_perfil, email_atual, env);
+  try {
+    const urlFotoSalva = await uploadBase64ToR2(foto_perfil, email_atual, env);
 
-          // 1. TENTA ATUALIZAR O CADASTRO NORMAL (Serve para todos os usuários)
-          const queryCadastros = "UPDATE tb_cadastros SET nome_usuarios = ?, email = ?, foto_perfil = ? WHERE email = ?";
-          const infoCadastros = await env.DB.prepare(queryCadastros).bind(novo_nome, novo_email, urlFotoSalva, email_atual).run();
+    const _cnpj = cnpj !== undefined ? cnpj : null;
+    const _endereco = endereco !== undefined ? endereco : null;
+    const _setor = setor !== undefined ? setor : null;
+    const _descricao = descricao !== undefined ? descricao : null;
+    const _telefone = telefone_contato !== undefined ? telefone_contato : null;
 
-          // 2. SE FOR EMPRESA (O Android só manda 'cnpj' se for Nível 4)
-          if (cnpj !== undefined) {
+    // CORREÇÃO 1: Nome da variável corrigido para nova_senha
+    const _nova_senha = nova_senha !== undefined ? nova_senha : null;
 
-            if (infoCadastros.meta.changes > 0) {
-              const queryEmpresas = `
-                UPDATE tb_empresas
-                SET foto_perfil = ?, nome_empresa = ?, usuario = ?, email_contato = ?,
-                    cnpj = COALESCE(?, cnpj), endereco = COALESCE(?, endereco),
-                    setor = COALESCE(?, setor), descricao = COALESCE(?, descricao),
-                    telefone_contato = COALESCE(?, telefone_contato)
-                WHERE email_contato = ?
-              `;
-              await env.DB.prepare(queryEmpresas)
-                  .bind(urlFotoSalva, novo_nome, novo_nome, novo_email, cnpj, endereco, setor, descricao, telefone_contato, email_atual)
-                  .run();
-            } else {
-              // Fallback se o email não for encontrado (legado do seu sistema)
-              const queryOld = "UPDATE tb_cadastros SET nome_usuarios = ?, email = ?, foto_perfil = ? WHERE nome_usuarios = ?";
-              await env.DB.prepare(queryOld).bind(novo_nome, novo_email, urlFotoSalva, email_atual).run();
+    const queryCadastros = "UPDATE tb_cadastros SET nome_usuarios = ?, email = ?, foto_perfil = ?, senha = COALESCE(?, senha) WHERE email = ?";
+    const infoCadastros = await env.DB.prepare(queryCadastros).bind(novo_nome, novo_email, urlFotoSalva, _nova_senha, email_atual).run();
 
-              const queryEmpresasOld = `
-                UPDATE tb_empresas
-                SET foto_perfil = ?, nome_empresa = ?, usuario = ?, email_contato = ?,
-                    cnpj = COALESCE(?, cnpj), endereco = COALESCE(?, endereco),
-                    setor = COALESCE(?, setor), descricao = COALESCE(?, descricao),
-                    telefone_contato = COALESCE(?, telefone_contato)
-                WHERE usuario = ? OR nome_empresa = ?
-              `;
-              await env.DB.prepare(queryEmpresasOld)
-                  .bind(urlFotoSalva, novo_nome, novo_nome, novo_email, cnpj, endereco, setor, descricao, telefone_contato, email_atual, email_atual)
-                  .run();
-            }
+    if (infoCadastros.meta.changes > 0) {
+      const queryEmpresas = `
+        UPDATE tb_empresas
+        SET
+          foto_perfil = ?,
+          nome_empresa = ?,
+          usuario = ?,
+          email_contato = ?,
+          cnpj = COALESCE(?, cnpj),
+          endereco = COALESCE(?, endereco),
+          setor = COALESCE(?, setor),
+          descricao = COALESCE(?, descricao),
+          telefone_contato = COALESCE(?, telefone_contato),
+          senha = COALESCE(?, senha)
+        WHERE email_contato = ?
+      `;
+      // CORREÇÃO 2: Ordem dos parâmetros nova_senha e email_atual corrigida
+      await env.DB.prepare(queryEmpresas)
+          .bind(urlFotoSalva, novo_nome, novo_nome, novo_email, _cnpj, _endereco, _setor, _descricao, _telefone, _nova_senha, email_atual)
+          .run();
 
-          }
-          // 3. SE NÃO FOR EMPRESA (Aluno, Professor, etc - Volta a funcionar como era antes)
-          else {
-            if (infoCadastros.meta.changes === 0) {
-              // Fallback legado para os usuários normais
-              const queryOld = "UPDATE tb_cadastros SET nome_usuarios = ?, email = ?, foto_perfil = ? WHERE nome_usuarios = ?";
-              await env.DB.prepare(queryOld).bind(novo_nome, novo_email, urlFotoSalva, email_atual).run();
-            }
-          }
+      return new Response(JSON.stringify({ success: true, foto_url: urlFotoSalva }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-          // Resposta final de sucesso
-          return new Response(JSON.stringify({ success: true, foto_url: urlFotoSalva }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } else {
+      // CORREÇÃO 3: Incluída senha no bloco else para consistência
+      const queryOld = "UPDATE tb_cadastros SET nome_usuarios = ?, email = ?, foto_perfil = ?, senha = COALESCE(?, senha) WHERE nome_usuarios = ?";
+      await env.DB.prepare(queryOld).bind(novo_nome, novo_email, urlFotoSalva, _nova_senha, email_atual).run();
 
-        } catch (e) {
-          // Agora, se der algum erro real, você verá no log
-          return new Response(JSON.stringify({ success: false, error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-      }
+      const queryEmpresasOld = `
+        UPDATE tb_empresas
+        SET
+          foto_perfil = ?,
+          nome_empresa = ?,
+          usuario = ?,
+          email_contato = ?,
+          cnpj = COALESCE(?, cnpj),
+          endereco = COALESCE(?, endereco),
+          setor = COALESCE(?, setor),
+          descricao = COALESCE(?, descricao),
+          telefone_contato = COALESCE(?, telefone_contato),
+          senha = COALESCE(?, senha)
+        WHERE usuario = ? OR nome_empresa = ?
+      `;
+      await env.DB.prepare(queryEmpresasOld)
+          .bind(urlFotoSalva, novo_nome, novo_nome, novo_email, _cnpj, _endereco, _setor, _descricao, _telefone, _nova_senha, email_atual, email_atual)
+          .run();
+
+      return new Response(JSON.stringify({ success: true, foto_url: urlFotoSalva }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+  } catch (e) {
+    return new Response(JSON.stringify({ success: false, error: e.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+}
 
 
 
@@ -3489,6 +3499,60 @@ if (path === "/salvar-curriculo") {
     }), {
       status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
+  }
+}
+
+if (path === "/excluir-projeto") {
+  try {
+    const { nome_equipe } = body;
+
+    if (!nome_equipe) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Nome da equipe não fornecido."
+      }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const equipe = await env.DB.prepare(`
+      SELECT id_equipe, usuario FROM tb_equipe WHERE nome_equipe = ?
+    `).bind(nome_equipe).first();
+
+    if (!equipe) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: "Projeto não encontrado."
+      }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const { id_equipe, usuario } = equipe;
+
+    const batchQueries = [
+      env.DB.prepare(`DELETE FROM tb_conhecimentos WHERE usuario = ?`).bind(nome_equipe),
+      env.DB.prepare(`DELETE FROM tb_recursos_aplicados WHERE usuario = ?`).bind(nome_equipe),
+      env.DB.prepare(`DELETE FROM tb_cronograma WHERE usuario = ?`).bind(nome_equipe),
+      env.DB.prepare(`DELETE FROM tb_canva WHERE usuario = ?`).bind(nome_equipe),
+      env.DB.prepare(`DELETE FROM tb_empresas_formulario WHERE id_empresa_formulario = ?`).bind(id_equipe),
+      env.DB.prepare(`DELETE FROM tb_pitch WHERE usuario = ?`).bind(nome_equipe),
+      env.DB.prepare(`DELETE FROM tb_uso_ia WHERE usuario = ?`).bind(nome_equipe),
+      env.DB.prepare(`DELETE FROM tb_acompanhamento_projeto WHERE usuario = ?`).bind(nome_equipe),
+      env.DB.prepare(`DELETE FROM tb_informacoes_complementares WHERE usuario = ?`).bind(nome_equipe),
+      env.DB.prepare(`DELETE FROM tb_informacoes_completude WHERE usuario = ?`).bind(nome_equipe),
+      env.DB.prepare(`DELETE FROM tb_relatorio WHERE usuario = ?`).bind(usuario),
+      env.DB.prepare(`DELETE FROM tb_equipe WHERE id_equipe = ?`).bind(id_equipe),
+    ];
+
+    await env.DB.batch(batchQueries);
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: "Projeto e todos os dados vinculados foram excluídos."
+    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+  } catch (error) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: "Erro ao excluir projeto: " + error.message
+    }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 }
 
