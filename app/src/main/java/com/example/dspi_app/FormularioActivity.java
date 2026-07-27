@@ -183,7 +183,6 @@ public class FormularioActivity extends AppCompatActivity {
 
         // LOG DE ENTRADA
         android.util.Log.d("DEBUG_FORM", "Iniciando formulário para: " + targetEmail);
-        Toast.makeText(this, "Carregando dados de: " + targetEmail, Toast.LENGTH_SHORT).show();
 
         // Lógica de visibilidade baseada no nível
         configurarInterfacePorNivel(nivel);
@@ -271,7 +270,6 @@ public class FormularioActivity extends AppCompatActivity {
     // =========================================================================
 
     private void fazerRequisicaoNode(String usuarioAtual) {
-        Toast.makeText(this, "Processando dados na nuvem...", Toast.LENGTH_SHORT).show();
 
         String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-relatorio?usuario=" + usuarioAtual;
         JSONObject jsonBody = new JSONObject();
@@ -283,27 +281,18 @@ public class FormularioActivity extends AppCompatActivity {
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
-                            Toast.makeText(this, "Dados prontos! Iniciando download...", Toast.LENGTH_SHORT).show();
                             String nomeEquipe = etNomeEquipe.getText().toString().trim();
                             if (nomeEquipe.isEmpty()) {
                                 nomeEquipe = usuarioAtual;
                             }
                             baixarPdfNoAndroid(nomeEquipe);
-                        } else {
-                            Toast.makeText(this, "Aviso: " + response.optString("message"), Toast.LENGTH_LONG).show();
                         }
                     } catch (JSONException e) {
-                        Toast.makeText(this, "Erro ao processar resposta do servidor.", Toast.LENGTH_SHORT).show();
+                        // Silencioso
                     }
                 },
                 error -> {
-                    String erroMsg = "Erro de conexão. Status: ";
-                    if (error.networkResponse != null) {
-                        erroMsg += error.networkResponse.statusCode;
-                    } else {
-                        erroMsg += "Desconhecido";
-                    }
-                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
+                    // Silencioso
                 }
         );
 
@@ -326,12 +315,10 @@ public class FormularioActivity extends AppCompatActivity {
         DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         if (manager != null) {
             manager.enqueue(request);
-            Toast.makeText(this, "Download iniciado! Verifique sua pasta de Downloads.", Toast.LENGTH_LONG).show();
         }
     }
 
     private void fazerRequisicaoCanva(String usuarioAtual) {
-        Toast.makeText(this, "Validando dados do Canva...", Toast.LENGTH_SHORT).show();
 
         String urlNode = "https://api-dspi.whyguiih.workers.dev/gerar-canva?usuario=" + usuarioAtual;
         JSONObject jsonBody = new JSONObject();
@@ -343,23 +330,14 @@ public class FormularioActivity extends AppCompatActivity {
                 response -> {
                     try {
                         if (response.getBoolean("success")) {
-                            Toast.makeText(this, "Dados do Canva prontos! Iniciando download...", Toast.LENGTH_SHORT).show();
                             baixarCanvaNoAndroid(usuarioAtual);
-                        } else {
-                            Toast.makeText(this, "Aviso: " + response.optString("message"), Toast.LENGTH_LONG).show();
                         }
                     } catch (JSONException e) {
-                        Toast.makeText(this, "Erro ao processar resposta do servidor.", Toast.LENGTH_SHORT).show();
+                        // Silencioso
                     }
                 },
                 error -> {
-                    String erroMsg = "Erro de conexão. Status: ";
-                    if (error.networkResponse != null) {
-                        erroMsg += error.networkResponse.statusCode;
-                    } else {
-                        erroMsg += "Desconhecido";
-                    }
-                    Toast.makeText(this, erroMsg, Toast.LENGTH_LONG).show();
+                    // Silencioso
                 }
         );
 
@@ -382,7 +360,6 @@ public class FormularioActivity extends AppCompatActivity {
         DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         if (manager != null) {
             manager.enqueue(request);
-            Toast.makeText(this, "Download do Canva iniciado! Verifique sua pasta de Downloads.", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -610,7 +587,7 @@ public class FormularioActivity extends AppCompatActivity {
 
                         Button btnDoc = new Button(FormularioActivity.this);
                         btnDoc.setText(tipo + ": " + nome);
-                        
+
                         // Aplicar estilo similar aos outros botões
                         btnDoc.setBackgroundResource(R.drawable.bg_glass);
                         btnDoc.setTextColor(android.graphics.Color.WHITE);
@@ -631,7 +608,7 @@ public class FormularioActivity extends AppCompatActivity {
 
             @Override
             public void onErro(String erro) {
-                // Silencioso ou log
+                // Silencioso
             }
         });
     }
@@ -1074,6 +1051,7 @@ public class FormularioActivity extends AppCompatActivity {
 
             } else if (tipo.equals("feedback")) {
                 campos.put("comentario", etFeedbackGeral.getText().toString().trim());
+                campos.put("nome_equipe", etNomeEquipe.getText().toString().trim());
             }
 
 
@@ -1085,10 +1063,6 @@ public class FormularioActivity extends AppCompatActivity {
                     salvamentosPendentes--;
 
                     if (salvamentosPendentes == 0 && !houveErroAoSalvar) {
-                        
-                        String msgSucesso = tipo.equals("feedback") ? "Feedback atualizado com sucesso!" : "Todos os dados foram salvos com sucesso!";
-
-                        mostrarMensagemFeedback("Sucesso", msgSucesso, true);
 
                         houveErroAoSalvar = false;
                     }
@@ -1101,15 +1075,11 @@ public class FormularioActivity extends AppCompatActivity {
 
                     houveErroAoSalvar = true;
 
-                    mostrarMensagemFeedback("Erro ao Salvar", "Erro ao salvar " + tipo + ":\n\n" + erro, false);
                 }
             });
 
         } catch (Exception e) {
-
-            Toast.makeText(this,
-                    e.getMessage(),
-                    Toast.LENGTH_LONG).show();
+            // Silencioso
         }
     }
 
@@ -1127,15 +1097,12 @@ public class FormularioActivity extends AppCompatActivity {
             @Override
             public void onSucesso(JSONObject dados) {
 
-                    if (tipo.equals("equipe")) {
-                        String nomeProjeto = dados.optString("nome_projeto");
-                        if (nomeProjeto.isEmpty() || nomeProjeto.equals("null")) {
-                            mostrarMensagemFeedback("Aviso de Dados", "A API retornou um objeto vazio para 'equipe'. Verifique se o identificador '" + targetEmail + "' está correto no banco.", false);
-                        }
+                if (tipo.equals("equipe")) {
+                    String nomeProjeto = dados.optString("nome_projeto");
 
-                        etNomeEquipe.setText(dados.optString("nome_equipe"));
-                        etNomeProjeto.setText(nomeProjeto);
-                        etEmail.setText(dados.optString("email"));
+                    etNomeEquipe.setText(dados.optString("nome_equipe"));
+                    etNomeProjeto.setText(nomeProjeto);
+                    etEmail.setText(dados.optString("email"));
                     etAreaCurso.setText(dados.optString("area_atuacao_curso"));
                     etAreaProjeto.setText(dados.optString("area_atuacao_projeto"));
                     etNomeOrientador.setText(dados.optString("nome_orientador"));
@@ -1548,15 +1515,12 @@ public class FormularioActivity extends AppCompatActivity {
                 if (!videoUrl.isEmpty()) {
                     configurarPlayerVideo(videoUrl);
                 }
-                Toast.makeText(FormularioActivity.this, "Vídeo do pitch enviado!", Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onErro(String erro) {
-                tvVideoStatus.setText("Erro ao enviar vídeo.");
                 pbVideoUpload.setVisibility(View.GONE);
                 btnUploadVideo.setEnabled(true);
-                Toast.makeText(FormularioActivity.this, erro, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -1652,7 +1616,7 @@ public class FormularioActivity extends AppCompatActivity {
     private void definirCamposEditaveis(LinearLayout formulario, boolean habilitado) {
         for (int i = 0; i < formulario.getChildCount(); i++) {
             View view = formulario.getChildAt(i);
-            
+
             if (view instanceof android.widget.EditText) {
                 android.widget.EditText editText = (android.widget.EditText) view;
                 editText.setEnabled(habilitado);
@@ -1701,7 +1665,7 @@ public class FormularioActivity extends AppCompatActivity {
         definirCamposEditaveis(formComplementares, isEmpresa ? false : habilitado);
         definirCamposEditaveis(formCompletude, isEmpresa ? false : habilitado);
         definirCamposEditaveis(formRelatorio, isEmpresa ? false : habilitado);
-        
+
         // Feedback é editável para empresas ou se o modo edição estiver ON
         definirCamposEditaveis(formFeedback, isEmpresa || habilitado);
     }
@@ -1714,15 +1678,6 @@ public class FormularioActivity extends AppCompatActivity {
         if (tabAtiva != null) tabAtiva.setAlpha(1.0f);
     }
 
-    private void mostrarMensagemFeedback(String titulo, String mensagem, boolean sucesso) {
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle(titulo)
-                .setMessage(mensagem)
-                .setPositiveButton("OK", null)
-                .setIcon(sucesso ? android.R.drawable.ic_dialog_info : android.R.drawable.ic_dialog_alert)
-                .show();
-    }
-
     private void abrirPdf(String url) {
         if (url == null || url.isEmpty()) return;
         urlRelatorioPdf = url;
@@ -1732,7 +1687,7 @@ public class FormularioActivity extends AppCompatActivity {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         } catch (Exception e) {
-            Toast.makeText(this, "Nenhum visualizador de PDF encontrado", Toast.LENGTH_SHORT).show();
+            // Silencioso
         }
     }
 
