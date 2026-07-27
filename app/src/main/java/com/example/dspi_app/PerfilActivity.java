@@ -151,6 +151,12 @@ public class PerfilActivity extends AppCompatActivity {
         }
 
         fotoBase64 = prefs.getString("foto_usuario", "");
+
+        // Se for empresa (nível 4), busca os dados adicionais no banco para preencher os campos
+        if ("4".equals(nivel)) {
+            buscarDadosEmpresa(emailAntigo);
+        }
+
         int radiusPx = (int) (16 * getResources().getDisplayMetrics().density);
 
         if (!fotoBase64.isEmpty()) {
@@ -216,6 +222,86 @@ public class PerfilActivity extends AppCompatActivity {
                     .setNegativeButton("Não", null)
                     .show();
         });
+    }
+
+    private void buscarDadosEmpresa(String email) {
+        String url = "https://api-dspi.whyguiih.workers.dev/listar-empresas";
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    try {
+                        if (response.getBoolean("success")) {
+                            org.json.JSONArray data = response.getJSONArray("data");
+                            for (int i = 0; i < data.length(); i++) {
+                                JSONObject empresa = data.getJSONObject(i);
+                                String emailEmpresa = empresa.optString("email_contato", "");
+
+                                if (emailEmpresa.equalsIgnoreCase(email)) {
+                                    // Preenche os campos da empresa com dados reais do banco
+                                    editCnpj.setText(empresa.optString("cnpj", ""));
+                                    editSetor.setText(empresa.optString("setor", ""));
+                                    editTelefone.setText(empresa.optString("telefone_contato", ""));
+                                    editEndereco.setText(empresa.optString("endereco", ""));
+                                    editDescricao.setText(empresa.optString("descricao", ""));
+
+                                    // Atualiza o nome se necessário
+                                    String nomeEmpresa = empresa.optString("nome_empresa", "");
+                                    if (!nomeEmpresa.isEmpty()) {
+                                        inputNome.setText(nomeEmpresa);
+                                    }
+
+                                    // Sincroniza a foto de perfil se houver uma no banco
+                                    String fotoEmpresa = empresa.optString("foto_perfil", "");
+                                    if (!fotoEmpresa.isEmpty() && !fotoEmpresa.equals("null")) {
+                                        fotoBase64 = fotoEmpresa;
+                                        int radiusPx = (int) (16 * getResources().getDisplayMetrics().density);
+
+                                        if (fotoEmpresa.startsWith("http")) {
+                                            Glide.with(this)
+                                                    .load(fotoEmpresa)
+                                                    .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                                                    .into(imgPerfil);
+                                            imgPerfil.setPadding(0, 0, 0, 0);
+                                        } else if (fotoEmpresa.length() > 100) {
+                                            byte[] decodedString = Base64.decode(fotoEmpresa, Base64.DEFAULT);
+                                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                                            if (decodedByte != null) {
+                                                Glide.with(this)
+                                                        .load(decodedByte)
+                                                        .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                                                        .into(imgPerfil);
+                                                imgPerfil.setPadding(0, 0, 0, 0);
+                                            }
+                                        } else {
+                                            // Caso seja um recurso local (drawable)
+                                            String nomeImg = fotoEmpresa.replace("/drawable/", "").replace(".png", "").replace(".jpg", "");
+                                            int resId = getResources().getIdentifier(nomeImg, "drawable", getPackageName());
+                                            if (resId != 0) {
+                                                Glide.with(this)
+                                                        .load(resId)
+                                                        .transform(new CenterCrop(), new RoundedCorners(radiusPx))
+                                                        .into(imgPerfil);
+                                                imgPerfil.setPadding(0, 0, 0, 0);
+                                            }
+                                        }
+
+                                        // Atualiza o SharedPreferences para manter a foto e o nome sincronizados
+                                        getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit()
+                                                .putString("foto_usuario", fotoEmpresa)
+                                                .putString("nome_usuario", nomeEmpresa)
+                                                .apply();
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                },
+                error -> { /* Silenciado */ }
+        );
+        Volley.newRequestQueue(this).add(request);
     }
 
     private int getOrientationDegrees(Uri uri) {
