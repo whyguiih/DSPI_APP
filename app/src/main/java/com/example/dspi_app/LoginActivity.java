@@ -196,20 +196,22 @@ public class LoginActivity extends AppCompatActivity {
 
                             // AGORA PUXA O NÍVEL QUE VEIO DA API (antes estava chumbado "6")
                             String nivel = response.optString("nivel", "6");
+                            int idUsuario = response.optInt("id", -1); // NOVO: Captura o ID do usuário
 
-                            String email = response.optString("email", response.optString("email_usuario", ""));
-                            String nome = response.optString("nome_usuarios", response.optString("nome_usuario", email));
-                            String foto = response.optString("foto_perfil", response.optString("foto_usuario", ""));
+                            String email = response.optString("email_usuario", response.optString("email", ""));
+                            String nome = response.optString("nome_usuario", response.optString("nome_usuarios", email));
+                            String foto = response.optString("foto_usuario", response.optString("foto_perfil", ""));
 
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            intent.putExtra("nivel_de_acesso", nivel); // Usa o nível dinâmico
+                            intent.putExtra("nivel_de_acesso", nivel); 
                             intent.putExtra("email_usuario", email);
 
                             getSharedPreferences("SESSAO_USER", MODE_PRIVATE).edit()
+                                    .putInt("id_usuario", idUsuario) // Salva o ID
                                     .putString("email_logado", email)
                                     .putString("nome_usuario", nome)
                                     .putString("foto_usuario", foto)
-                                    .putString("nivel_de_acesso", nivel) // Usa o nível dinâmico
+                                    .putString("nivel_de_acesso", nivel)
                                     .apply();
 
                             startActivity(intent);
