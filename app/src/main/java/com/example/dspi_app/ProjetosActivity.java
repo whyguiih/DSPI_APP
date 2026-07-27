@@ -148,23 +148,40 @@ public class ProjetosActivity extends AppCompatActivity {
                                         obj.optString("tarefas", ""),
                                         obj.optString("dificuldades_enxergadas", ""),
                                         obj.optString("empresa_vinculada", ""),
-                                        obj.optString("video_url", "")
+                                        obj.optString("video_url", ""),
+                                        obj.optString("nome_coorientador", ""),
+                                        obj.optString("usuario", "")
                                 );
 
                                 p.setComentarioEmpresa(obj.optString("comentario_empresa", ""));
 
                                 String empresaVinc = p.getEmpresaVinculada() != null ? p.getEmpresaVinculada().trim() : "";
                                 String nomeEqp = p.getNomeEquipe() != null ? p.getNomeEquipe().trim() : "";
+                                String orientador = p.getOrientador() != null ? p.getOrientador().trim() : "";
+                                String coorientador = p.getNomeCoorientador() != null ? p.getNomeCoorientador().trim() : "";
+                                String integrantes = p.getIntegrantes() != null ? p.getIntegrantes().trim() : "";
+                                String donoEmail = p.getUsuario() != null ? p.getUsuario().trim() : "";
+
+                                boolean isMeuProjeto = false;
+                                if (!userLogado.isEmpty()) {
+                                    String userLower = userLogado.toLowerCase();
+                                    if (nomeEqp.toLowerCase().contains(userLower) || 
+                                        donoEmail.toLowerCase().contains(userLower) ||
+                                        orientador.toLowerCase().contains(userLower) ||
+                                        coorientador.toLowerCase().contains(userLower) ||
+                                        integrantes.toLowerCase().contains(userLower)) {
+                                        isMeuProjeto = true;
+                                    }
+                                }
 
                                 if ("4".equals(nivel)) {
-                                    // CORREÇÃO: Empresa compara com seu NOME (nomeUsuario agora tem o nome real)
                                     if (!userLogado.isEmpty() && empresaVinc.equalsIgnoreCase(userLogado)) {
                                         todosMeusProjetos.add(p);
                                     } else if (empresaVinc.isEmpty() || empresaVinc.equalsIgnoreCase("null") || empresaVinc.equalsIgnoreCase("Nenhuma")) {
                                         todosOutrosProjetos.add(p);
                                     }
                                 } else {
-                                    if (!userLogado.isEmpty() && nomeEqp.equalsIgnoreCase(userLogado)) {
+                                    if (isMeuProjeto) {
                                         todosMeusProjetos.add(p);
                                     } else {
                                         todosOutrosProjetos.add(p);

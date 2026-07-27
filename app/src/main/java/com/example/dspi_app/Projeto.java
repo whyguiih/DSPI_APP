@@ -3,22 +3,20 @@ package com.example.dspi_app;
 import java.io.Serializable;
 
 public class Projeto implements Serializable {
-    private String nomeProjeto, nomeEquipe, status, integrantes, orientador;
+    private String nomeProjeto, nomeEquipe, status, integrantes, orientador, nomeCoorientador, usuario;
     private String propostaChave, segmentosClientes, atividadesChaves, recursosChaves;
     private String relacionamentosClientes, canais, estruturaCustos, fluxoReceita, parceirosChaves;
     private String tarefas, dificuldadesEnxergadas;
 
-    // NOVO CAMPO: Essencial para a empresa saber quais projetos são dela
     private String empresaVinculada;
     private String comentarioEmpresa;
     private String videoUrl;
-
 
     public Projeto(String nomeProjeto, String nomeEquipe, String status, String integrantes, String orientador,
                    String propostaChave, String segmentosClientes, String atividadesChaves, String recursosChaves,
                    String relacionamentosClientes, String canais, String estruturaCustos, String fluxoReceita,
                    String parceirosChaves, String tarefas, String dificuldadesEnxergadas, String empresaVinculada,
-                   String videoUrl) {
+                   String videoUrl, String nomeCoorientador, String usuario) {
         this.nomeProjeto = nomeProjeto;
         this.nomeEquipe = nomeEquipe;
         this.status = status;
@@ -37,6 +35,8 @@ public class Projeto implements Serializable {
         this.dificuldadesEnxergadas = dificuldadesEnxergadas;
         this.empresaVinculada = empresaVinculada;
         this.videoUrl = videoUrl;
+        this.nomeCoorientador = nomeCoorientador;
+        this.usuario = usuario;
     }
 
     public String getNomeProjeto() { return nomeProjeto; }
@@ -44,6 +44,8 @@ public class Projeto implements Serializable {
     public String getStatus() { return status; }
     public String getIntegrantes() { return integrantes; }
     public String getOrientador() { return orientador; }
+    public String getNomeCoorientador() { return nomeCoorientador; }
+    public String getUsuario() { return usuario; }
     public String getPropostaChave() { return propostaChave; }
     public String getSegmentosClientes() { return segmentosClientes; }
     public String getAtividadesChaves() { return atividadesChaves; }
